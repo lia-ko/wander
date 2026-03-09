@@ -268,7 +268,11 @@ export const useTripStore = create<TripState>()(
         }));
       },
 
-      reorderPin: (dayId, fromIndex, toIndex) =>
+      reorderPin: (dayId, fromIndex, toIndex) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const day = trip?.days.find((d) => d.id === dayId);
+        const pinName = day?.pins[fromIndex]?.name ?? "stop";
+        snapBeforeAction(get, `Reordered "${pinName}"`);
         set((s) => ({
           trips: s.trips.map((t) => {
             if (t.id !== s.activeTripId) return t;
@@ -283,7 +287,8 @@ export const useTripStore = create<TripState>()(
               }),
             };
           }),
-        })),
+        }));
+      },
 
       movePinToDay: (fromDayId, pinId, toDayId) => {
         if (fromDayId === toDayId) return;
@@ -361,47 +366,57 @@ export const useTripStore = create<TripState>()(
         }));
       },
 
-      moveWishlistToDay: (pinId, dayId, insertIndex) =>
+      moveWishlistToDay: (pinId, dayId, insertIndex) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const pin = (trip?.wishlist ?? []).find((p) => p.id === pinId);
+        const day = trip?.days.find((d) => d.id === dayId);
+        if (pin) snapBeforeAction(get, `Moved "${pin.name}" to ${day?.label ?? "day"}`);
         set((s) => ({
           trips: s.trips.map((t) => {
             if (t.id !== s.activeTripId) return t;
             const wl = t.wishlist ?? [];
-            const pin = wl.find((p) => p.id === pinId);
-            if (!pin) return t;
+            const p = wl.find((w) => w.id === pinId);
+            if (!p) return t;
             return {
               ...t,
-              wishlist: wl.filter((p) => p.id !== pinId),
+              wishlist: wl.filter((w) => w.id !== pinId),
               days: t.days.map((d) => {
                 if (d.id !== dayId) return d;
                 const pins = [...d.pins];
                 if (insertIndex !== undefined && insertIndex >= 0) {
-                  pins.splice(insertIndex, 0, pin);
+                  pins.splice(insertIndex, 0, p);
                 } else {
-                  pins.push(pin);
+                  pins.push(p);
                 }
                 return { ...d, pins };
               }),
             };
           }),
-        })),
+        }));
+      },
 
-      movePinToWishlist: (dayId, pinId) =>
+      movePinToWishlist: (dayId, pinId) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const day = trip?.days.find((d) => d.id === dayId);
+        const pin = day?.pins.find((p) => p.id === pinId);
+        if (pin) snapBeforeAction(get, `Moved "${pin.name}" to wishlist`);
         set((s) => ({
           trips: s.trips.map((t) => {
             if (t.id !== s.activeTripId) return t;
-            const day = t.days.find((d) => d.id === dayId);
-            const pin = day?.pins.find((p) => p.id === pinId);
-            if (!pin) return t;
+            const d = t.days.find((dy) => dy.id === dayId);
+            const p = d?.pins.find((px) => px.id === pinId);
+            if (!p) return t;
             return {
               ...t,
-              wishlist: [...(t.wishlist ?? []), { ...pin, transport: null, travelTime: null }],
-              days: t.days.map((d) =>
-                d.id === dayId ? { ...d, pins: d.pins.filter((p) => p.id !== pinId) } : d
+              wishlist: [...(t.wishlist ?? []), { ...p, transport: null, travelTime: null }],
+              days: t.days.map((dy) =>
+                dy.id === dayId ? { ...dy, pins: dy.pins.filter((px) => px.id !== pinId) } : dy
               ),
             };
           }),
           selectedPinId: s.selectedPinId === pinId ? null : s.selectedPinId,
-        })),
+        }));
+      },
 
       setBudget: (config) =>
         set((s) => ({
