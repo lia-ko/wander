@@ -37,8 +37,7 @@ const createPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" 
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const createClusterIcon = (color: string, opacity: number) => (cluster: any) => {
+const createClusterIcon = (color: string, opacity: number) => (cluster: { getChildCount(): number }) => {
   const count = cluster.getChildCount();
   return L.divIcon({
     html: `<div style="
@@ -220,11 +219,11 @@ function MapSync() {
 
   // Count all pins with valid coords in the active day
   const activeDay = trip.days.find((d) => d.id === activeDayId);
+  // Stable primitive key — changes only when pin IDs or coordinates change
+  const pinsKey = activeDay?.pins.map((p) => `${p.id}:${p.y}:${p.x}`).join(",") ?? "";
   const validPins = useMemo(
     () => activeDay?.pins.filter((p) => p.y !== 0 && p.x !== 0) ?? [],
-    // Stabilize: only recompute when the pin IDs or coordinates actually change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeDay?.pins.map((p) => `${p.id}:${p.y}:${p.x}`).join(",")]
+    [pinsKey]
   );
 
   useEffect(() => {

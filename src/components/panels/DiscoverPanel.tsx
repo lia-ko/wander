@@ -238,8 +238,7 @@ export default function DiscoverPanel() {
     const pin = allPins.find((p) => p.id === activeNearId);
     if (pin) return { lat: pin.y, lng: pin.x };
     return null;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeNearId, trip.center, trip.hotels.length, allPins.length]);
+  }, [activeNearId, trip.center, trip.hotels, allPins]);
 
   const doSearch = useCallback((nameFilter?: string) => {
     const center = getSearchCenter();
@@ -272,8 +271,7 @@ export default function DiscoverPanel() {
     if (!discoverOpen || !hasSearchCenter) return;
     doSearch();
     return () => { abortRef.current?.abort(); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discoverTab, activeNearId, discoverOpen]);
+  }, [discoverTab, activeNearId, discoverOpen, doSearch, hasSearchCenter]);
 
   const handleSearch = () => {
     doSearch(searchQuery.trim() || undefined);

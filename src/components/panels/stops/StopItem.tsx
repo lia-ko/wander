@@ -45,8 +45,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
       updatePin(dayId, pin.id, { openingHours: hours || "" });
     });
     return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pin.id, pin.openingHours]);
+  }, [pin.id, pin.openingHours, pin.y, pin.x, pin.name, dayId, updatePin]);
 
   const getCategoryBadge = () => {
     if (pin.foodType && FOOD_TYPE_META[pin.foodType]) return FOOD_TYPE_META[pin.foodType].emoji;
