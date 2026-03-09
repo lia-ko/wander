@@ -36,6 +36,7 @@ function NewTripModal() {
   const [selectedDest, setSelectedDest] = useState<GeoResult | null>(null);
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const emojis = ["\u{1F30D}", "\u{1F3D9}\uFE0F", "\u{1F3F0}", "\u{1F333}", "\u26F0\uFE0F", "\u{1F3D6}\uFE0F", "\u2708\uFE0F"];
 
@@ -46,12 +47,20 @@ function NewTripModal() {
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
       setSearching(true);
-      const results = await searchCities(destQuery);
-      setDestResults(results);
-      setSearching(false);
+      const results = await searchCities(destQuery, controller.signal);
+      if (!controller.signal.aborted) {
+        setDestResults(results);
+        setSearching(false);
+      }
     }, 400);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
   }, [destQuery, selectedDest]);
 
   const handleSelectDest = (result: GeoResult) => {

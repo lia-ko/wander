@@ -18,6 +18,7 @@ export default function PlaceSearch({
   const [results, setResults] = useState<GeoResult[]>([]);
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,12 +32,20 @@ export default function PlaceSearch({
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
       setSearching(true);
-      const res = await searchPlaces(query, center);
-      setResults(res);
-      setSearching(false);
+      const res = await searchPlaces(query, center, controller.signal);
+      if (!controller.signal.aborted) {
+        setResults(res);
+        setSearching(false);
+      }
     }, 400);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      abortRef.current?.abort();
+    };
   }, [query, center]);
 
   return (

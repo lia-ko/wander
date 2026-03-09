@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import { searchPlaces, type GeoResult } from "@/lib/geocode";
@@ -16,19 +16,24 @@ function HotelSearch({ onSelect, onCancel }: {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeoResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const debounceRef = useState<NodeJS.Timeout | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const handleChange = (val: string) => {
     setQuery(val);
-    if (debounceRef[0]) clearTimeout(debounceRef[0]);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     if (val.trim().length < 2) { setResults([]); return; }
-    const t = setTimeout(async () => {
+    debounceRef.current = setTimeout(async () => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
       setSearching(true);
-      const res = await searchPlaces(val, center);
-      setResults(res);
-      setSearching(false);
+      const res = await searchPlaces(val, center, controller.signal);
+      if (!controller.signal.aborted) {
+        setResults(res);
+        setSearching(false);
+      }
     }, 400);
-    debounceRef[1](t);
   };
 
   return (

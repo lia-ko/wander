@@ -11,15 +11,15 @@ export type GeoResult = {
 
 let lastRequestTime = 0;
 
-async function throttledFetch(url: string): Promise<Response> {
+async function throttledFetch(url: string, signal?: AbortSignal): Promise<Response> {
   const now = Date.now();
   const wait = Math.max(0, lastRequestTime + 1100 - now); // Nominatim requires 1s between requests
   if (wait > 0) await new Promise((r) => setTimeout(r, wait));
   lastRequestTime = Date.now();
-  return fetch(url);
+  return fetch(url, signal ? { signal } : undefined);
 }
 
-export async function searchCities(query: string): Promise<GeoResult[]> {
+export async function searchCities(query: string, signal?: AbortSignal): Promise<GeoResult[]> {
   if (!query.trim() || query.length < 2) return [];
   try {
     const url = `https://nominatim.openstreetmap.org/search?` +
@@ -30,7 +30,7 @@ export async function searchCities(query: string): Promise<GeoResult[]> {
         featuretype: "city",
         addressdetails: "1",
       });
-    const res = await throttledFetch(url);
+    const res = await throttledFetch(url, signal);
     if (!res.ok) {
       toast("City search failed — try again.");
       return [];
@@ -44,7 +44,8 @@ export async function searchCities(query: string): Promise<GeoResult[]> {
       lng: parseFloat(item.lon),
       type: item.type,
     }));
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") return [];
     toast("City search failed — check your connection and try again.");
     return [];
   }
@@ -65,7 +66,8 @@ export async function searchNearby(
   query: string,
   center: { lat: number; lng: number },
   radiusDeg = 0.015, // ~1.5km default
-  maxDistKm = 10
+  maxDistKm = 10,
+  signal?: AbortSignal,
 ): Promise<GeoResult[]> {
   if (!center.lat && !center.lng) return [];
   const searchQuery = query.trim();
@@ -91,7 +93,7 @@ export async function searchNearby(
         bounded: "1",
         addressdetails: "1",
       });
-    const res = await throttledFetch(url);
+    const res = await throttledFetch(url, signal);
     if (!res.ok) {
       toast("Place search failed — try again.");
       return [];
@@ -110,7 +112,7 @@ export async function searchNearby(
           bounded: "1",
           addressdetails: "1",
         });
-      const widerRes = await throttledFetch(widerUrl);
+      const widerRes = await throttledFetch(widerUrl, signal);
       if (widerRes.ok) {
         const widerData = await widerRes.json();
         if (widerData.length > data.length) data = widerData;
@@ -122,13 +124,14 @@ export async function searchNearby(
       .map((r) => ({ ...r, _dist: distanceKm(center, { lat: r.lat, lng: r.lng }) }))
       .filter((r) => r._dist <= maxDistKm)
       .sort((a, b) => a._dist - b._dist);
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") return [];
     toast("Place search failed — check your connection and try again.");
     return [];
   }
 }
 
-export async function searchPlaces(query: string, center: { lat: number; lng: number }): Promise<GeoResult[]> {
+export async function searchPlaces(query: string, center: { lat: number; lng: number }, signal?: AbortSignal): Promise<GeoResult[]> {
   if (!query.trim() || query.length < 2) return [];
 
   const parseResults = (data: Record<string, string>[]): GeoResult[] =>
@@ -151,7 +154,7 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
         viewbox: `${center.lng - 0.5},${center.lat + 0.5},${center.lng + 0.5},${center.lat - 0.5}`,
         bounded: "1",
       });
-    const res = await throttledFetch(url);
+    const res = await throttledFetch(url, signal);
     if (!res.ok) {
       toast("Place search failed — try again.");
       return [];
@@ -168,14 +171,15 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
         viewbox: `${center.lng - 2},${center.lat + 2},${center.lng + 2},${center.lat - 2}`,
         bounded: "1",
       });
-    const widerRes = await throttledFetch(widerUrl);
+    const widerRes = await throttledFetch(widerUrl, signal);
     if (!widerRes.ok) {
       toast("Place search failed — try again.");
       return [];
     }
     const widerData = await widerRes.json();
     return parseResults(widerData);
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") return [];
     toast("Place search failed — check your connection and try again.");
     return [];
   }
