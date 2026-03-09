@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { getHoursForDate } from "@/lib/hours";
 import type { OverpassResult } from "@/lib/overpass";
@@ -16,7 +17,7 @@ function TagPill({ label, color }: { label: string; color: string }) {
   );
 }
 
-export default function ResultItem({ result, tab, added, wishlisted, onAdd, onWishlist, dayDate }: {
+export default memo(function ResultItem({ result, tab, added, wishlisted, onAdd, onWishlist, dayDate }: {
   result: OverpassResult;
   tab: DiscoverTab;
   added: boolean;
@@ -89,4 +90,4 @@ export default function ResultItem({ result, tab, added, wishlisted, onAdd, onWi
       </div>
     </div>
   );
-}
+});

@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
-import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
 import { getHoursForDate, getDayDate } from "@/lib/hours";
+import { getPinBadge } from "@/lib/pinUtils";
 import { useUIStore } from "@/store/uiStore";
-import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg } from "@/lib/styles";
+import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg, formInput, saveBtn, cancelBtn, wishlistBtn, removeBtn, isSameLocation } from "@/lib/styles";
 import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
 
-export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop, isDragOver }: {
+export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop, isDragOver }: {
   pin: Pin; index: number; dayId: number; dayColor: string;
   isDragOver: boolean;
 } & DragHandlers) {
@@ -35,13 +35,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
   const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
   const dayHours = pin.openingHours && dayDate ? getHoursForDate(pin.openingHours, dayDate) : null;
 
-  const getCategoryBadge = () => {
-    if (pin.foodType && FOOD_TYPE_META[pin.foodType]) return FOOD_TYPE_META[pin.foodType].emoji;
-    if (pin.attrType && ATTR_TYPE_META[pin.attrType]) return ATTR_TYPE_META[pin.attrType].emoji;
-    return null;
-  };
-
-  const badge = getCategoryBadge();
+  const badge = getPinBadge(pin);
 
   const handleSaveEdit = () => {
     if (editName.trim()) {
@@ -60,9 +54,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
           autoFocus
           aria-label="Stop name"
-          className={`w-full px-2 py-1.5 rounded-lg text-sm outline-none mb-1.5 ${
-            dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white text-zinc-900"
-          }`}
+          className={`${formInput(dark)} mb-1.5`}
           placeholder="Stop name"
         />
         <input
@@ -71,14 +63,12 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           onChange={(e) => setEditNote(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
           aria-label="Stop note"
-          className={`w-full px-2 py-1.5 rounded-lg text-sm outline-none mb-2 ${
-            dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white text-zinc-900"
-          }`}
+          className={`${formInput(dark)} mb-2`}
           placeholder="Note (optional)"
         />
         <div className="flex gap-1.5">
-          <button onClick={handleSaveEdit} className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#4E8098] hover:bg-[#3D6B80] transition-colors">Save</button>
-          <button onClick={() => setEditing(false)} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-zinc-200 hover:bg-zinc-300"}`}>Cancel</button>
+          <button onClick={handleSaveEdit} className={saveBtn}>Save</button>
+          <button onClick={() => setEditing(false)} className={cancelBtn(dark)}>Cancel</button>
         </div>
       </div>
     );
@@ -159,7 +149,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           <button
             onClick={() => { movePinToWishlist(dayId, pin.id); setSelectedPinId(null); }}
             className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-              dark ? "bg-[#DAA520]/10 text-[#DAA520] hover:bg-[#DAA520]/20" : "bg-[#4E8098]/8 text-[#4E8098] hover:bg-[#4E8098]/15"
+              wishlistBtn(dark)
             }`}
             title="Move to wishlist"
           >
@@ -172,18 +162,18 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           </button>
           <button
             onClick={() => { removePin(dayId, pin.id); setSelectedPinId(null); }}
-            className="text-xs px-2.5 py-1 rounded-md text-red-500 transition-colors bg-red-500/10 hover:bg-red-500/20"
+            className={`text-xs px-2.5 py-1 rounded-md transition-colors ${removeBtn}`}
           >
             Remove
           </button>
           {pin.y !== 0 && pin.x !== 0 && (
             <button
               onClick={() => {
-                const isActive = radiusCenter && Math.abs(radiusCenter.lat - pin.y) < 0.0001 && Math.abs(radiusCenter.lng - pin.x) < 0.0001;
+                const isActive = radiusCenter && isSameLocation(radiusCenter.lat, radiusCenter.lng, pin.y, pin.x);
                 setRadiusCenter(isActive ? null : { lat: pin.y, lng: pin.x, label: pin.name });
               }}
               className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-                radiusCenter && Math.abs(radiusCenter.lat - pin.y) < 0.0001 && Math.abs(radiusCenter.lng - pin.x) < 0.0001
+                radiusCenter && isSameLocation(radiusCenter.lat, radiusCenter.lng, pin.y, pin.x)
                   ? "bg-[#4E8098]/20 text-[#4E8098]"
                   : btnHover(dark)
               }`}
@@ -201,4 +191,4 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
       )}
     </div>
   );
-}
+});

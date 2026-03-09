@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useTripStore } from "@/store/tripStore";
-import { textMuted, textSubtle, sectionBg, inputBase, btnHover, dragOverBg } from "@/lib/styles";
+import { textMuted, textSubtle, sectionBg, formInput, saveBtn, cancelBtn, btnHover, wishlistBtn, removeBtn, dragOverBg } from "@/lib/styles";
 import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
 
-export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver, onDrop, isDragOver }: {
+export default memo(function FlightItem({ pin, index, dayId, onDragStart, onDragOver, onDrop, isDragOver }: {
   pin: Pin; index: number; dayId: number; dayColor: string;
   isDragOver: boolean;
 } & DragHandlers) {
@@ -37,9 +37,7 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
     setEditing(false);
   };
 
-  const inputCls = `w-full px-2 py-1.5 rounded-lg text-xs outline-none ${
-    inputBase(dark)
-  }`;
+  const inputCls = formInput(dark);
 
   if (editing) {
     return (
@@ -57,8 +55,8 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
           <input type="text" value={arrTime} onChange={(e) => setArrTime(e.target.value)} placeholder="Arrives (e.g. 11:45 PM)" aria-label="Arrival time" className={inputCls} />
         </div>
         <div className="flex gap-1.5">
-          <button onClick={handleSave} className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#4E8098] hover:bg-[#3D6B80] transition-colors">Save</button>
-          <button onClick={() => setEditing(false)} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-zinc-200 hover:bg-zinc-300"}`}>Cancel</button>
+          <button onClick={handleSave} className={saveBtn}>Save</button>
+          <button onClick={() => setEditing(false)} className={cancelBtn(dark)}>Cancel</button>
         </div>
       </div>
     );
@@ -119,7 +117,7 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
           <button
             onClick={() => movePinToWishlist(dayId, pin.id)}
             className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-              dark ? "bg-[#DAA520]/10 text-[#DAA520] hover:bg-[#DAA520]/20" : "bg-[#4E8098]/8 text-[#4E8098] hover:bg-[#4E8098]/15"
+              wishlistBtn(dark)
             }`}
             title="Move to wishlist"
           >
@@ -132,7 +130,7 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
           </button>
           <button
             onClick={() => removePin(dayId, pin.id)}
-            className="text-xs px-2.5 py-1 rounded-md text-red-500 transition-colors bg-red-500/10 hover:bg-red-500/20"
+            className={`text-xs px-2.5 py-1 rounded-md transition-colors ${removeBtn}`}
           >
             Remove
           </button>
@@ -140,4 +138,4 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
       )}
     </div>
   );
-}
+});

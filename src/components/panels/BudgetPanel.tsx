@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { EXPENSE_CATEGORY_META, CURRENCIES } from "@/store/constants";
-import { textMuted, textSubtle, textStrong } from "@/lib/styles";
+import { textMuted, textSubtle, textStrong, formInputBordered, formSelect } from "@/lib/styles";
 import type { ExpenseCategory, Expense } from "@/types";
 
 const categories = Object.keys(EXPENSE_CATEGORY_META) as ExpenseCategory[];
@@ -47,14 +47,15 @@ export default function BudgetPanel() {
   const isForeignTrip = spendingCurrency !== homeCurrency;
 
   // Fetch rates for home currency + spending currency + any used foreign currencies
+  const expenseCurrencyKey = useMemo(
+    () => [...new Set(expenses.map((e) => e.currency).filter((c): c is string => !!c && c !== homeCurrency))].sort().join(","),
+    [expenses, homeCurrency]
+  );
   useEffect(() => {
     fetchRates(homeCurrency);
     if (isForeignTrip) fetchRates(spendingCurrency);
-    const foreignCurrencies = new Set(
-      expenses.map((e) => e.currency).filter((c): c is string => !!c && c !== homeCurrency)
-    );
-    foreignCurrencies.forEach((c) => fetchRates(c));
-  }, [homeCurrency, spendingCurrency, isForeignTrip, expenses, fetchRates]);
+    expenseCurrencyKey.split(",").filter(Boolean).forEach((c) => fetchRates(c));
+  }, [homeCurrency, spendingCurrency, isForeignTrip, expenseCurrencyKey, fetchRates]);
 
   /** Convert an expense amount to home currency. Returns null if rate unavailable. */
   const toHome = (exp: Expense): number | null => {
@@ -66,11 +67,11 @@ export default function BudgetPanel() {
   const totalSpent = expenses.reduce((sum, e) => sum + (toHome(e) ?? 0), 0);
   const hasUnconverted = expenses.some((e) => toHome(e) === null);
 
-  const byCategory = categories.map((cat) => ({
+  const byCategory = useMemo(() => categories.map((cat) => ({
     cat,
     ...EXPENSE_CATEGORY_META[cat],
     total: expenses.filter((e) => e.category === cat).reduce((s, e) => s + (toHome(e) ?? 0), 0),
-  }));
+  })), [expenses, homeCurrency, convert]);
 
   // Live rate display
   const liveRate = isForeignTrip ? convert(1, spendingCurrency, homeCurrency) : null;
@@ -117,15 +118,11 @@ export default function BudgetPanel() {
     setAdding(true);
   };
 
-  const inputClass = `w-full px-2.5 py-1.5 rounded-lg text-xs outline-none ${
-    dark ? "bg-white/5 text-zinc-200 border border-white/10 focus:border-[#DAA520]/40" : "bg-white border border-zinc-200 text-zinc-800 focus:border-[#4E8098]/40"
-  }`;
-
-  const selectClass = `text-xs rounded-lg px-2 py-1 outline-none ${
-    dark ? "bg-white/5 text-zinc-300 border border-white/10" : "bg-white border border-zinc-200 text-zinc-700"
-  }`;
+  const inputClass = formInputBordered(dark);
+  const selectClass = formSelect(dark);
 
   const isLoadingRates = Object.keys(ratesLoading).length > 0;
+  const dayLabelMap = useMemo(() => new Map(trip.days.map((d) => [d.id, d.label])), [trip.days]);
 
   return (
     <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-3">
@@ -341,7 +338,7 @@ export default function BudgetPanel() {
           </span>
           {expenses.map((exp) => {
             const meta = EXPENSE_CATEGORY_META[exp.category];
-            const dayLabel = exp.dayId ? trip.days.find((d) => d.id === exp.dayId)?.label : null;
+            const dayLabel = exp.dayId ? dayLabelMap.get(exp.dayId) ?? null : null;
             const expIsForeign = exp.currency && exp.currency !== homeCurrency;
             const converted = expIsForeign ? toHome(exp) : null;
             const foreignSymbol = expIsForeign ? symbolFor(exp.currency ?? homeCurrency) : null;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
 import GlassPanel from "@/components/ui/GlassPanel";
@@ -9,7 +9,7 @@ import { getDayDate } from "@/lib/hours";
 import type { DiscoverTab, Pin } from "@/types";
 import { mapOsmToFoodType, mapOsmToAttrType, formatCuisine } from "./helpers";
 import ResultItem from "./ResultItem";
-import { textMuted, textSubtle, hoverBg, accentActive } from "@/lib/styles";
+import { textMuted, textSubtle, hoverBg, accentActive, isSameLocation } from "@/lib/styles";
 
 export default function DiscoverPanel() {
   const discoverOpen = useUIStore((s) => s.discoverOpen);
@@ -32,8 +32,8 @@ export default function DiscoverPanel() {
   const cacheRef = useRef<Map<string, OverpassResult[]>>(new Map());
   const abortRef = useRef<AbortController | null>(null);
 
-  const allPins: Pin[] = trip.days.flatMap((d) => d.pins).filter((p) => p.y !== 0 && p.x !== 0);
-  const dayPins: Pin[] = (day?.pins ?? []).filter((p) => p.y !== 0 && p.x !== 0);
+  const allPins = useMemo<Pin[]>(() => trip.days.flatMap((d) => d.pins).filter((p) => p.y !== 0 && p.x !== 0), [trip.days]);
+  const dayPins = useMemo<Pin[]>(() => (day?.pins ?? []).filter((p) => p.y !== 0 && p.x !== 0), [day?.pins]);
 
   const effectiveDefault: number | string | null =
     dayPins.length > 0 ? dayPins[0].id :
@@ -98,11 +98,11 @@ export default function DiscoverPanel() {
 
   const isAdded = (result: OverpassResult) => {
     if (!day) return false;
-    return day.pins.some((p) => Math.abs(p.y - result.lat) < 0.0001 && Math.abs(p.x - result.lng) < 0.0001);
+    return day.pins.some((p) => isSameLocation(p.y, p.x, result.lat, result.lng));
   };
 
   const isWishlisted = (result: OverpassResult) => {
-    return (trip.wishlist ?? []).some((p) => Math.abs(p.y - result.lat) < 0.0001 && Math.abs(p.x - result.lng) < 0.0001);
+    return (trip.wishlist ?? []).some((p) => isSameLocation(p.y, p.x, result.lat, result.lng));
   };
 
   const buildPinData = (result: OverpassResult) => {

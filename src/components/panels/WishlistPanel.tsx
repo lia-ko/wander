@@ -1,26 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
-import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
+import { getPinBadge } from "@/lib/pinUtils";
 import { textMuted, textSubtle, sectionBg, softHoverBg, ghostBtn, ghostBtnSoft, deleteBtn } from "@/lib/styles";
 import type { Pin } from "@/types";
 import PlaceSearch from "./PlaceSearch";
 
 const WISHLIST_DRAG_TYPE = "application/wander-wishlist";
 
-function WishlistItem({ pin }: { pin: Pin }) {
+const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
   const removeFromWishlist = useTripStore((s) => s.removeFromWishlist);
   const moveWishlistToDay = useTripStore((s) => s.moveWishlistToDay);
   const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
   const [showDayPicker, setShowDayPicker] = useState(false);
 
-  const badge = pin.foodType && FOOD_TYPE_META[pin.foodType]
-    ? FOOD_TYPE_META[pin.foodType].emoji
-    : pin.attrType && ATTR_TYPE_META[pin.attrType]
-      ? ATTR_TYPE_META[pin.attrType].emoji
-      : null;
+  const badge = getPinBadge(pin);
 
   return (
     <div
@@ -102,7 +98,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
       )}
     </div>
   );
-}
+});
 
 export default function WishlistPanel() {
   const trip = useTripStore(selectActiveTrip);

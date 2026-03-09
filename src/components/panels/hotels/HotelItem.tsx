@@ -5,7 +5,7 @@ import { useTripStore } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import type { Hotel } from "@/types";
-import { textMuted, textSubtle, inputBase, ghostBtn, deleteBtn } from "@/lib/styles";
+import { textMuted, textSubtle, formInput, ghostBtn, deleteBtn, isSameLocation } from "@/lib/styles";
 
 function HotelItem({ hotel }: { hotel: Hotel }) {
   const removeHotel = useTripStore((s) => s.removeHotel);
@@ -18,7 +18,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
   const [checkOut, setCheckOut] = useState(hotel.checkOut || "");
   const [notes, setNotes] = useState(hotel.notes || "");
 
-  const isRadiusActive = radiusCenter && Math.abs(radiusCenter.lat - hotel.y) < 0.0001 && Math.abs(radiusCenter.lng - hotel.x) < 0.0001;
+  const isRadiusActive = radiusCenter && isSameLocation(radiusCenter.lat, radiusCenter.lng, hotel.y, hotel.x);
 
   const handleSave = () => {
     updateHotel(hotel.id, {
@@ -29,9 +29,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
     setExpanded(false);
   };
 
-  const inputCls = `w-full px-2 py-1.5 rounded-lg text-xs outline-none ${
-    inputBase(dark)
-  }`;
+  const inputCls = formInput(dark);
 
   return (
     <div
