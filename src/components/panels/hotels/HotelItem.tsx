@@ -70,6 +70,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
                 : dark ? "text-zinc-500 hover:bg-[#F5E8D8]/10" : "text-zinc-400 hover:bg-[#4E8098]/8"
             }`}
             title="Show walking radius"
+            aria-label={`${isRadiusActive ? "Hide" : "Show"} walking radius for ${hotel.name}`}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <circle cx="12" cy="12" r="10" strokeWidth={2} />
@@ -84,6 +85,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
             }}
             className={`p-1.5 rounded-lg transition-colors ${deleteBtn(dark)}`}
             title="Remove hotel"
+            aria-label={`Remove ${hotel.name}`}
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

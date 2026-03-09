@@ -44,6 +44,7 @@ function HotelSearch({ onSelect, onCancel }: {
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
           placeholder="Search for hotel / accommodation..."
+          aria-label="Search for hotel or accommodation"
           autoFocus
           className={`w-full px-2.5 py-2 rounded-lg text-sm outline-none ${
             inputBase(dark)

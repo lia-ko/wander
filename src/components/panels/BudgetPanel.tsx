@@ -135,6 +135,7 @@ export default function BudgetPanel() {
           <select
             value={homeCurrency}
             onChange={(e) => setBudget({ currency: e.target.value })}
+            aria-label="Home currency"
             className={`${selectClass} flex-1 min-w-0`}
           >
             {CURRENCIES.map((c) => (
@@ -147,6 +148,7 @@ export default function BudgetPanel() {
           <select
             value={spendingCurrency}
             onChange={(e) => setBudget({ spendingCurrency: e.target.value === homeCurrency ? undefined : e.target.value })}
+            aria-label="Spending currency"
             className={`${selectClass} flex-1 min-w-0`}
           >
             {CURRENCIES.map((c) => (
@@ -174,6 +176,7 @@ export default function BudgetPanel() {
               placeholder="No limit"
               value={budget.totalBudget ?? ""}
               onChange={(e) => setBudget({ totalBudget: e.target.value ? Number(e.target.value) : null })}
+              aria-label="Total budget amount"
               className={`w-24 text-right text-xs px-2 py-1 rounded-lg outline-none ${
                 dark ? "bg-white/5 text-zinc-200 border border-white/10" : "bg-white border border-zinc-200 text-zinc-700"
               }`}
@@ -235,12 +238,13 @@ export default function BudgetPanel() {
           <span className={`text-xs font-semibold ${textStrong(dark)}`}>
             {editingId !== null ? "Edit Expense" : "New Expense"}
           </span>
-          <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+          <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} aria-label="Expense name" className={inputClass} />
           <div className="flex gap-2">
             <div className="flex items-center gap-1 flex-1">
               <select
                 value={expCurrency}
                 onChange={(e) => setExpCurrency(e.target.value)}
+                aria-label="Expense currency"
                 className={`text-xs rounded-lg px-1.5 py-1.5 outline-none flex-shrink-0 ${
                   dark ? "bg-white/5 text-zinc-300 border border-white/10" : "bg-white border border-zinc-200 text-zinc-700"
                 }`}
@@ -255,10 +259,11 @@ export default function BudgetPanel() {
                 placeholder="Amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                aria-label="Expense amount"
                 className={inputClass}
               />
             </div>
-            <select value={category} onChange={(e) => setCategory(e.target.value as ExpenseCategory)} className={inputClass} style={{ width: "auto" }}>
+            <select value={category} onChange={(e) => setCategory(e.target.value as ExpenseCategory)} aria-label="Expense category" className={inputClass} style={{ width: "auto" }}>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>{EXPENSE_CATEGORY_META[cat].label}</option>
               ))}
@@ -281,6 +286,7 @@ export default function BudgetPanel() {
           <select
             value={dayId ?? ""}
             onChange={(e) => setDayId(e.target.value ? Number(e.target.value) : null)}
+            aria-label="Assign to day"
             className={inputClass}
           >
             <option value="">No specific day</option>
@@ -288,7 +294,7 @@ export default function BudgetPanel() {
               <option key={d.id} value={d.id}>{d.label}</option>
             ))}
           </select>
-          <input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
+          <input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="Expense note" className={inputClass} />
           <div className="flex gap-2">
             <button
               onClick={handleSave}
@@ -367,6 +373,7 @@ export default function BudgetPanel() {
                 <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => startEdit(exp)}
+                    aria-label={`Edit ${exp.name}`}
                     className={`p-1 rounded ${dark ? "hover:bg-white/10 text-zinc-400" : "hover:bg-zinc-200 text-zinc-500"}`}
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -375,6 +382,7 @@ export default function BudgetPanel() {
                   </button>
                   <button
                     onClick={() => removeExpense(exp.id)}
+                    aria-label={`Delete ${exp.name}`}
                     className={`p-1 rounded ${dark ? "hover:bg-red-500/20 text-zinc-400" : "hover:bg-red-50 text-zinc-500"}`}
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

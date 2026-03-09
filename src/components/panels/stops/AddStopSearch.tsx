@@ -42,16 +42,16 @@ function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
   return (
     <div className={`mx-2 mt-1 rounded-xl overflow-hidden px-3 py-2.5 space-y-1.5 ${sectionBg(dark)}`}>
       <div className="flex gap-2">
-        <input type="text" value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Airline" autoFocus className={inputCls} />
-        <input type="text" value={flightNum} onChange={(e) => setFlightNum(e.target.value)} placeholder="Flight #" className={inputCls} />
+        <input type="text" value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Airline" aria-label="Airline" autoFocus className={inputCls} />
+        <input type="text" value={flightNum} onChange={(e) => setFlightNum(e.target.value)} placeholder="Flight #" aria-label="Flight number" className={inputCls} />
       </div>
       <div className="flex gap-2">
-        <input type="text" value={depAirport} onChange={(e) => setDepAirport(e.target.value)} placeholder="From (e.g. JFK)" className={inputCls} />
-        <input type="text" value={arrAirport} onChange={(e) => setArrAirport(e.target.value)} placeholder="To (e.g. MAD)" className={inputCls} />
+        <input type="text" value={depAirport} onChange={(e) => setDepAirport(e.target.value)} placeholder="From (e.g. JFK)" aria-label="Departure airport" className={inputCls} />
+        <input type="text" value={arrAirport} onChange={(e) => setArrAirport(e.target.value)} placeholder="To (e.g. MAD)" aria-label="Arrival airport" className={inputCls} />
       </div>
       <div className="flex gap-2">
-        <input type="text" value={depTime} onChange={(e) => setDepTime(e.target.value)} placeholder="Departs (e.g. 10:30 AM)" className={inputCls} />
-        <input type="text" value={arrTime} onChange={(e) => setArrTime(e.target.value)} placeholder="Arrives (e.g. 11:45 PM)" className={inputCls} />
+        <input type="text" value={depTime} onChange={(e) => setDepTime(e.target.value)} placeholder="Departs (e.g. 10:30 AM)" aria-label="Departure time" className={inputCls} />
+        <input type="text" value={arrTime} onChange={(e) => setArrTime(e.target.value)} placeholder="Arrives (e.g. 11:45 PM)" aria-label="Arrival time" className={inputCls} />
       </div>
       <div className="flex gap-1.5 pt-1">
         <button onClick={handleAdd} className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#3B82F6] hover:bg-[#2563EB] transition-colors">Add Flight</button>

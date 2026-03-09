@@ -168,6 +168,7 @@ export default function DiscoverPanel() {
         <button
           onClick={closeDiscover}
           className={`p-1 rounded-lg transition-colors ${hoverBg(dark)}`}
+          aria-label="Close discover panel"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -188,6 +189,7 @@ export default function DiscoverPanel() {
               setNearPinId(v === "trip-center" || v.startsWith("hotel-") ? v : Number(v));
             }}
             disabled={!hasSearchCenter}
+            aria-label="Search near location"
             className={`flex-1 min-w-0 text-xs px-2 py-1.5 rounded-lg outline-none truncate ${
               dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-[#4E8098]/8 text-zinc-900"
             } ${!hasSearchCenter ? "opacity-50" : ""}`}
@@ -223,6 +225,7 @@ export default function DiscoverPanel() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
             placeholder="Filter by name..."
+            aria-label="Filter results by name"
             disabled={!hasSearchCenter}
             className={`flex-1 px-3 py-2 rounded-xl text-sm outline-none transition-colors ${
               dark ? "bg-[#F5E8D8]/10 placeholder:text-zinc-500 focus:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 placeholder:text-zinc-400 focus:bg-black/[.08]"

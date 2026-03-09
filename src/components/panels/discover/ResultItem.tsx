@@ -68,6 +68,7 @@ export default function ResultItem({ result, tab, added, wishlisted, onAdd, onWi
               : dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-700 hover:bg-[#4E8098]/12"
           }`}
           title="Add to day"
+          aria-label={added ? `${result.name} added to day` : `Add ${result.name} to day`}
         >
           {added ? "\u2713" : "+"}
         </button>
@@ -79,6 +80,7 @@ export default function ResultItem({ result, tab, added, wishlisted, onAdd, onWi
               : dark ? "bg-[#F5E8D8]/10 text-zinc-500 hover:text-[#DAA520] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-400 hover:text-[#4E8098] hover:bg-[#4E8098]/12"
           }`}
           title="Save to wishlist"
+          aria-label={wishlisted ? `${result.name} saved to wishlist` : `Save ${result.name} to wishlist`}
         >
           <svg className="w-3.5 h-3.5" fill={wishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />

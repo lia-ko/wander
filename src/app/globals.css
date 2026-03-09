@@ -97,3 +97,15 @@ html, body {
 .animate-toast-in {
   animation: toast-in 0.2s ease-out;
 }
+
+/* Global focus-visible ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #4E8098;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove focus ring for mouse clicks */
+:focus:not(:focus-visible) {
+  outline: none;
+}

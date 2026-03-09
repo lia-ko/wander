@@ -21,7 +21,7 @@ export default function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm">
+    <div className="fixed bottom-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm" role="status" aria-live="polite">
       {toasts.map((t) => {
         const c = COLORS[t.type];
         return (
@@ -45,6 +45,7 @@ export default function ToastContainer() {
             <button
               onClick={() => removeToast(t.id)}
               className={`flex-shrink-0 mt-0.5 ${c.icon} hover:opacity-70`}
+              aria-label="Dismiss notification"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

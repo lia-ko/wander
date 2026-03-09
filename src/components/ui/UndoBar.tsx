@@ -47,6 +47,7 @@ export default function UndoBar() {
       <button
         onClick={() => setVisible(false)}
         className="flex-shrink-0 opacity-40 hover:opacity-70"
+        aria-label="Dismiss undo bar"
       >
         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

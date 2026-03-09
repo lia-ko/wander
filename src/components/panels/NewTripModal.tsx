@@ -115,12 +115,12 @@ function NewTripModal() {
   }`;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="new-trip-heading">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setNewTripModalOpen(false)} />
       <div className={`relative w-[380px] rounded-2xl border shadow-2xl p-5 ${
         dark ? "bg-[#1C1C1C] border-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white border-[#4E8098]/10 text-zinc-900"
       }`}>
-        <h2 className="text-lg font-bold mb-4">New Trip</h2>
+        <h2 id="new-trip-heading" className="text-lg font-bold mb-4">New Trip</h2>
 
         {/* Destination search */}
         <div className="mb-3 relative">
@@ -208,6 +208,7 @@ function NewTripModal() {
                 setStartDate(e.target.value);
                 if (!endDate || e.target.value > endDate) setEndDate(e.target.value);
               }}
+              aria-label="Start date"
               className={`flex-1 ${inputClass}`}
             />
             <span className={`text-xs ${textSubtle(dark)}`}>to</span>
@@ -216,6 +217,7 @@ function NewTripModal() {
               value={endDate}
               min={startDate}
               onChange={(e) => setEndDate(e.target.value)}
+              aria-label="End date"
               className={`flex-1 ${inputClass}`}
             />
           </div>

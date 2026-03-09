@@ -72,6 +72,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           onChange={(e) => setEditName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
           autoFocus
+          aria-label="Stop name"
           className={`w-full px-2 py-1.5 rounded-lg text-sm outline-none mb-1.5 ${
             dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white text-zinc-900"
           }`}
@@ -82,6 +83,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           value={editNote}
           onChange={(e) => setEditNote(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
+          aria-label="Stop note"
           className={`w-full px-2 py-1.5 rounded-lg text-sm outline-none mb-2 ${
             dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white text-zinc-900"
           }`}
@@ -101,6 +103,9 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
       onDragStart={(e) => onDragStart(e, index)}
       onDragOver={(e) => onDragOver(e, index)}
       onDrop={() => onDrop(index)}
+      role="listitem"
+      aria-roledescription="Draggable stop"
+      aria-label={pin.name}
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
         isDragOver
           ? dragOverBg(dark)

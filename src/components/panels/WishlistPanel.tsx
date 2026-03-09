@@ -29,6 +29,8 @@ function WishlistItem({ pin }: { pin: Pin }) {
         e.dataTransfer.setData(WISHLIST_DRAG_TYPE, JSON.stringify({ pinId: pin.id }));
         e.dataTransfer.effectAllowed = "move";
       }}
+      role="listitem"
+      aria-roledescription="Draggable wishlist item"
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
         softHoverBg(dark)
       }`}
@@ -60,6 +62,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
               ghostBtn(dark)
             }`}
             title="Add to day"
+            aria-label={`Add ${pin.name} to a day`}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -71,6 +74,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
               deleteBtn(dark)
             }`}
             title="Remove"
+            aria-label={`Remove ${pin.name} from wishlist`}
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
