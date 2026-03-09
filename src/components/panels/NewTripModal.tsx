@@ -75,8 +75,10 @@ function NewTripModal() {
   const numDays = startDate && endDate ? daysBetween(startDate, endDate) : 0;
   const dateLabel = startDate && endDate ? formatDateRange(startDate, endDate) : "";
 
+  const datesValid = startDate && endDate && endDate >= startDate;
+
   const handleCreate = () => {
-    if (!name.trim() || !selectedDest || !startDate || !endDate) return;
+    if (!name.trim() || !selectedDest || !startDate || !endDate || !datesValid) return;
 
     const genId = () => Date.now() + Math.floor(Math.random() * 10000);
     const count = daysBetween(startDate, endDate);
@@ -222,7 +224,10 @@ function NewTripModal() {
               className={`flex-1 ${inputClass}`}
             />
           </div>
-          {numDays > 0 && (
+          {startDate && endDate && endDate < startDate && (
+            <div className="text-xs mt-1.5 text-red-500">End date must be on or after start date</div>
+          )}
+          {numDays > 0 && datesValid && (
             <div className={`text-xs mt-1.5 ${textMuted(dark)}`}>
               {dateLabel} &middot; {numDays} {numDays === 1 ? "day" : "days"}
             </div>
@@ -233,7 +238,7 @@ function NewTripModal() {
         <div className="flex gap-2">
           <button
             onClick={handleCreate}
-            disabled={!name.trim() || !selectedDest || !startDate || !endDate}
+            disabled={!name.trim() || !selectedDest || !datesValid}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#4E8098] hover:bg-[#3D6B80] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Create Trip

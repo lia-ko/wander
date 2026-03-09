@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { batchFetchOpeningHours } from "@/lib/hours";
 import { textSubtle, dashedBorder } from "@/lib/styles";
 import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
 import { STOP_DRAG_TYPE } from "./stops/types";
@@ -24,7 +25,37 @@ export default function StopList() {
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [wishlistDragOver, setWishlistDragOver] = useState(false);
 
+  const updatePin = useTripStore((s) => s.updatePin);
+  const fetchedRef = useRef<Set<number>>(new Set());
+
   const day = trip.days.find((d) => d.id === activeDayId);
+
+  // Batch-fetch opening hours for all pins in the active day that need them
+  useEffect(() => {
+    if (!day) return;
+    const eligible = day.pins.filter(
+      (p) => p.openingHours == null && p.y !== 0 && p.x !== 0 && !fetchedRef.current.has(p.id)
+    );
+    if (eligible.length === 0) return;
+
+    // Mark as fetching so we don't re-trigger
+    for (const p of eligible) fetchedRef.current.add(p.id);
+
+    const controller = new AbortController();
+    batchFetchOpeningHours(
+      eligible.map((p) => ({ id: p.id, lat: p.y, lng: p.x, name: p.name })),
+      controller.signal
+    ).then((hoursMap) => {
+      if (controller.signal.aborted) return;
+      for (const p of eligible) {
+        const hours = hoursMap.get(p.id);
+        updatePin(day.id, p.id, { openingHours: hours || "" });
+      }
+    });
+
+    return () => { controller.abort(); };
+  }, [day, updatePin]);
+
   if (!day) return null;
 
   const handleDragStart = (e: React.DragEvent, i: number) => {

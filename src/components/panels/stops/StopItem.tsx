@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
 import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
-import { getHoursForDate, getDayDate, fetchOpeningHours } from "@/lib/hours";
+import { getHoursForDate, getDayDate } from "@/lib/hours";
 import { useUIStore } from "@/store/uiStore";
 import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg } from "@/lib/styles";
 import type { Pin } from "@/types";
@@ -34,17 +34,6 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
   const dayIndex = trip.days.findIndex((d) => d.id === dayId);
   const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
   const dayHours = pin.openingHours && dayDate ? getHoursForDate(pin.openingHours, dayDate) : null;
-
-  // Fetch opening hours from Overpass if missing and pin has coordinates
-  useEffect(() => {
-    if (pin.openingHours || pin.openingHours === "" || !pin.y || !pin.x) return;
-    let cancelled = false;
-    fetchOpeningHours(pin.y, pin.x, pin.name).then((hours) => {
-      if (cancelled) return;
-      updatePin(dayId, pin.id, { openingHours: hours || "" });
-    });
-    return () => { cancelled = true; };
-  }, [pin.id, pin.openingHours, pin.y, pin.x, pin.name, dayId, updatePin]);
 
   const getCategoryBadge = () => {
     if (pin.foodType && FOOD_TYPE_META[pin.foodType]) return FOOD_TYPE_META[pin.foodType].emoji;

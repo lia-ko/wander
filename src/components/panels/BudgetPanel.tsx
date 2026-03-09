@@ -173,9 +173,15 @@ export default function BudgetPanel() {
             <span className={`text-xs ${textMuted(dark)}`}>{homeSymbol}</span>
             <input
               type="number"
+              min="0"
               placeholder="No limit"
               value={budget.totalBudget ?? ""}
-              onChange={(e) => setBudget({ totalBudget: e.target.value ? Number(e.target.value) : null })}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) { setBudget({ totalBudget: null }); return; }
+                const n = Number(v);
+                if (n >= 0) setBudget({ totalBudget: n });
+              }}
               aria-label="Total budget amount"
               className={`w-24 text-right text-xs px-2 py-1 rounded-lg outline-none ${
                 dark ? "bg-white/5 text-zinc-200 border border-white/10" : "bg-white border border-zinc-200 text-zinc-700"
@@ -256,6 +262,8 @@ export default function BudgetPanel() {
               </select>
               <input
                 type="number"
+                min="0"
+                step="any"
                 placeholder="Amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
