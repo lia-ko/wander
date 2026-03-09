@@ -367,7 +367,7 @@ export const useTripStore = create<TripState>()(
             if (!p) return t;
             return {
               ...t,
-              wishlist: [...(t.wishlist ?? []), { ...p, transport: null, travelTime: null }],
+              wishlist: [...(t.wishlist ?? []), { ...p, transport: null, travelTime: null, startTime: undefined }],
               days: t.days.map((dy) =>
                 dy.id === dayId ? { ...dy, pins: dy.pins.filter((px) => px.id !== pinId) } : dy
               ),

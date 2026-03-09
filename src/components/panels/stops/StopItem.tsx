@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
-import { getHoursForDate, getDayDate } from "@/lib/hours";
+import { getHoursForDate, getDayDate, parseTimeToMinutes, minutesToDisplay, checkTimeConflict } from "@/lib/hours";
 import { getPinBadge } from "@/lib/pinUtils";
 import { useUIStore } from "@/store/uiStore";
 import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg, formInput, saveBtn, cancelBtn, wishlistBtn, removeBtn, isSameLocation } from "@/lib/styles";
@@ -17,6 +17,8 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(pin.name);
   const [editNote, setEditNote] = useState(pin.note || "");
+  const [editingTime, setEditingTime] = useState(false);
+  const [timeValue, setTimeValue] = useState(pin.startTime || "");
   const removePin = useTripStore((s) => s.removePin);
   const updatePin = useTripStore((s) => s.updatePin);
   const movePinToWishlist = useTripStore((s) => s.movePinToWishlist);
@@ -35,6 +37,12 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
   const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
   const dayHours = pin.openingHours && dayDate ? getHoursForDate(pin.openingHours, dayDate) : null;
 
+  // Time conflict check
+  const startMins = parseTimeToMinutes(pin.startTime);
+  const conflict = startMins !== null
+    ? checkTimeConflict(startMins, pin.openingHours, dayDate)
+    : null;
+
   const badge = getPinBadge(pin);
 
   const handleSaveEdit = () => {
@@ -42,6 +50,17 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
       updatePin(dayId, pin.id, { name: editName.trim(), note: editNote.trim() || null });
     }
     setEditing(false);
+  };
+
+  const handleSaveTime = () => {
+    const trimmed = timeValue.trim();
+    if (trimmed && parseTimeToMinutes(trimmed) === null) {
+      // Invalid time — clear
+      updatePin(dayId, pin.id, { startTime: undefined });
+    } else {
+      updatePin(dayId, pin.id, { startTime: trimmed || undefined });
+    }
+    setEditingTime(false);
   };
 
   if (editing) {
@@ -93,7 +112,23 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
       onClick={() => { setSelectedPinId(isSelected ? null : pin.id); setExpanded(!expanded); }}
     >
       <div className="flex items-center gap-2.5">
-        {badge ? (
+        {/* Time badge or index */}
+        {pin.startTime && startMins !== null ? (
+          <div
+            className="flex flex-col items-center flex-shrink-0 w-6"
+            onClick={(e) => { e.stopPropagation(); setTimeValue(pin.startTime || ""); setEditingTime(true); }}
+            title="Click to edit time"
+          >
+            <span className={`text-[9px] font-semibold leading-tight ${
+              conflict === "closed" ? "text-red-400" : dark ? "text-[#DAA520]" : "text-[#4E8098]"
+            }`}>
+              {minutesToDisplay(startMins)}
+            </span>
+            {conflict === "closed" && (
+              <span className="text-[7px] text-red-400 leading-tight">closed</span>
+            )}
+          </div>
+        ) : badge ? (
           <span className="w-6 h-6 flex items-center justify-center text-sm">{badge}</span>
         ) : (
           <span
@@ -112,7 +147,7 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
           )}
           {(dayHours || (!dayDate && pin.openingHours && pin.openingHours !== "")) && (
             <div className={`text-[10px] mt-0.5 flex items-center gap-1 ${
-              dayHours?.toLowerCase().includes("closed")
+              dayHours?.toLowerCase().includes("closed") || conflict === "closed"
                 ? "text-red-400"
                 : textSubtle(dark)
             }`}>
@@ -120,6 +155,9 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="truncate">{dayHours || pin.openingHours}</span>
+              {conflict === "closed" && pin.startTime && (
+                <span className="text-red-400 font-medium flex-shrink-0">— arrives before open</span>
+              )}
             </div>
           )}
         </div>
@@ -136,6 +174,33 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
         )}
       </div>
 
+      {/* Inline time editor */}
+      {editingTime && (
+        <div className="flex items-center gap-1.5 mt-1.5 ml-8" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="time"
+            value={timeValue}
+            onChange={(e) => setTimeValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSaveTime(); if (e.key === "Escape") { setEditingTime(false); } }}
+            onBlur={handleSaveTime}
+            autoFocus
+            aria-label="Start time"
+            className={`px-2 py-1 rounded-lg text-xs outline-none ${
+              dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-[#4E8098]/8 text-zinc-900"
+            }`}
+          />
+          <button
+            onClick={() => { updatePin(dayId, pin.id, { startTime: undefined }); setEditingTime(false); }}
+            className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+              dark ? "text-zinc-500 hover:text-red-400" : "text-zinc-400 hover:text-red-500"
+            }`}
+            title="Clear time"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {expanded && (
         <div className="flex items-center gap-1 mt-2 ml-8" onClick={(e) => e.stopPropagation()}>
           <button
@@ -146,6 +211,19 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
           >
             Edit
           </button>
+          {!editingTime && (
+            <button
+              onClick={() => { setTimeValue(pin.startTime || ""); setEditingTime(true); }}
+              className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+                pin.startTime
+                  ? dark ? "bg-[#DAA520]/10 text-[#DAA520]" : "bg-[#4E8098]/10 text-[#4E8098]"
+                  : btnHover(dark)
+              }`}
+              title={pin.startTime ? "Edit start time" : "Set start time"}
+            >
+              {pin.startTime ? minutesToDisplay(startMins!) : "Set time"}
+            </button>
+          )}
           <button
             onClick={() => { movePinToWishlist(dayId, pin.id); setSelectedPinId(null); }}
             className={`text-xs px-2.5 py-1 rounded-md transition-colors ${

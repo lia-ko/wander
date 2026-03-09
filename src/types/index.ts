@@ -31,6 +31,9 @@ export type Pin = {
   duration?: string;
   cost?: number | null;
 
+  // Scheduling
+  startTime?: string;         // 24h format e.g. "09:00", "14:30"
+
   // Hours
   openingHours?: string | null;
 
