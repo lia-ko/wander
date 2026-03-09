@@ -70,13 +70,15 @@ export type Expense = {
   id: number;
   name: string;
   amount: number;
+  currency?: string;        // currency the expense was paid in (defaults to trip home currency)
   category: ExpenseCategory;
   dayId: number | null;
   note: string | null;
 };
 
 export type BudgetConfig = {
-  currency: string;
+  currency: string;           // home currency (budget/totals shown in this)
+  spendingCurrency?: string;  // local currency at destination (new expenses default to this)
   totalBudget: number | null;
 };
 
