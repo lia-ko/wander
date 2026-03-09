@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { textSubtle, dashedBorder } from "@/lib/styles";
 import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
 import { STOP_DRAG_TYPE } from "./stops/types";
@@ -14,7 +14,7 @@ import AddStopSearch from "./stops/AddStopSearch";
 export { STOP_DRAG_TYPE };
 
 export default function StopList() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const reorderPin = useTripStore((s) => s.reorderPin);
   const moveWishlistToDay = useTripStore((s) => s.moveWishlistToDay);

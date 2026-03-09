@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { searchCities, type GeoResult } from "@/lib/geocode";
 import { DAY_COLORS } from "@/store/constants";
 import { textMuted, textSubtle, hoverBg, inputFocus, btnHover } from "@/lib/styles";
@@ -25,8 +26,8 @@ function daysBetween(start: string, end: string): number {
 
 function NewTripModal() {
   const addTrip = useTripStore((s) => s.addTrip);
-  const setNewTripModalOpen = useTripStore((s) => s.setNewTripModalOpen);
   const dark = useTripStore((s) => s.darkMode);
+  const setNewTripModalOpen = useUIStore((s) => s.setNewTripModalOpen);
 
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("\u{1F30D}");

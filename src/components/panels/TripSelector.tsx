@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { textMuted, sectionBg, hoverBg, deleteBtn } from "@/lib/styles";
 import NewTripModal from "./NewTripModal";
 
@@ -10,13 +11,13 @@ export default function TripSelector() {
   const activeTripId = useTripStore((s) => s.activeTripId);
   const setActiveTripId = useTripStore((s) => s.setActiveTripId);
   const removeTrip = useTripStore((s) => s.removeTrip);
-  const toggleSidebar = useTripStore((s) => s.toggleSidebar);
-  const newTripModalOpen = useTripStore((s) => s.newTripModalOpen);
-  const setNewTripModalOpen = useTripStore((s) => s.setNewTripModalOpen);
   const dark = useTripStore((s) => s.darkMode);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const newTripModalOpen = useUIStore((s) => s.newTripModalOpen);
+  const setNewTripModalOpen = useUIStore((s) => s.setNewTripModalOpen);
   const [open, setOpen] = useState(false);
 
-  const activeTrip = trips.find((t) => t.id === activeTripId)!;
+  const activeTrip = trips.find((t) => t.id === activeTripId) ?? trips[0];
 
   return (
     <>

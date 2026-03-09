@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
 import { textMuted, textSubtle, sectionBg, softHoverBg, ghostBtn, ghostBtnSoft, deleteBtn } from "@/lib/styles";
 import type { Pin } from "@/types";
@@ -12,7 +12,7 @@ const WISHLIST_DRAG_TYPE = "application/wander-wishlist";
 function WishlistItem({ pin }: { pin: Pin }) {
   const removeFromWishlist = useTripStore((s) => s.removeFromWishlist);
   const moveWishlistToDay = useTripStore((s) => s.moveWishlistToDay);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
   const [showDayPicker, setShowDayPicker] = useState(false);
 
@@ -105,7 +105,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
 }
 
 export default function WishlistPanel() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const addToWishlist = useTripStore((s) => s.addToWishlist);
   const dark = useTripStore((s) => s.darkMode);
   const [searching, setSearching] = useState(false);

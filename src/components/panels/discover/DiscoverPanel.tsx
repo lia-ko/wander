@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { searchOverpass, type OverpassResult } from "@/lib/overpass";
 import { getDayDate } from "@/lib/hours";
@@ -11,19 +12,16 @@ import ResultItem from "./ResultItem";
 import { textMuted, textSubtle, hoverBg, accentActive } from "@/lib/styles";
 
 export default function DiscoverPanel() {
-  const discoverOpen = useTripStore((s) => s.discoverOpen);
-  const discoverTab = useTripStore((s) => s.discoverTab);
-  const toggleDiscover = useTripStore((s) => s.toggleDiscover);
-  const closeDiscover = useTripStore((s) => s.closeDiscover);
+  const discoverOpen = useUIStore((s) => s.discoverOpen);
+  const discoverTab = useUIStore((s) => s.discoverTab);
+  const toggleDiscover = useUIStore((s) => s.toggleDiscover);
+  const closeDiscover = useUIStore((s) => s.closeDiscover);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const addPin = useTripStore((s) => s.addPin);
   const addToWishlist = useTripStore((s) => s.addToWishlist);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const sidebarWidth = useTripStore((s) => s.sidebarWidth);
-  const day = useTripStore((s) => {
-    const tr = s.trips.find((t) => t.id === s.activeTripId)!;
-    return tr.days.find((d) => d.id === s.activeDayId)!;
-  });
+  const day = useTripStore(selectActiveDay);
   const dark = useTripStore((s) => s.darkMode);
 
   const [searchQuery, setSearchQuery] = useState("");

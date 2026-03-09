@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { exportTripPdf } from "@/components/export/exportPdf";
 import { toast } from "@/store/toastStore";
 import { accentActive, inactiveBtn } from "@/lib/styles";
@@ -22,12 +23,12 @@ function validateTrips(data: unknown): data is Trip[] {
 }
 
 export default function BottomActionBar() {
-  const toggleDiscover = useTripStore((s) => s.toggleDiscover);
-  const discoverOpen = useTripStore((s) => s.discoverOpen);
-  const discoverTab = useTripStore((s) => s.discoverTab);
-  const sidebarView = useTripStore((s) => s.sidebarView);
-  const setSidebarView = useTripStore((s) => s.setSidebarView);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const toggleDiscover = useUIStore((s) => s.toggleDiscover);
+  const discoverOpen = useUIStore((s) => s.discoverOpen);
+  const discoverTab = useUIStore((s) => s.discoverTab);
+  const sidebarView = useUIStore((s) => s.sidebarView);
+  const setSidebarView = useUIStore((s) => s.setSidebarView);
+  const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

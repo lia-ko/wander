@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { searchPlaces, type GeoResult } from "@/lib/geocode";
 import { textMuted, textSubtle, sectionBg, hoverBg, inputBase, ghostBtn } from "@/lib/styles";
 
@@ -13,7 +13,7 @@ export default function PlaceSearch({
   onCancel: () => void;
 }) {
   const dark = useTripStore((s) => s.darkMode);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const center = trip?.center ?? { lat: 0, lng: 0 };
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeoResult[]>([]);

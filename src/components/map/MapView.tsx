@@ -4,7 +4,8 @@ import { useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import "leaflet/dist/leaflet.css";
 
@@ -95,10 +96,10 @@ function DayCluster({ dayId, color, isActive, children }: {
 }
 
 function MapPins() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const activeDayId = useTripStore((s) => s.activeDayId);
-  const selectedPinId = useTripStore((s) => s.selectedPinId);
-  const setSelectedPinId = useTripStore((s) => s.setSelectedPinId);
+  const selectedPinId = useUIStore((s) => s.selectedPinId);
+  const setSelectedPinId = useUIStore((s) => s.setSelectedPinId);
 
   return (
     <>
@@ -169,7 +170,7 @@ const WALK_RINGS = [
 ];
 
 function WalkingRadius() {
-  const radiusCenter = useTripStore((s) => s.radiusCenter);
+  const radiusCenter = useUIStore((s) => s.radiusCenter);
   const dark = useTripStore((s) => s.darkMode);
 
   if (!radiusCenter) return null;
@@ -218,7 +219,7 @@ function WalkingRadius() {
 
 function MapSync() {
   const map = useMap();
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const activeTripId = useTripStore((s) => s.activeTripId);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const prevTripId = useRef(activeTripId);
@@ -275,7 +276,7 @@ function MapSync() {
 
 export default function MapView() {
   const dark = useTripStore((s) => s.darkMode);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const center = trip?.center ?? { lat: 0, lng: 0 };
 
   const lightTiles = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";

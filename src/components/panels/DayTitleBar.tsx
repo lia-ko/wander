@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { getDayDate, formatDayDate } from "@/lib/hours";
 import { textMuted } from "@/lib/styles";
 
 export default function DayTitleBar() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const updateDay = useTripStore((s) => s.updateDay);
   const updateTrip = useTripStore((s) => s.updateTrip);

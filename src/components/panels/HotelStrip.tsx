@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import { ghostBtnSoft } from "@/lib/styles";
 import HotelSearch from "./hotels/HotelSearch";
 import HotelItem from "./hotels/HotelItem";
 
 export default function HotelStrip() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const addHotel = useTripStore((s) => s.addHotel);
   const dark = useTripStore((s) => s.darkMode);
   const [searching, setSearching] = useState(false);

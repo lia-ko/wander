@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
 import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
 import { getHoursForDate, getDayDate, fetchOpeningHours } from "@/lib/hours";
+import { useUIStore } from "@/store/uiStore";
 import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg } from "@/lib/styles";
 import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
@@ -20,15 +21,12 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
   const updatePin = useTripStore((s) => s.updatePin);
   const movePinToWishlist = useTripStore((s) => s.movePinToWishlist);
   const dark = useTripStore((s) => s.darkMode);
-  const setSelectedPinId = useTripStore((s) => s.setSelectedPinId);
-  const selectedPinId = useTripStore((s) => s.selectedPinId);
-  const radiusCenter = useTripStore((s) => s.radiusCenter);
-  const setRadiusCenter = useTripStore((s) => s.setRadiusCenter);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
-  const day = useTripStore((s) => {
-    const tr = s.trips.find((t) => t.id === s.activeTripId)!;
-    return tr.days.find((d) => d.id === s.activeDayId)!;
-  });
+  const setSelectedPinId = useUIStore((s) => s.setSelectedPinId);
+  const selectedPinId = useUIStore((s) => s.selectedPinId);
+  const radiusCenter = useUIStore((s) => s.radiusCenter);
+  const setRadiusCenter = useUIStore((s) => s.setRadiusCenter);
+  const trip = useTripStore(selectActiveTrip);
+  const day = useTripStore(selectActiveDay);
   const isSelected = selectedPinId === pin.id;
   const pinCount = day.pins.length;
 

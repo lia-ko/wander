@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import type { Hotel } from "@/types";
 import { textMuted, textSubtle, inputBase, ghostBtn, deleteBtn } from "@/lib/styles";
@@ -9,8 +10,8 @@ import { textMuted, textSubtle, inputBase, ghostBtn, deleteBtn } from "@/lib/sty
 function HotelItem({ hotel }: { hotel: Hotel }) {
   const removeHotel = useTripStore((s) => s.removeHotel);
   const updateHotel = useTripStore((s) => s.updateHotel);
-  const radiusCenter = useTripStore((s) => s.radiusCenter);
-  const setRadiusCenter = useTripStore((s) => s.setRadiusCenter);
+  const radiusCenter = useUIStore((s) => s.radiusCenter);
+  const setRadiusCenter = useUIStore((s) => s.setRadiusCenter);
   const dark = useTripStore((s) => s.darkMode);
   const [expanded, setExpanded] = useState(false);
   const [checkIn, setCheckIn] = useState(hotel.checkIn || "");

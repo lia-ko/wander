@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { EXPENSE_CATEGORY_META, CURRENCIES } from "@/store/constants";
 import { textMuted, textSubtle, textStrong } from "@/lib/styles";
@@ -18,7 +18,7 @@ function fmtAmt(n: number) {
 }
 
 export default function BudgetPanel() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const setBudget = useTripStore((s) => s.setBudget);
   const addExpense = useTripStore((s) => s.addExpense);
   const updateExpense = useTripStore((s) => s.updateExpense);
@@ -336,7 +336,7 @@ export default function BudgetPanel() {
             const dayLabel = exp.dayId ? trip.days.find((d) => d.id === exp.dayId)?.label : null;
             const expIsForeign = exp.currency && exp.currency !== homeCurrency;
             const converted = expIsForeign ? toHome(exp) : null;
-            const foreignSymbol = expIsForeign ? symbolFor(exp.currency!) : null;
+            const foreignSymbol = expIsForeign ? symbolFor(exp.currency ?? homeCurrency) : null;
 
             return (
               <div

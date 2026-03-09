@@ -1,14 +1,15 @@
 "use client";
 
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { hoverBg } from "@/lib/styles";
 import GlassPanel from "@/components/ui/GlassPanel";
 
 export default function CollapsedSidebar() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
-  const toggleSidebar = useTripStore((s) => s.toggleSidebar);
-  const toggleDiscover = useTripStore((s) => s.toggleDiscover);
+  const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const toggleDiscover = useUIStore((s) => s.toggleDiscover);
 
   return (
     <GlassPanel className="absolute top-4 left-4 bottom-4 w-[52px] z-20 flex flex-col items-center py-3 gap-3">

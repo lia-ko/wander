@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useEffect } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import GlassPanel from "@/components/ui/GlassPanel";
 import TripSelector from "./TripSelector";
 import HotelStrip from "./HotelStrip";
@@ -15,10 +16,10 @@ import UndoBar from "@/components/ui/UndoBar";
 import CollapsedSidebar from "./CollapsedSidebar";
 
 export default function MainPanel() {
-  const collapsed = useTripStore((s) => s.sidebarCollapsed);
+  const collapsed = useUIStore((s) => s.sidebarCollapsed);
   const sidebarWidth = useTripStore((s) => s.sidebarWidth);
   const setSidebarWidth = useTripStore((s) => s.setSidebarWidth);
-  const sidebarView = useTripStore((s) => s.sidebarView);
+  const sidebarView = useUIStore((s) => s.sidebarView);
   const dark = useTripStore((s) => s.darkMode);
   const dragging = useRef(false);
   const startX = useRef(0);
