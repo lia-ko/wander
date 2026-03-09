@@ -1,28 +1,27 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { searchOverpass, type OverpassResult } from "@/lib/overpass";
 import { getDayDate } from "@/lib/hours";
 import type { DiscoverTab, Pin } from "@/types";
 import { mapOsmToFoodType, mapOsmToAttrType, formatCuisine } from "./helpers";
 import ResultItem from "./ResultItem";
+import { textMuted, textSubtle, hoverBg, accentActive, isSameLocation } from "@/lib/styles";
 
 export default function DiscoverPanel() {
-  const discoverOpen = useTripStore((s) => s.discoverOpen);
-  const discoverTab = useTripStore((s) => s.discoverTab);
-  const toggleDiscover = useTripStore((s) => s.toggleDiscover);
-  const closeDiscover = useTripStore((s) => s.closeDiscover);
+  const discoverOpen = useUIStore((s) => s.discoverOpen);
+  const discoverTab = useUIStore((s) => s.discoverTab);
+  const toggleDiscover = useUIStore((s) => s.toggleDiscover);
+  const closeDiscover = useUIStore((s) => s.closeDiscover);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const addPin = useTripStore((s) => s.addPin);
   const addToWishlist = useTripStore((s) => s.addToWishlist);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const sidebarWidth = useTripStore((s) => s.sidebarWidth);
-  const day = useTripStore((s) => {
-    const tr = s.trips.find((t) => t.id === s.activeTripId)!;
-    return tr.days.find((d) => d.id === s.activeDayId)!;
-  });
+  const day = useTripStore(selectActiveDay);
   const dark = useTripStore((s) => s.darkMode);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,8 +32,8 @@ export default function DiscoverPanel() {
   const cacheRef = useRef<Map<string, OverpassResult[]>>(new Map());
   const abortRef = useRef<AbortController | null>(null);
 
-  const allPins: Pin[] = trip.days.flatMap((d) => d.pins).filter((p) => p.y !== 0 && p.x !== 0);
-  const dayPins: Pin[] = (day?.pins ?? []).filter((p) => p.y !== 0 && p.x !== 0);
+  const allPins = useMemo<Pin[]>(() => trip.days.flatMap((d) => d.pins).filter((p) => p.y !== 0 && p.x !== 0), [trip.days]);
+  const dayPins = useMemo<Pin[]>(() => (day?.pins ?? []).filter((p) => p.y !== 0 && p.x !== 0), [day?.pins]);
 
   const effectiveDefault: number | string | null =
     dayPins.length > 0 ? dayPins[0].id :
@@ -99,11 +98,11 @@ export default function DiscoverPanel() {
 
   const isAdded = (result: OverpassResult) => {
     if (!day) return false;
-    return day.pins.some((p) => Math.abs(p.y - result.lat) < 0.0001 && Math.abs(p.x - result.lng) < 0.0001);
+    return day.pins.some((p) => isSameLocation(p.y, p.x, result.lat, result.lng));
   };
 
   const isWishlisted = (result: OverpassResult) => {
-    return (trip.wishlist ?? []).some((p) => Math.abs(p.y - result.lat) < 0.0001 && Math.abs(p.x - result.lng) < 0.0001);
+    return (trip.wishlist ?? []).some((p) => isSameLocation(p.y, p.x, result.lat, result.lng));
   };
 
   const buildPinData = (result: OverpassResult) => {
@@ -156,7 +155,7 @@ export default function DiscoverPanel() {
               onClick={() => toggleDiscover(tab.key)}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 discoverTab === tab.key
-                  ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+                  ? accentActive(dark)
                   : dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-500 hover:bg-[#4E8098]/8"
               }`}
             >
@@ -166,7 +165,8 @@ export default function DiscoverPanel() {
         </div>
         <button
           onClick={closeDiscover}
-          className={`p-1 rounded-lg transition-colors ${dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"}`}
+          className={`p-1 rounded-lg transition-colors ${hoverBg(dark)}`}
+          aria-label="Close discover panel"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -177,7 +177,7 @@ export default function DiscoverPanel() {
       {/* Search near + filter */}
       <div className="px-3 py-2 space-y-2">
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-medium flex-shrink-0 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <span className={`text-xs font-medium flex-shrink-0 ${textMuted(dark)}`}>
             Search near:
           </span>
           <select
@@ -187,6 +187,7 @@ export default function DiscoverPanel() {
               setNearPinId(v === "trip-center" || v.startsWith("hotel-") ? v : Number(v));
             }}
             disabled={!hasSearchCenter}
+            aria-label="Search near location"
             className={`flex-1 min-w-0 text-xs px-2 py-1.5 rounded-lg outline-none truncate ${
               dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-[#4E8098]/8 text-zinc-900"
             } ${!hasSearchCenter ? "opacity-50" : ""}`}
@@ -222,6 +223,7 @@ export default function DiscoverPanel() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
             placeholder="Filter by name..."
+            aria-label="Filter results by name"
             disabled={!hasSearchCenter}
             className={`flex-1 px-3 py-2 rounded-xl text-sm outline-none transition-colors ${
               dark ? "bg-[#F5E8D8]/10 placeholder:text-zinc-500 focus:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 placeholder:text-zinc-400 focus:bg-black/[.08]"
@@ -241,7 +243,7 @@ export default function DiscoverPanel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: day?.color }} />
-            <span className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <span className={`text-xs ${textMuted(dark)}`}>
               Adding to {day?.label}
             </span>
           </div>
@@ -256,7 +258,7 @@ export default function DiscoverPanel() {
       {/* Results */}
       <div className="flex-1 overflow-y-auto px-1 pb-2 scrollbar-hide">
         {!hasSearchCenter && (
-          <div className={`text-center py-12 px-6 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <div className={`text-center py-12 px-6 ${textMuted(dark)}`}>
             <div className="text-2xl mb-3">{"\u{1F4CD}"}</div>
             <div className="text-sm font-medium mb-1">No search location set</div>
             <div className="text-xs leading-relaxed">
@@ -266,14 +268,14 @@ export default function DiscoverPanel() {
         )}
 
         {hasSearchCenter && loading && (
-          <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+          <div className={`text-center py-8 text-sm ${textSubtle(dark)}`}>
             <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
             Searching nearby places...
           </div>
         )}
 
         {hasSearchCenter && !loading && searched && results.length === 0 && (
-          <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+          <div className={`text-center py-8 text-sm ${textSubtle(dark)}`}>
             No places found nearby. Try a different location or search term.
           </div>
         )}

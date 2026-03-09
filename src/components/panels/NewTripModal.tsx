@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { searchCities, type GeoResult } from "@/lib/geocode";
 import { DAY_COLORS } from "@/store/constants";
+import { textMuted, textSubtle, hoverBg, inputFocus, btnHover, SEARCH_DEBOUNCE_MS } from "@/lib/styles";
 
 function formatDateRange(start: string, end: string): string {
   const s = new Date(start + "T12:00:00");
@@ -24,8 +26,8 @@ function daysBetween(start: string, end: string): number {
 
 function NewTripModal() {
   const addTrip = useTripStore((s) => s.addTrip);
-  const setNewTripModalOpen = useTripStore((s) => s.setNewTripModalOpen);
   const dark = useTripStore((s) => s.darkMode);
+  const setNewTripModalOpen = useUIStore((s) => s.setNewTripModalOpen);
 
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("\u{1F30D}");
@@ -56,7 +58,7 @@ function NewTripModal() {
         setDestResults(results);
         setSearching(false);
       }
-    }, 400);
+    }, SEARCH_DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       abortRef.current?.abort();
@@ -73,8 +75,10 @@ function NewTripModal() {
   const numDays = startDate && endDate ? daysBetween(startDate, endDate) : 0;
   const dateLabel = startDate && endDate ? formatDateRange(startDate, endDate) : "";
 
+  const datesValid = startDate && endDate && endDate >= startDate;
+
   const handleCreate = () => {
-    if (!name.trim() || !selectedDest || !startDate || !endDate) return;
+    if (!name.trim() || !selectedDest || !startDate || !endDate || !datesValid) return;
 
     const genId = () => Date.now() + Math.floor(Math.random() * 10000);
     const count = daysBetween(startDate, endDate);
@@ -110,20 +114,20 @@ function NewTripModal() {
   };
 
   const inputClass = `w-full px-3 py-2 rounded-xl text-sm outline-none transition-colors ${
-    dark ? "bg-[#F5E8D8]/10 placeholder:text-zinc-500 focus:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 placeholder:text-zinc-400 focus:bg-black/[.08]"
+    inputFocus(dark)
   }`;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="new-trip-heading">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setNewTripModalOpen(false)} />
       <div className={`relative w-[380px] rounded-2xl border shadow-2xl p-5 ${
         dark ? "bg-[#1C1C1C] border-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white border-[#4E8098]/10 text-zinc-900"
       }`}>
-        <h2 className="text-lg font-bold mb-4">New Trip</h2>
+        <h2 id="new-trip-heading" className="text-lg font-bold mb-4">New Trip</h2>
 
         {/* Destination search */}
         <div className="mb-3 relative">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Destination</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Destination</label>
           <input
             type="text"
             value={destQuery}
@@ -144,13 +148,13 @@ function NewTripModal() {
                   key={r.placeId}
                   onClick={() => handleSelectDest(r)}
                   className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors ${
-                    dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+                    hoverBg(dark)
                   }`}
                 >
                   <span className="text-base">&#128205;</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{r.name}</div>
-                    <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{r.displayName}</div>
+                    <div className={`text-xs truncate ${textMuted(dark)}`}>{r.displayName}</div>
                   </div>
                 </button>
               ))}
@@ -165,7 +169,7 @@ function NewTripModal() {
 
         {/* Emoji picker */}
         <div className="mb-3">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Icon</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Icon</label>
           <div className="flex flex-wrap gap-1.5">
             {emojis.map((e) => (
               <button
@@ -174,7 +178,7 @@ function NewTripModal() {
                 className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
                   emoji === e
                     ? "ring-2 ring-[#4E8098] scale-110"
-                    : dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+                    : hoverBg(dark)
                 }`}
               >
                 {e}
@@ -185,7 +189,7 @@ function NewTripModal() {
 
         {/* Name */}
         <div className="mb-3">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Trip Name</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Trip Name</label>
           <input
             type="text"
             value={name}
@@ -198,7 +202,7 @@ function NewTripModal() {
 
         {/* Date range */}
         <div className="mb-5">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Dates</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Dates</label>
           <div className="flex gap-2 items-center">
             <input
               type="date"
@@ -207,19 +211,24 @@ function NewTripModal() {
                 setStartDate(e.target.value);
                 if (!endDate || e.target.value > endDate) setEndDate(e.target.value);
               }}
+              aria-label="Start date"
               className={`flex-1 ${inputClass}`}
             />
-            <span className={`text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>to</span>
+            <span className={`text-xs ${textSubtle(dark)}`}>to</span>
             <input
               type="date"
               value={endDate}
               min={startDate}
               onChange={(e) => setEndDate(e.target.value)}
+              aria-label="End date"
               className={`flex-1 ${inputClass}`}
             />
           </div>
-          {numDays > 0 && (
-            <div className={`text-xs mt-1.5 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          {startDate && endDate && endDate < startDate && (
+            <div className="text-xs mt-1.5 text-red-500">End date must be on or after start date</div>
+          )}
+          {numDays > 0 && datesValid && (
+            <div className={`text-xs mt-1.5 ${textMuted(dark)}`}>
               {dateLabel} &middot; {numDays} {numDays === 1 ? "day" : "days"}
             </div>
           )}
@@ -229,7 +238,7 @@ function NewTripModal() {
         <div className="flex gap-2">
           <button
             onClick={handleCreate}
-            disabled={!name.trim() || !selectedDest || !startDate || !endDate}
+            disabled={!name.trim() || !selectedDest || !datesValid}
             className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#4E8098] hover:bg-[#3D6B80] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Create Trip
@@ -237,7 +246,7 @@ function NewTripModal() {
           <button
             onClick={() => setNewTripModalOpen(false)}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-              dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
+              btnHover(dark)
             }`}
           >
             Cancel

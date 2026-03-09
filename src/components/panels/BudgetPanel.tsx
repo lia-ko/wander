@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useState, useEffect, useMemo } from "react";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { EXPENSE_CATEGORY_META, CURRENCIES } from "@/store/constants";
+import { textMuted, textSubtle, textStrong, formInputBordered, formSelect } from "@/lib/styles";
 import type { ExpenseCategory, Expense } from "@/types";
 
 const categories = Object.keys(EXPENSE_CATEGORY_META) as ExpenseCategory[];
@@ -17,7 +18,7 @@ function fmtAmt(n: number) {
 }
 
 export default function BudgetPanel() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const setBudget = useTripStore((s) => s.setBudget);
   const addExpense = useTripStore((s) => s.addExpense);
   const updateExpense = useTripStore((s) => s.updateExpense);
@@ -26,6 +27,7 @@ export default function BudgetPanel() {
 
   const fetchRates = useRatesStore((s) => s.fetchRates);
   const convert = useRatesStore((s) => s.convert);
+  const rates = useRatesStore((s) => s.rates);
   const ratesLoading = useRatesStore((s) => s.loading);
 
   const [adding, setAdding] = useState(false);
@@ -46,14 +48,15 @@ export default function BudgetPanel() {
   const isForeignTrip = spendingCurrency !== homeCurrency;
 
   // Fetch rates for home currency + spending currency + any used foreign currencies
+  const expenseCurrencyKey = useMemo(
+    () => [...new Set(expenses.map((e) => e.currency).filter((c): c is string => !!c && c !== homeCurrency))].sort().join(","),
+    [expenses, homeCurrency]
+  );
   useEffect(() => {
     fetchRates(homeCurrency);
     if (isForeignTrip) fetchRates(spendingCurrency);
-    const foreignCurrencies = new Set(
-      expenses.map((e) => e.currency).filter((c): c is string => !!c && c !== homeCurrency)
-    );
-    foreignCurrencies.forEach((c) => fetchRates(c));
-  }, [homeCurrency, spendingCurrency, isForeignTrip, expenses, fetchRates]);
+    expenseCurrencyKey.split(",").filter(Boolean).forEach((c) => fetchRates(c));
+  }, [homeCurrency, spendingCurrency, isForeignTrip, expenseCurrencyKey, fetchRates]);
 
   /** Convert an expense amount to home currency. Returns null if rate unavailable. */
   const toHome = (exp: Expense): number | null => {
@@ -65,11 +68,18 @@ export default function BudgetPanel() {
   const totalSpent = expenses.reduce((sum, e) => sum + (toHome(e) ?? 0), 0);
   const hasUnconverted = expenses.some((e) => toHome(e) === null);
 
-  const byCategory = categories.map((cat) => ({
-    cat,
-    ...EXPENSE_CATEGORY_META[cat],
-    total: expenses.filter((e) => e.category === cat).reduce((s, e) => s + (toHome(e) ?? 0), 0),
-  }));
+  const byCategory = useMemo(() => {
+    const toHomeMemo = (exp: Expense) => {
+      const from = exp.currency ?? homeCurrency;
+      if (from === homeCurrency) return exp.amount;
+      return convert(exp.amount, from, homeCurrency);
+    };
+    return categories.map((cat) => ({
+      cat,
+      ...EXPENSE_CATEGORY_META[cat],
+      total: expenses.filter((e) => e.category === cat).reduce((s, e) => s + (toHomeMemo(e) ?? 0), 0),
+    }));
+  }, [expenses, homeCurrency, rates, convert]);
 
   // Live rate display
   const liveRate = isForeignTrip ? convert(1, spendingCurrency, homeCurrency) : null;
@@ -116,15 +126,11 @@ export default function BudgetPanel() {
     setAdding(true);
   };
 
-  const inputClass = `w-full px-2.5 py-1.5 rounded-lg text-xs outline-none ${
-    dark ? "bg-white/5 text-zinc-200 border border-white/10 focus:border-[#DAA520]/40" : "bg-white border border-zinc-200 text-zinc-800 focus:border-[#4E8098]/40"
-  }`;
-
-  const selectClass = `text-xs rounded-lg px-2 py-1 outline-none ${
-    dark ? "bg-white/5 text-zinc-300 border border-white/10" : "bg-white border border-zinc-200 text-zinc-700"
-  }`;
+  const inputClass = formInputBordered(dark);
+  const selectClass = formSelect(dark);
 
   const isLoadingRates = Object.keys(ratesLoading).length > 0;
+  const dayLabelMap = useMemo(() => new Map(trip.days.map((d) => [d.id, d.label])), [trip.days]);
 
   return (
     <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-3">
@@ -134,18 +140,20 @@ export default function BudgetPanel() {
           <select
             value={homeCurrency}
             onChange={(e) => setBudget({ currency: e.target.value })}
+            aria-label="Home currency"
             className={`${selectClass} flex-1 min-w-0`}
           >
             {CURRENCIES.map((c) => (
               <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>
             ))}
           </select>
-          <svg className={`w-3.5 h-3.5 flex-shrink-0 ${dark ? "text-zinc-500" : "text-zinc-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className={`w-3.5 h-3.5 flex-shrink-0 ${textSubtle(dark)}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
           </svg>
           <select
             value={spendingCurrency}
             onChange={(e) => setBudget({ spendingCurrency: e.target.value === homeCurrency ? undefined : e.target.value })}
+            aria-label="Spending currency"
             className={`${selectClass} flex-1 min-w-0`}
           >
             {CURRENCIES.map((c) => (
@@ -154,7 +162,7 @@ export default function BudgetPanel() {
           </select>
         </div>
         {isForeignTrip && (
-          <div className={`text-[10px] text-center ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+          <div className={`text-[10px] text-center ${textSubtle(dark)}`}>
             {isLoadingRates ? "Fetching rate..." : liveRate !== null
               ? `1 ${spendingCurrency} = ${homeSymbol}${fmtAmt(liveRate)} ${homeCurrency}`
               : "Rate unavailable"}
@@ -165,14 +173,21 @@ export default function BudgetPanel() {
       {/* Total budget card */}
       <div className={`rounded-xl p-3 ${dark ? "bg-white/5" : "bg-zinc-50"}`}>
         <div className="flex items-center justify-between mb-2">
-          <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Total Budget</span>
+          <span className={`text-xs font-medium ${textMuted(dark)}`}>Total Budget</span>
           <div className="flex items-center gap-1">
-            <span className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{homeSymbol}</span>
+            <span className={`text-xs ${textMuted(dark)}`}>{homeSymbol}</span>
             <input
               type="number"
+              min="0"
               placeholder="No limit"
               value={budget.totalBudget ?? ""}
-              onChange={(e) => setBudget({ totalBudget: e.target.value ? Number(e.target.value) : null })}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (!v) { setBudget({ totalBudget: null }); return; }
+                const n = Number(v);
+                if (n >= 0) setBudget({ totalBudget: n });
+              }}
+              aria-label="Total budget amount"
               className={`w-24 text-right text-xs px-2 py-1 rounded-lg outline-none ${
                 dark ? "bg-white/5 text-zinc-200 border border-white/10" : "bg-white border border-zinc-200 text-zinc-700"
               }`}
@@ -191,7 +206,7 @@ export default function BudgetPanel() {
             )}
           </div>
           {budget.totalBudget !== null && (
-            <span className={`text-xs ${totalSpent > budget.totalBudget ? "text-red-500" : dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <span className={`text-xs ${totalSpent > budget.totalBudget ? "text-red-500" : textMuted(dark)}`}>
               / {homeSymbol}{budget.totalBudget.toLocaleString()}
             </span>
           )}
@@ -211,19 +226,19 @@ export default function BudgetPanel() {
 
       {/* Category breakdown */}
       <div className={`rounded-xl p-3 ${dark ? "bg-white/5" : "bg-zinc-50"}`}>
-        <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>By Category</span>
+        <span className={`text-xs font-medium ${textMuted(dark)}`}>By Category</span>
         <div className="mt-2 flex flex-col gap-1.5">
           {byCategory.filter((c) => c.total > 0).map((c) => (
             <div key={c.cat} className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color }} />
               <span className={`text-xs flex-1 ${dark ? "text-zinc-300" : "text-zinc-600"}`}>{c.label}</span>
-              <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+              <span className={`text-xs font-semibold ${textStrong(dark)}`}>
                 {homeSymbol}{fmtAmt(c.total)}
               </span>
             </div>
           ))}
           {byCategory.every((c) => c.total === 0) && (
-            <span className={`text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>No expenses yet</span>
+            <span className={`text-xs ${textSubtle(dark)}`}>No expenses yet</span>
           )}
         </div>
       </div>
@@ -231,15 +246,16 @@ export default function BudgetPanel() {
       {/* Add/Edit expense form */}
       {adding ? (
         <div className={`rounded-xl p-3 flex flex-col gap-2 ${dark ? "bg-white/5" : "bg-zinc-50"}`}>
-          <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+          <span className={`text-xs font-semibold ${textStrong(dark)}`}>
             {editingId !== null ? "Edit Expense" : "New Expense"}
           </span>
-          <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+          <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} aria-label="Expense name" className={inputClass} />
           <div className="flex gap-2">
             <div className="flex items-center gap-1 flex-1">
               <select
                 value={expCurrency}
                 onChange={(e) => setExpCurrency(e.target.value)}
+                aria-label="Expense currency"
                 className={`text-xs rounded-lg px-1.5 py-1.5 outline-none flex-shrink-0 ${
                   dark ? "bg-white/5 text-zinc-300 border border-white/10" : "bg-white border border-zinc-200 text-zinc-700"
                 }`}
@@ -251,13 +267,16 @@ export default function BudgetPanel() {
               </select>
               <input
                 type="number"
+                min="0"
+                step="any"
                 placeholder="Amount"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
+                aria-label="Expense amount"
                 className={inputClass}
               />
             </div>
-            <select value={category} onChange={(e) => setCategory(e.target.value as ExpenseCategory)} className={inputClass} style={{ width: "auto" }}>
+            <select value={category} onChange={(e) => setCategory(e.target.value as ExpenseCategory)} aria-label="Expense category" className={inputClass} style={{ width: "auto" }}>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>{EXPENSE_CATEGORY_META[cat].label}</option>
               ))}
@@ -265,7 +284,7 @@ export default function BudgetPanel() {
           </div>
           {/* Live conversion preview */}
           {expCurrency && expCurrency !== homeCurrency && amount && !isNaN(parseFloat(amount)) && (
-            <div className={`text-[10px] px-1 flex items-center gap-1 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+            <div className={`text-[10px] px-1 flex items-center gap-1 ${textSubtle(dark)}`}>
               <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
@@ -280,6 +299,7 @@ export default function BudgetPanel() {
           <select
             value={dayId ?? ""}
             onChange={(e) => setDayId(e.target.value ? Number(e.target.value) : null)}
+            aria-label="Assign to day"
             className={inputClass}
           >
             <option value="">No specific day</option>
@@ -287,7 +307,7 @@ export default function BudgetPanel() {
               <option key={d.id} value={d.id}>{d.label}</option>
             ))}
           </select>
-          <input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
+          <input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="Expense note" className={inputClass} />
           <div className="flex gap-2">
             <button
               onClick={handleSave}
@@ -321,15 +341,15 @@ export default function BudgetPanel() {
       {/* Expense list */}
       {expenses.length > 0 && (
         <div className="flex flex-col gap-1">
-          <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <span className={`text-xs font-medium ${textMuted(dark)}`}>
             Expenses ({expenses.length})
           </span>
           {expenses.map((exp) => {
             const meta = EXPENSE_CATEGORY_META[exp.category];
-            const dayLabel = exp.dayId ? trip.days.find((d) => d.id === exp.dayId)?.label : null;
+            const dayLabel = exp.dayId ? dayLabelMap.get(exp.dayId) ?? null : null;
             const expIsForeign = exp.currency && exp.currency !== homeCurrency;
             const converted = expIsForeign ? toHome(exp) : null;
-            const foreignSymbol = expIsForeign ? symbolFor(exp.currency!) : null;
+            const foreignSymbol = expIsForeign ? symbolFor(exp.currency ?? homeCurrency) : null;
 
             return (
               <div
@@ -340,8 +360,8 @@ export default function BudgetPanel() {
               >
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
                 <div className="flex-1 min-w-0">
-                  <div className={`text-xs font-medium truncate ${dark ? "text-zinc-200" : "text-zinc-700"}`}>{exp.name}</div>
-                  <div className={`text-[10px] flex items-center gap-1 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+                  <div className={`text-xs font-medium truncate ${textStrong(dark)}`}>{exp.name}</div>
+                  <div className={`text-[10px] flex items-center gap-1 ${textSubtle(dark)}`}>
                     <span>{meta.label}</span>
                     {dayLabel && <><span>·</span><span>{dayLabel}</span></>}
                     {exp.note && <><span>·</span><span className="truncate">{exp.note}</span></>}
@@ -350,15 +370,15 @@ export default function BudgetPanel() {
                 <div className="flex flex-col items-end flex-shrink-0">
                   {expIsForeign ? (
                     <>
-                      <span className={`text-[10px] ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+                      <span className={`text-[10px] ${textMuted(dark)}`}>
                         {foreignSymbol}{fmtAmt(exp.amount)}
                       </span>
-                      <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+                      <span className={`text-xs font-semibold ${textStrong(dark)}`}>
                         {converted !== null ? `${homeSymbol}${fmtAmt(converted)}` : "..."}
                       </span>
                     </>
                   ) : (
-                    <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+                    <span className={`text-xs font-semibold ${textStrong(dark)}`}>
                       {homeSymbol}{fmtAmt(exp.amount)}
                     </span>
                   )}
@@ -366,6 +386,7 @@ export default function BudgetPanel() {
                 <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => startEdit(exp)}
+                    aria-label={`Edit ${exp.name}`}
                     className={`p-1 rounded ${dark ? "hover:bg-white/10 text-zinc-400" : "hover:bg-zinc-200 text-zinc-500"}`}
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,6 +395,7 @@ export default function BudgetPanel() {
                   </button>
                   <button
                     onClick={() => removeExpense(exp.id)}
+                    aria-label={`Delete ${exp.name}`}
                     className={`p-1 rounded ${dark ? "hover:bg-red-500/20 text-zinc-400" : "hover:bg-red-50 text-zinc-500"}`}
                   >
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

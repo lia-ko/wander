@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { ghostBtn, dashedBorder } from "@/lib/styles";
 import type { Pin, TransportKey } from "@/types";
 
 function getGoogleMapsUrl(from: Pin, to: Pin, mode: string): string {
@@ -36,7 +37,7 @@ export default function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; pr
     <div className="mx-2 my-1">
       {/* Dashed connector */}
       <div className="ml-3 mb-1">
-        <div className={`w-px h-3 border-l border-dashed ${dark ? "border-[#F5E8D8]/20" : "border-[#4E8098]/15"}`} style={{ marginLeft: "8px" }} />
+        <div className={`w-px h-3 border-l border-dashed ${dashedBorder(dark)}`} style={{ marginLeft: "8px" }} />
       </div>
 
       <div className={`rounded-xl overflow-hidden ${dark ? "bg-[#F5E8D8]/6" : "bg-[#F0D5A8]/15"}`}>
@@ -51,7 +52,7 @@ export default function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; pr
                 className={`flex items-center gap-1.5 flex-1 justify-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   isActive
                     ? "text-white shadow-sm"
-                    : dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
+                    : ghostBtn(dark)
                 }`}
                 style={isActive ? { backgroundColor: mode.color } : undefined}
               >
@@ -101,7 +102,7 @@ export default function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; pr
               target="_blank"
               rel="noopener noreferrer"
               className={`flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-colors flex-shrink-0 ${
-                dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
+                ghostBtn(dark)
               }`}
               title="Open in Google Maps"
             >
@@ -116,7 +117,7 @@ export default function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; pr
 
       {/* Dashed connector */}
       <div className="ml-3 mt-1">
-        <div className={`w-px h-3 border-l border-dashed ${dark ? "border-[#F5E8D8]/20" : "border-[#4E8098]/15"}`} style={{ marginLeft: "8px" }} />
+        <div className={`w-px h-3 border-l border-dashed ${dashedBorder(dark)}`} style={{ marginLeft: "8px" }} />
       </div>
     </div>
   );

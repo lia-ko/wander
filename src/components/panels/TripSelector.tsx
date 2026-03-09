@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
+import { textMuted, sectionBg, hoverBg, deleteBtn } from "@/lib/styles";
 import NewTripModal from "./NewTripModal";
 
 export default function TripSelector() {
@@ -9,13 +11,13 @@ export default function TripSelector() {
   const activeTripId = useTripStore((s) => s.activeTripId);
   const setActiveTripId = useTripStore((s) => s.setActiveTripId);
   const removeTrip = useTripStore((s) => s.removeTrip);
-  const toggleSidebar = useTripStore((s) => s.toggleSidebar);
-  const newTripModalOpen = useTripStore((s) => s.newTripModalOpen);
-  const setNewTripModalOpen = useTripStore((s) => s.setNewTripModalOpen);
   const dark = useTripStore((s) => s.darkMode);
+  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const newTripModalOpen = useUIStore((s) => s.newTripModalOpen);
+  const setNewTripModalOpen = useUIStore((s) => s.setNewTripModalOpen);
   const [open, setOpen] = useState(false);
 
-  const activeTrip = trips.find((t) => t.id === activeTripId)!;
+  const activeTrip = trips.find((t) => t.id === activeTripId) ?? trips[0];
 
   return (
     <>
@@ -24,13 +26,13 @@ export default function TripSelector() {
           <button
             onClick={() => setOpen(!open)}
             className={`flex items-center gap-2 w-full text-left rounded-lg px-2 py-1.5 transition-colors ${
-              dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+              hoverBg(dark)
             }`}
           >
             <span className="text-lg">{activeTrip.emoji}</span>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-sm truncate">{activeTrip.name}</div>
-              <div className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{activeTrip.dates}</div>
+              <div className={`text-xs ${textMuted(dark)}`}>{activeTrip.dates}</div>
             </div>
             <svg className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -45,7 +47,7 @@ export default function TripSelector() {
                   key={trip.id}
                   className={`flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors
                     ${trip.id === activeTripId
-                      ? dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
+                      ? sectionBg(dark)
                       : dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#4E8098]/8"
                     }`}
                 >
@@ -56,9 +58,9 @@ export default function TripSelector() {
                     <span>{trip.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{trip.name}</div>
-                      <div className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{trip.destination}</div>
+                      <div className={`text-xs ${textMuted(dark)}`}>{trip.destination}</div>
                     </div>
-                    <span className={`text-xs flex-shrink-0 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{trip.dates}</span>
+                    <span className={`text-xs flex-shrink-0 ${textMuted(dark)}`}>{trip.dates}</span>
                   </button>
                   {trips.length > 1 && (
                     <button
@@ -68,7 +70,7 @@ export default function TripSelector() {
                         if (trips.length <= 2) setOpen(false);
                       }}
                       className={`p-1 rounded transition-colors flex-shrink-0 ${
-                        dark ? "text-zinc-500 hover:text-red-400 hover:bg-[#F5E8D8]/10" : "text-zinc-400 hover:text-red-500 hover:bg-[#4E8098]/8"
+                        deleteBtn(dark)
                       }`}
                       title="Delete trip"
                     >
@@ -93,7 +95,7 @@ export default function TripSelector() {
 
         <button
           onClick={toggleSidebar}
-          className={`p-1.5 rounded-lg transition-colors ${dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"}`}
+          className={`p-1.5 rounded-lg transition-colors ${hoverBg(dark)}`}
           title="Collapse panel"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

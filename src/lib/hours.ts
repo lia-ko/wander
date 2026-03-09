@@ -130,6 +130,69 @@ export function formatDayDate(date: Date): string {
 }
 
 /**
+ * Batch-fetch opening_hours for multiple pins in a single Overpass query.
+ * Each pin gets a name-matched search within 300m.
+ * Returns a Map from pin id to opening_hours string.
+ */
+export async function batchFetchOpeningHours(
+  pins: Array<{ id: number; lat: number; lng: number; name: string }>,
+  signal?: AbortSignal
+): Promise<Map<number, string>> {
+  const results = new Map<number, string>();
+  if (pins.length === 0) return results;
+
+  // Build a single Overpass union query for all pins
+  const unions = pins.map((p) => {
+    const escaped = p.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return [
+      `node["name"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
+      `way["name"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
+      `node["name:en"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
+      `way["name:en"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
+    ].join("\n");
+  }).join("\n");
+
+  const query = `[out:json][timeout:15];(\n${unions}\n);out body qt;`;
+
+  try {
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: `data=${encodeURIComponent(query)}`,
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal,
+    });
+    if (!res.ok) return results;
+    const data = await res.json();
+    const elements: Array<{ lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }> = data.elements ?? [];
+
+    // Match each result element back to the closest requesting pin
+    for (const el of elements) {
+      const hours = el.tags?.opening_hours;
+      if (!hours) continue;
+      const elLat = el.lat ?? el.center?.lat;
+      const elLng = el.lon ?? el.center?.lon;
+      if (elLat == null || elLng == null) continue;
+
+      let bestPin: (typeof pins)[0] | null = null;
+      let bestDist = Infinity;
+      for (const p of pins) {
+        if (results.has(p.id)) continue; // already matched
+        const dist = Math.abs(p.lat - elLat) + Math.abs(p.lng - elLng);
+        if (dist < bestDist && dist < 0.005) { // ~500m threshold
+          bestDist = dist;
+          bestPin = p;
+        }
+      }
+      if (bestPin) results.set(bestPin.id, hours);
+    }
+  } catch {
+    // Silent failure — background fetch
+  }
+
+  return results;
+}
+
+/**
  * Fetch opening_hours for a POI from Overpass by coordinates.
  * Tries name-matched search first (200m), then falls back to nearest POI with hours (100m).
  * Note: This is a background fetch so errors are silent (no toast) to avoid noise.

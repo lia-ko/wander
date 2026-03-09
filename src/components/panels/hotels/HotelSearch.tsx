@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { searchPlaces, type GeoResult } from "@/lib/geocode";
+import { textMuted, sectionBg, hoverBg, inputBase, ghostBtn, SEARCH_DEBOUNCE_MS } from "@/lib/styles";
 
 function HotelSearch({ onSelect, onCancel }: {
   onSelect: (name: string, address: string, lat: number, lng: number) => void;
   onCancel: () => void;
 }) {
   const dark = useTripStore((s) => s.darkMode);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const center = trip?.center ?? { lat: 0, lng: 0 };
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeoResult[]>([]);
@@ -31,11 +32,11 @@ function HotelSearch({ onSelect, onCancel }: {
         setResults(res);
         setSearching(false);
       }
-    }, 400);
+    }, SEARCH_DEBOUNCE_MS);
   };
 
   return (
-    <div className={`mx-3 mt-2 rounded-xl overflow-hidden ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
+    <div className={`mx-3 mt-2 rounded-xl overflow-hidden ${sectionBg(dark)}`}>
       <div className="px-3 pt-2.5 pb-1.5">
         <input
           type="text"
@@ -43,14 +44,15 @@ function HotelSearch({ onSelect, onCancel }: {
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
           placeholder="Search for hotel / accommodation..."
+          aria-label="Search for hotel or accommodation"
           autoFocus
           className={`w-full px-2.5 py-2 rounded-lg text-sm outline-none ${
-            dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
+            inputBase(dark)
           }`}
         />
       </div>
       {searching && (
-        <div className={`px-5 py-2 text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Searching...</div>
+        <div className={`px-5 py-2 text-xs ${textMuted(dark)}`}>Searching...</div>
       )}
       {results.length > 0 && (
         <div className="max-h-40 overflow-y-auto">
@@ -62,13 +64,13 @@ function HotelSearch({ onSelect, onCancel }: {
                 onSelect(r.name, addr, r.lat, r.lng);
               }}
               className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors ${
-                dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+                hoverBg(dark)
               }`}
             >
               <span className="text-xs">🏨</span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate">{r.name}</div>
-                <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{r.displayName}</div>
+                <div className={`text-xs truncate ${textMuted(dark)}`}>{r.displayName}</div>
               </div>
             </button>
           ))}
@@ -78,7 +80,7 @@ function HotelSearch({ onSelect, onCancel }: {
         <button
           onClick={onCancel}
           className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-            dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
+            ghostBtn(dark)
           }`}
         >
           Cancel

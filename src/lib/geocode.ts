@@ -38,7 +38,7 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
     const data = await res.json();
     return data.map((item: Record<string, string>) => ({
       placeId: item.place_id,
-      name: item.display_name?.split(",")[0] || item.name,
+      name: item.display_name?.split(",")[0] ?? item.name,
       displayName: item.display_name,
       lat: parseFloat(item.lat),
       lng: parseFloat(item.lon),
@@ -75,7 +75,7 @@ export async function searchNearby(
   const parseResults = (data: Record<string, string>[]): GeoResult[] =>
     data.map((item) => ({
       placeId: item.place_id,
-      name: item.display_name?.split(",")[0] || item.name,
+      name: item.display_name?.split(",")[0] ?? item.name,
       displayName: item.display_name,
       lat: parseFloat(item.lat),
       lng: parseFloat(item.lon),
@@ -135,7 +135,7 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
   const parseResults = (data: Record<string, string>[]): GeoResult[] =>
     data.map((item) => ({
       placeId: item.place_id,
-      name: item.display_name?.split(",")[0] || item.name,
+      name: item.display_name?.split(",")[0] ?? item.name,
       displayName: item.display_name,
       lat: parseFloat(item.lat),
       lng: parseFloat(item.lon),

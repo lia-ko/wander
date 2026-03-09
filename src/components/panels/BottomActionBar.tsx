@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { useUIStore } from "@/store/uiStore";
 import { exportTripPdf } from "@/components/export/exportPdf";
 import { toast } from "@/store/toastStore";
+import { accentActive, inactiveBtn } from "@/lib/styles";
 import html2canvas from "html2canvas";
 import type { Trip } from "@/types";
 
@@ -21,12 +23,12 @@ function validateTrips(data: unknown): data is Trip[] {
 }
 
 export default function BottomActionBar() {
-  const toggleDiscover = useTripStore((s) => s.toggleDiscover);
-  const discoverOpen = useTripStore((s) => s.discoverOpen);
-  const discoverTab = useTripStore((s) => s.discoverTab);
-  const sidebarView = useTripStore((s) => s.sidebarView);
-  const setSidebarView = useTripStore((s) => s.setSidebarView);
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const toggleDiscover = useUIStore((s) => s.toggleDiscover);
+  const discoverOpen = useUIStore((s) => s.discoverOpen);
+  const discoverTab = useUIStore((s) => s.discoverTab);
+  const sidebarView = useUIStore((s) => s.sidebarView);
+  const setSidebarView = useUIStore((s) => s.setSidebarView);
+  const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,8 +46,8 @@ export default function BottomActionBar() {
   const btnClass = (active: boolean) =>
     `flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold transition-all ${
       active
-        ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
-        : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
+        ? accentActive(dark)
+        : inactiveBtn(dark)
     }`;
 
   const handleExportJson = () => {
@@ -102,8 +104,8 @@ export default function BottomActionBar() {
           onClick={() => setSidebarView(isWishlist ? "day" : "wishlist")}
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
             isWishlist
-              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
-              : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
+              ? accentActive(dark)
+              : inactiveBtn(dark)
           }`}
         >
           <svg className="w-3.5 h-3.5" fill={isWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
@@ -125,8 +127,8 @@ export default function BottomActionBar() {
           onClick={() => setSidebarView(isBudget ? "day" : "budget")}
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
             isBudget
-              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
-              : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
+              ? accentActive(dark)
+              : inactiveBtn(dark)
           }`}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1,19 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useTripStore } from "@/store/tripStore";
-import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
-import { STOP_DRAG_TYPE } from "./stops/types";
+import { useState, useEffect, useRef } from "react";
+import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { batchFetchOpeningHours } from "@/lib/hours";
+import { textSubtle, dashedBorder } from "@/lib/styles";
+import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE } from "./stops/types";
 import StopItem from "./stops/StopItem";
 import FlightItem from "./stops/FlightItem";
 import TransportSegment from "./stops/TransportSegment";
 import AddStopSearch from "./stops/AddStopSearch";
 
-// Re-export for DayChips and other consumers
-export { STOP_DRAG_TYPE };
-
 export default function StopList() {
-  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
+  const trip = useTripStore(selectActiveTrip);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const reorderPin = useTripStore((s) => s.reorderPin);
   const moveWishlistToDay = useTripStore((s) => s.moveWishlistToDay);
@@ -23,7 +21,37 @@ export default function StopList() {
   const [dragOver, setDragOver] = useState<number | null>(null);
   const [wishlistDragOver, setWishlistDragOver] = useState(false);
 
+  const updatePin = useTripStore((s) => s.updatePin);
+  const fetchedRef = useRef<Set<number>>(new Set());
+
   const day = trip.days.find((d) => d.id === activeDayId);
+
+  // Batch-fetch opening hours for all pins in the active day that need them
+  useEffect(() => {
+    if (!day) return;
+    const eligible = day.pins.filter(
+      (p) => p.openingHours == null && p.y !== 0 && p.x !== 0 && !fetchedRef.current.has(p.id)
+    );
+    if (eligible.length === 0) return;
+
+    // Mark as fetching so we don't re-trigger
+    for (const p of eligible) fetchedRef.current.add(p.id);
+
+    const controller = new AbortController();
+    batchFetchOpeningHours(
+      eligible.map((p) => ({ id: p.id, lat: p.y, lng: p.x, name: p.name })),
+      controller.signal
+    ).then((hoursMap) => {
+      if (controller.signal.aborted) return;
+      for (const p of eligible) {
+        const hours = hoursMap.get(p.id);
+        updatePin(day.id, p.id, { openingHours: hours || "" });
+      }
+    });
+
+    return () => { controller.abort(); };
+  }, [day, updatePin]);
+
   if (!day) return null;
 
   const handleDragStart = (e: React.DragEvent, i: number) => {
@@ -90,7 +118,7 @@ export default function StopList() {
             {showTransport && <TransportSegment pin={pin} prevPin={prev!} dayId={day.id} />}
             {i > 0 && !showTransport && (
               <div className="ml-5 my-1">
-                <div className={`w-px h-4 border-l border-dashed ${dark ? "border-[#F5E8D8]/20" : "border-[#4E8098]/15"}`} style={{ marginLeft: "8px" }} />
+                <div className={`w-px h-4 border-l border-dashed ${dashedBorder(dark)}`} style={{ marginLeft: "8px" }} />
               </div>
             )}
             {isFlight ? (
@@ -121,7 +149,7 @@ export default function StopList() {
       })}
 
       {day.pins.length === 0 && (
-        <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+        <div className={`text-center py-8 text-sm ${textSubtle(dark)}`}>
           No stops yet. Add a stop below or drop a pin on the map.
         </div>
       )}

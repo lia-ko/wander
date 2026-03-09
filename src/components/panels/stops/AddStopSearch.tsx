@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { sectionBg, inputBase, ghostBtnSoft } from "@/lib/styles";
 import PlaceSearch from "../PlaceSearch";
 
 function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
@@ -15,7 +16,7 @@ function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
   const [arrTime, setArrTime] = useState("");
 
   const inputCls = `w-full px-2.5 py-2 rounded-lg text-xs outline-none ${
-    dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
+    inputBase(dark)
   }`;
 
   const handleAdd = () => {
@@ -39,18 +40,18 @@ function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
   };
 
   return (
-    <div className={`mx-2 mt-1 rounded-xl overflow-hidden px-3 py-2.5 space-y-1.5 ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
+    <div className={`mx-2 mt-1 rounded-xl overflow-hidden px-3 py-2.5 space-y-1.5 ${sectionBg(dark)}`}>
       <div className="flex gap-2">
-        <input type="text" value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Airline" autoFocus className={inputCls} />
-        <input type="text" value={flightNum} onChange={(e) => setFlightNum(e.target.value)} placeholder="Flight #" className={inputCls} />
+        <input type="text" value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Airline" aria-label="Airline" autoFocus className={inputCls} />
+        <input type="text" value={flightNum} onChange={(e) => setFlightNum(e.target.value)} placeholder="Flight #" aria-label="Flight number" className={inputCls} />
       </div>
       <div className="flex gap-2">
-        <input type="text" value={depAirport} onChange={(e) => setDepAirport(e.target.value)} placeholder="From (e.g. JFK)" className={inputCls} />
-        <input type="text" value={arrAirport} onChange={(e) => setArrAirport(e.target.value)} placeholder="To (e.g. MAD)" className={inputCls} />
+        <input type="text" value={depAirport} onChange={(e) => setDepAirport(e.target.value)} placeholder="From (e.g. JFK)" aria-label="Departure airport" className={inputCls} />
+        <input type="text" value={arrAirport} onChange={(e) => setArrAirport(e.target.value)} placeholder="To (e.g. MAD)" aria-label="Arrival airport" className={inputCls} />
       </div>
       <div className="flex gap-2">
-        <input type="text" value={depTime} onChange={(e) => setDepTime(e.target.value)} placeholder="Departs (e.g. 10:30 AM)" className={inputCls} />
-        <input type="text" value={arrTime} onChange={(e) => setArrTime(e.target.value)} placeholder="Arrives (e.g. 11:45 PM)" className={inputCls} />
+        <input type="text" value={depTime} onChange={(e) => setDepTime(e.target.value)} placeholder="Departs (e.g. 10:30 AM)" aria-label="Departure time" className={inputCls} />
+        <input type="text" value={arrTime} onChange={(e) => setArrTime(e.target.value)} placeholder="Arrives (e.g. 11:45 PM)" aria-label="Arrival time" className={inputCls} />
       </div>
       <div className="flex gap-1.5 pt-1">
         <button onClick={handleAdd} className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#3B82F6] hover:bg-[#2563EB] transition-colors">Add Flight</button>
@@ -71,7 +72,7 @@ export default function AddStopSearch({ dayId, dayColor }: { dayId: number; dayC
         <button
           onClick={() => setMode("stop")}
           className={`flex items-center gap-2 flex-1 px-3 py-2.5 rounded-xl text-sm transition-colors ${
-            dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:bg-[#F0D5A8]/25"
+            ghostBtnSoft(dark)
           }`}
         >
           <span className="w-6 h-6 rounded-full border-2 border-dashed flex items-center justify-center text-xs"
