@@ -8,7 +8,13 @@ import { useTripStore } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import "leaflet/dist/leaflet.css";
 
-const createPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" = "default") => {
+const pinIconCache = new Map<string, L.DivIcon>();
+
+const getPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" = "default"): L.DivIcon => {
+  const key = `${color}-${variant}`;
+  const cached = pinIconCache.get(key);
+  if (cached) return cached;
+
   let svg: string;
   if (variant === "hotel") {
     svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
@@ -28,13 +34,15 @@ const createPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" 
       </svg>`;
   }
 
-  return L.divIcon({
+  const icon = L.divIcon({
     html: svg,
     iconSize: [24, 32],
     iconAnchor: [12, 32],
     popupAnchor: [0, -32],
     className: "custom-pin",
   });
+  pinIconCache.set(key, icon);
+  return icon;
 };
 
 const createClusterIcon = (color: string, opacity: number) => (cluster: { getChildCount(): number }) => {
@@ -98,7 +106,7 @@ function MapPins() {
         <Marker
           key={hotel.id}
           position={[hotel.y, hotel.x]}
-          icon={createPinIcon(HOTEL_COLOR, "hotel")}
+          icon={getPinIcon(HOTEL_COLOR, "hotel")}
         >
           <Popup>
             <div className="text-sm font-semibold">{hotel.name}</div>
@@ -116,7 +124,7 @@ function MapPins() {
               <Marker
                 key={`${day.id}-${pin.id}`}
                 position={[pin.y, pin.x]}
-                icon={createPinIcon(day.color)}
+                icon={getPinIcon(day.color)}
                 opacity={isActive ? 1 : 0.15}
                 eventHandlers={{
                   click: () => setSelectedPinId(selectedPinId === pin.id ? null : pin.id),
@@ -139,7 +147,7 @@ function MapPins() {
           <Marker
             key={`wish-${pin.id}`}
             position={[pin.y, pin.x]}
-            icon={createPinIcon("#9CA3AF", "wishlist")}
+            icon={getPinIcon("#9CA3AF", "wishlist")}
             opacity={0.6}
           >
             <Popup>
