@@ -1,4 +1,7 @@
-/** Reusable dark/light theme class helpers to avoid duplication across components. */
+/** Reusable dark/light theme class helpers and UI constants. */
+
+// Shared UI constants
+export const SEARCH_DEBOUNCE_MS = 400;
 
 // Text
 export const textMuted = (dark: boolean) => dark ? "text-zinc-400" : "text-zinc-500";

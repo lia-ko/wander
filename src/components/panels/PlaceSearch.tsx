@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { searchPlaces, type GeoResult } from "@/lib/geocode";
-import { textMuted, textSubtle, sectionBg, hoverBg, inputBase, ghostBtn } from "@/lib/styles";
+import { textMuted, textSubtle, sectionBg, hoverBg, inputBase, ghostBtn, SEARCH_DEBOUNCE_MS } from "@/lib/styles";
 
 export default function PlaceSearch({
   onAdd,
@@ -42,7 +42,7 @@ export default function PlaceSearch({
         setResults(res);
         setSearching(false);
       }
-    }, 400);
+    }, SEARCH_DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       abortRef.current?.abort();

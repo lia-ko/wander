@@ -51,6 +51,11 @@ export default function MainPanel() {
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      if (dragging.current) {
+        dragging.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
     };
   }, [setSidebarWidth]);
 

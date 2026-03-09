@@ -4,10 +4,9 @@ import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { getPinBadge } from "@/lib/pinUtils";
 import { textMuted, textSubtle, sectionBg, softHoverBg, ghostBtn, ghostBtnSoft, deleteBtn } from "@/lib/styles";
+import { WISHLIST_DRAG_TYPE } from "./stops/types";
 import type { Pin } from "@/types";
 import PlaceSearch from "./PlaceSearch";
-
-const WISHLIST_DRAG_TYPE = "application/wander-wishlist";
 
 const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
   const removeFromWishlist = useTripStore((s) => s.removeFromWishlist);
@@ -170,5 +169,3 @@ export default function WishlistPanel() {
     </div>
   );
 }
-
-export { WISHLIST_DRAG_TYPE };

@@ -27,6 +27,7 @@ export default function BudgetPanel() {
 
   const fetchRates = useRatesStore((s) => s.fetchRates);
   const convert = useRatesStore((s) => s.convert);
+  const rates = useRatesStore((s) => s.rates);
   const ratesLoading = useRatesStore((s) => s.loading);
 
   const [adding, setAdding] = useState(false);
@@ -67,11 +68,18 @@ export default function BudgetPanel() {
   const totalSpent = expenses.reduce((sum, e) => sum + (toHome(e) ?? 0), 0);
   const hasUnconverted = expenses.some((e) => toHome(e) === null);
 
-  const byCategory = useMemo(() => categories.map((cat) => ({
-    cat,
-    ...EXPENSE_CATEGORY_META[cat],
-    total: expenses.filter((e) => e.category === cat).reduce((s, e) => s + (toHome(e) ?? 0), 0),
-  })), [expenses, homeCurrency, convert]);
+  const byCategory = useMemo(() => {
+    const toHomeMemo = (exp: Expense) => {
+      const from = exp.currency ?? homeCurrency;
+      if (from === homeCurrency) return exp.amount;
+      return convert(exp.amount, from, homeCurrency);
+    };
+    return categories.map((cat) => ({
+      cat,
+      ...EXPENSE_CATEGORY_META[cat],
+      total: expenses.filter((e) => e.category === cat).reduce((s, e) => s + (toHomeMemo(e) ?? 0), 0),
+    }));
+  }, [expenses, homeCurrency, rates, convert]);
 
   // Live rate display
   const liveRate = isForeignTrip ? convert(1, spendingCurrency, homeCurrency) : null;

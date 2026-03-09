@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { searchPlaces, type GeoResult } from "@/lib/geocode";
-import { textMuted, sectionBg, hoverBg, inputBase, ghostBtn } from "@/lib/styles";
+import { textMuted, sectionBg, hoverBg, inputBase, ghostBtn, SEARCH_DEBOUNCE_MS } from "@/lib/styles";
 
 function HotelSearch({ onSelect, onCancel }: {
   onSelect: (name: string, address: string, lat: number, lng: number) => void;
@@ -32,7 +32,7 @@ function HotelSearch({ onSelect, onCancel }: {
         setResults(res);
         setSearching(false);
       }
-    }, 400);
+    }, SEARCH_DEBOUNCE_MS);
   };
 
   return (

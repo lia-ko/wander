@@ -5,7 +5,7 @@ import { useTripStore } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
 import { searchCities, type GeoResult } from "@/lib/geocode";
 import { DAY_COLORS } from "@/store/constants";
-import { textMuted, textSubtle, hoverBg, inputFocus, btnHover } from "@/lib/styles";
+import { textMuted, textSubtle, hoverBg, inputFocus, btnHover, SEARCH_DEBOUNCE_MS } from "@/lib/styles";
 
 function formatDateRange(start: string, end: string): string {
   const s = new Date(start + "T12:00:00");
@@ -58,7 +58,7 @@ function NewTripModal() {
         setDestResults(results);
         setSearching(false);
       }
-    }, 400);
+    }, SEARCH_DEBOUNCE_MS);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       abortRef.current?.abort();

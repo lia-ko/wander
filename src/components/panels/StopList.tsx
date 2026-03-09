@@ -4,15 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { batchFetchOpeningHours } from "@/lib/hours";
 import { textSubtle, dashedBorder } from "@/lib/styles";
-import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
-import { STOP_DRAG_TYPE } from "./stops/types";
+import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE } from "./stops/types";
 import StopItem from "./stops/StopItem";
 import FlightItem from "./stops/FlightItem";
 import TransportSegment from "./stops/TransportSegment";
 import AddStopSearch from "./stops/AddStopSearch";
-
-// Re-export for DayChips and other consumers
-export { STOP_DRAG_TYPE };
 
 export default function StopList() {
   const trip = useTripStore(selectActiveTrip);

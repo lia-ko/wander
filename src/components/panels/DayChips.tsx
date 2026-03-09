@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
-import { STOP_DRAG_TYPE } from "./StopList";
-import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
+import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE } from "./stops/types";
 
 export default function DayChips() {
   const trip = useTripStore(selectActiveTrip);
