@@ -8,34 +8,6 @@ import { WISHLIST_DRAG_TYPE } from "./stops/types";
 import type { Pin } from "@/types";
 import PlaceSearch from "./PlaceSearch";
 
-type WishlistSort = "added" | "priority";
-
-const PRIORITY_LABELS: Record<number, string> = { 1: "Nice", 2: "Want", 3: "Must-do" };
-
-function StarRating({ value, onChange, dark }: { value: number; onChange: (v: number) => void; dark: boolean }) {
-  return (
-    <div className="flex items-center gap-px" onClick={(e) => e.stopPropagation()}>
-      {[1, 2, 3].map((star) => (
-        <button
-          key={star}
-          onClick={() => onChange(value === star ? 0 : star)}
-          className={`p-0.5 transition-colors ${
-            star <= value
-              ? "text-amber-400"
-              : dark ? "text-zinc-600 hover:text-amber-400/50" : "text-zinc-300 hover:text-amber-400/50"
-          }`}
-          title={star <= value && value === star ? "Clear priority" : PRIORITY_LABELS[star]}
-          aria-label={`Set priority ${star}`}
-        >
-          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-          </svg>
-        </button>
-      ))}
-    </div>
-  );
-}
-
 const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
   const removeFromWishlist = useTripStore((s) => s.removeFromWishlist);
   const moveWishlistToDay = useTripStore((s) => s.moveWishlistToDay);
@@ -45,7 +17,7 @@ const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
   const [showDayPicker, setShowDayPicker] = useState(false);
 
   const badge = getPinBadge(pin);
-  const priority = pin.priority ?? 0;
+  const isMustDo = !!pin.mustDo;
 
   return (
     <div
@@ -61,13 +33,7 @@ const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
       }`}
     >
       <div className="flex items-center gap-2.5">
-        {priority === 3 ? (
-          <span className="w-6 h-6 flex items-center justify-center text-sm" title="Must-do">
-            <svg className="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-          </span>
-        ) : badge ? (
+        {badge ? (
           <span className="w-6 h-6 flex items-center justify-center text-sm">{badge}</span>
         ) : (
           <span className={`w-6 h-6 rounded-full flex items-center justify-center ${
@@ -79,28 +45,31 @@ const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
           </span>
         )}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-medium truncate">{pin.name}</span>
-            {priority > 0 && priority < 3 && (
-              <span className={`text-[9px] font-medium flex-shrink-0 ${
-                dark ? "text-amber-400/70" : "text-amber-500/70"
-              }`}>
-                {PRIORITY_LABELS[priority]}
-              </span>
-            )}
-          </div>
+          <div className="text-sm font-medium truncate">{pin.name}</div>
           {pin.note && (
             <div className={`text-xs truncate ${textMuted(dark)}`}>
               {pin.note}
             </div>
           )}
         </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            updateWishlistItem(pin.id, { mustDo: !isMustDo });
+          }}
+          className={`p-1 rounded-lg transition-colors flex-shrink-0 ${
+            isMustDo
+              ? "text-amber-400"
+              : dark ? "text-zinc-600 hover:text-amber-400" : "text-zinc-300 hover:text-amber-400"
+          }`}
+          title={isMustDo ? "Unmark must-do" : "Mark as must-do"}
+          aria-label={isMustDo ? "Unmark must-do" : "Mark as must-do"}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isMustDo ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isMustDo ? 0 : 2}>
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        </button>
         <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <StarRating
-            value={priority}
-            onChange={(v) => updateWishlistItem(pin.id, { priority: v === 0 ? undefined : v as 1 | 2 | 3 })}
-            dark={dark}
-          />
           <button
             onClick={(e) => { e.stopPropagation(); setShowDayPicker(!showDayPicker); }}
             className={`p-1.5 rounded-lg text-xs transition-colors ${
@@ -154,18 +123,17 @@ export default function WishlistPanel() {
   const addToWishlist = useTripStore((s) => s.addToWishlist);
   const dark = useTripStore((s) => s.darkMode);
   const [searching, setSearching] = useState(false);
-  const [sort, setSort] = useState<WishlistSort>("added");
 
   const wishlist = trip.wishlist ?? [];
 
   const sorted = useMemo(() => {
-    if (sort === "priority") {
-      return [...wishlist].sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-    }
-    return wishlist;
-  }, [wishlist, sort]);
+    const mustDo = wishlist.filter((p) => p.mustDo);
+    const rest = wishlist.filter((p) => !p.mustDo);
+    if (mustDo.length === 0) return wishlist;
+    return [...mustDo, ...rest];
+  }, [wishlist]);
 
-  const mustDoCount = wishlist.filter((p) => p.priority === 3).length;
+  const mustDoCount = wishlist.filter((p) => p.mustDo).length;
 
   return (
     <div className="flex-1 overflow-y-auto py-1 scrollbar-hide">
@@ -177,25 +145,10 @@ export default function WishlistPanel() {
           </svg>
           <span className="font-semibold text-sm">Wishlist</span>
         </div>
-        <div className="flex items-center gap-2">
-          {wishlist.length > 1 && (
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as WishlistSort)}
-              aria-label="Sort wishlist"
-              className={`text-[10px] px-1.5 py-0.5 rounded-md outline-none ${
-                dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-[#4E8098]/8 text-zinc-700"
-              }`}
-            >
-              <option value="added">Order added</option>
-              <option value="priority">Priority</option>
-            </select>
-          )}
-          <span className={`text-xs ${textMuted(dark)}`}>
-            {wishlist.length} {wishlist.length === 1 ? "place" : "places"}
-            {mustDoCount > 0 && ` · ${mustDoCount} must-do`}
-          </span>
-        </div>
+        <span className={`text-xs ${textMuted(dark)}`}>
+          {wishlist.length} {wishlist.length === 1 ? "place" : "places"}
+          {mustDoCount > 0 && ` · ${mustDoCount} must-do`}
+        </span>
       </div>
 
       {/* Wishlist items */}
