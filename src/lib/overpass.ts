@@ -114,11 +114,11 @@ function parseElement(el: Record<string, unknown>): OverpassResult | null {
     lat = center.lat;
     lng = center.lon;
   } else {
-    lat = el.lat as number;
-    lng = el.lon as number;
+    lat = Number(el.lat);
+    lng = Number(el.lon);
   }
 
-  if (!lat || !lng) return null;
+  if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
 
   // Build address from addr:* tags
   const addrParts: string[] = [];

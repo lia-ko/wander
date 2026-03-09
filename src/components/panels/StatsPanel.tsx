@@ -148,7 +148,7 @@ export default function StatsPanel() {
       foodCounts, attrCounts, transportCounts,
       totalSpent, daySpendMap, biggestSpendDay, avgDailySpend, byCat, topExpense,
     };
-  }, [trip.days, trip.wishlist, expenses, homeCurrency, convert, rates]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [trip.days, trip.wishlist, expenses, homeCurrency, convert]);
 
   const cardClass = `rounded-xl p-3 ${dark ? "bg-white/5" : "bg-zinc-50"}`;
   const labelClass = `text-[10px] uppercase tracking-wider font-semibold ${textSubtle(dark)}`;

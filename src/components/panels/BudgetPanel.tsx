@@ -97,6 +97,7 @@ export default function BudgetPanel() {
 
   // Debounce ref for category limit inputs
   const limitTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(limitTimerRef.current), []);
 
   const expenses = trip.expenses ?? [];
   const budget = trip.budget ?? { currency: "USD", totalBudget: null };
@@ -122,7 +123,7 @@ export default function BudgetPanel() {
     const from = exp.currency ?? homeCurrency;
     if (from === homeCurrency) return exp.amount;
     return convert(exp.amount, from, homeCurrency);
-  }, [homeCurrency, convert, rates]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [homeCurrency, convert]);
 
   const { totalSpent, hasUnconverted } = useMemo(() => {
     let total = 0;

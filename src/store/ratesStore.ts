@@ -33,6 +33,7 @@ export const useRatesStore = create<RatesState>((set, get) => ({
         throw new Error("Failed to fetch rates");
       }
       const data = await res.json();
+      if (!data.rates || typeof data.rates !== "object") throw new Error("Invalid rates response");
       const newRates = data.rates as Record<string, number>;
       // Add self-rate
       newRates[base] = 1;

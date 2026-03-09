@@ -15,8 +15,12 @@ function validateTrips(data: unknown): data is Trip[] {
     if (typeof t !== "object" || t === null) return false;
     if (typeof t.id !== "number" || typeof t.name !== "string") return false;
     if (!Array.isArray(t.days)) return false;
+    if (!t.center || typeof t.center.lat !== "number" || typeof t.center.lng !== "number") return false;
     for (const d of t.days) {
       if (typeof d.id !== "number" || !Array.isArray(d.pins)) return false;
+      for (const p of d.pins) {
+        if (typeof p.name !== "string" || typeof p.x !== "number" || typeof p.y !== "number") return false;
+      }
     }
   }
   return true;
@@ -169,6 +173,7 @@ export default function BottomActionBar() {
             key={btn.key}
             onClick={() => toggleDiscover(btn.key)}
             className={btnClass(discoverOpen && discoverTab === btn.key)}
+            aria-label={`Discover ${btn.label}`}
           >
             <span>{btn.emoji}</span>
             <span>{btn.label}</span>
