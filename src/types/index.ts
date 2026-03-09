@@ -56,7 +56,7 @@ export type Trip = {
   startDate: string | null; // ISO date string e.g. "2026-03-08"
   destination: string;
   center: { lat: number; lng: number };
-  hotel: Hotel | null;
+  hotels: Hotel[];
   days: Day[];
 };
 

@@ -10,6 +10,16 @@ export default function DayTitleBar() {
   const updateDay = useTripStore((s) => s.updateDay);
   const updateTrip = useTripStore((s) => s.updateTrip);
   const removeDay = useTripStore((s) => s.removeDay);
+  const clearDay = () => {
+    useTripStore.setState((s) => ({
+      trips: s.trips.map((t) =>
+        t.id === s.activeTripId
+          ? { ...t, days: t.days.map((d) => (d.id === activeDayId ? { ...d, pins: [] } : d)) }
+          : t
+      ),
+      selectedPinId: null,
+    }));
+  };
   const dark = useTripStore((s) => s.darkMode);
   const [editingSublabel, setEditingSublabel] = useState(false);
   const [sublabelValue, setSublabelValue] = useState("");
@@ -45,7 +55,7 @@ export default function DayTitleBar() {
             onBlur={() => setEditingDate(false)}
             autoFocus
             className={`text-xs px-1.5 py-0.5 rounded outline-none ${
-              dark ? "bg-white/10 text-white" : "bg-black/5 text-zinc-900"
+              dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-[#4E8098]/8 text-zinc-900"
             }`}
           />
         ) : dayDate ? (
@@ -76,7 +86,7 @@ export default function DayTitleBar() {
             autoFocus
             placeholder="Neighbourhood..."
             className={`text-xs px-1.5 py-0.5 rounded outline-none w-24 ${
-              dark ? "bg-white/10 text-white" : "bg-black/5 text-zinc-900"
+              dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-[#4E8098]/8 text-zinc-900"
             }`}
           />
         ) : (
@@ -93,14 +103,25 @@ export default function DayTitleBar() {
         <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
           {day.pins.length} {day.pins.length === 1 ? "stop" : "stops"}
         </span>
-        {trip.days.length > 1 && (
+        {day.pins.length > 0 && (
           <button
-            onClick={() => removeDay(day.id)}
-            className={`text-xs p-1 rounded transition-colors ${dark ? "text-zinc-500 hover:text-red-400 hover:bg-white/5" : "text-zinc-400 hover:text-red-500 hover:bg-black/5"}`}
-            title="Remove this day"
+            onClick={clearDay}
+            className={`text-xs p-1 rounded transition-colors ${dark ? "text-zinc-500 hover:text-red-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:text-red-500 hover:bg-[#4E8098]/8"}`}
+            title="Clear all stops"
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+        {trip.days.length > 1 && (
+          <button
+            onClick={() => removeDay(day.id)}
+            className={`text-xs p-1 rounded transition-colors ${dark ? "text-zinc-500 hover:text-red-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:text-red-500 hover:bg-[#4E8098]/8"}`}
+            title="Delete this day"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
         )}

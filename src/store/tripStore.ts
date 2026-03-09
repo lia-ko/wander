@@ -8,6 +8,7 @@ interface TripState {
   activeTripId: number;
   activeDayId: number;
   selectedPinId: number | null;
+  radiusCenter: { lat: number; lng: number; label: string } | null;
   discoverOpen: boolean;
   discoverTab: DiscoverTab;
   sidebarCollapsed: boolean;
@@ -19,6 +20,7 @@ interface TripState {
   setActiveTripId: (id: number) => void;
   setActiveDayId: (id: number) => void;
   setSelectedPinId: (id: number | null) => void;
+  setRadiusCenter: (center: { lat: number; lng: number; label: string } | null) => void;
   toggleDiscover: (tab?: DiscoverTab) => void;
   closeDiscover: () => void;
   toggleSidebar: () => void;
@@ -42,8 +44,9 @@ interface TripState {
   removePin: (dayId: number, pinId: number) => void;
   reorderPin: (dayId: number, fromIndex: number, toIndex: number) => void;
 
-  // Hotel
-  setHotel: (hotel: Hotel | null) => void;
+  // Hotels
+  addHotel: (hotel: Omit<Hotel, "id">) => void;
+  removeHotel: (hotelId: string) => void;
 
   // Helpers
   getActiveTrip: () => Trip;
@@ -65,7 +68,7 @@ const defaultTrip: Trip = {
   startDate: null,
   destination: "Tokyo, Japan",
   center: { lat: 35.6895, lng: 139.7500 },
-  hotel: null,
+  hotels: [],
   days: [
     { id: 1, label: "Day 1", sublabel: "", color: DAY_COLORS[0], pins: [] },
   ],
@@ -78,6 +81,7 @@ export const useTripStore = create<TripState>()(
       activeTripId: 1,
       activeDayId: 1,
       selectedPinId: null,
+      radiusCenter: null,
       discoverOpen: false,
       discoverTab: "eat",
       sidebarCollapsed: false,
@@ -88,6 +92,7 @@ export const useTripStore = create<TripState>()(
       setActiveTripId: (id) => set({ activeTripId: id, activeDayId: get().trips.find(t => t.id === id)!.days[0]?.id ?? 1 }),
       setActiveDayId: (id) => set({ activeDayId: id }),
       setSelectedPinId: (id) => set({ selectedPinId: id }),
+      setRadiusCenter: (center) => set({ radiusCenter: center }),
 
       toggleDiscover: (tab) =>
         set((s) => {
@@ -110,7 +115,7 @@ export const useTripStore = create<TripState>()(
           startDate: startDate || null,
           destination,
           center,
-          hotel: null,
+          hotels: [],
           days: [{ id: genId(), label: "Day 1", sublabel: "", color: DAY_COLORS[0], pins: [] }],
         };
         set((s) => ({ trips: [...s.trips, trip], activeTripId: id, activeDayId: trip.days[0].id }));
@@ -213,9 +218,22 @@ export const useTripStore = create<TripState>()(
           }),
         })),
 
-      setHotel: (hotel) =>
+      addHotel: (hotel) =>
         set((s) => ({
-          trips: s.trips.map((t) => (t.id === s.activeTripId ? { ...t, hotel } : t)),
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, hotels: [...t.hotels, { ...hotel, id: `hotel-${genId()}` }] }
+              : t
+          ),
+        })),
+
+      removeHotel: (hotelId) =>
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, hotels: t.hotels.filter((h) => h.id !== hotelId) }
+              : t
+          ),
         })),
 
       getActiveTrip: () => {
@@ -231,7 +249,7 @@ export const useTripStore = create<TripState>()(
     }),
     {
       name: "wander-trips",
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const state = persisted as any;
@@ -246,6 +264,11 @@ export const useTripStore = create<TripState>()(
             if (!trip.center) trip.center = { lat: 0, lng: 0 };
             if (!trip.destination) trip.destination = "";
             if (!trip.startDate) trip.startDate = null;
+            // v5: migrate hotel → hotels array
+            if (!Array.isArray(trip.hotels)) {
+              trip.hotels = trip.hotel ? [trip.hotel] : [];
+              delete trip.hotel;
+            }
             if (Array.isArray(trip.days)) {
               for (const day of trip.days) {
                 if (Array.isArray(day.pins)) {
@@ -253,7 +276,6 @@ export const useTripStore = create<TripState>()(
                     if (pin.transport && transportMap[pin.transport]) {
                       pin.transport = transportMap[pin.transport];
                     }
-                    // Fix duplicate pin IDs
                     if (seenIds.has(pin.id)) {
                       pin.id = ++rekeySeed;
                     }

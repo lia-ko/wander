@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
 import GlassPanel from "@/components/ui/GlassPanel";
@@ -109,7 +109,7 @@ function ResultItem({ result, tab, added, onAdd, dayDate }: {
   const clampedRating = Math.min(5, Math.round(pseudoRating * 10) / 10);
 
   return (
-    <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${dark ? "hover:bg-white/5" : "hover:bg-black/[.03]"}`}>
+    <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#F0D5A8]/25"}`}>
       <span className="text-lg flex-shrink-0 mt-0.5">{emoji}</span>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">{result.name}</div>
@@ -150,8 +150,8 @@ function ResultItem({ result, tab, added, onAdd, dayDate }: {
         onClick={onAdd}
         className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all flex-shrink-0 mt-1 ${
           added
-            ? "bg-emerald-500/15 text-emerald-500"
-            : dark ? "bg-white/10 text-white hover:bg-white/15" : "bg-black/5 text-zinc-700 hover:bg-black/10"
+            ? "bg-[#90CCB8]/25 text-[#4E8098]"
+            : dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-700 hover:bg-[#4E8098]/12"
         }`}
       >
         {added ? "\u2713" : "+"}
@@ -176,33 +176,61 @@ export default function DiscoverPanel() {
   const dark = useTripStore((s) => s.darkMode);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [nearPinId, setNearPinId] = useState<number | "trip-center">("trip-center");
+  const [nearPinId, setNearPinId] = useState<number | "trip-center" | string | null>(null);
   const [results, setResults] = useState<OverpassResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const cacheRef = useRef<Map<string, OverpassResult[]>>(new Map());
 
   const allPins: Pin[] = trip.days.flatMap((d) => d.pins).filter((p) => p.y !== 0 && p.x !== 0);
+  const dayPins: Pin[] = (day?.pins ?? []).filter((p) => p.y !== 0 && p.x !== 0);
+
+  // Compute the effective default: first stop of active day > first hotel > null (no valid center)
+  const effectiveDefault: number | string | null =
+    dayPins.length > 0 ? dayPins[0].id :
+    trip.hotels.length > 0 ? trip.hotels[0].id :
+    null;
+
+  // If user hasn't explicitly picked a location, use the smart default
+  const activeNearId = nearPinId !== null ? nearPinId : effectiveDefault;
+
+  // Whether we have a usable search center
+  const hasSearchCenter = activeNearId !== null;
 
   // Compute the calendar date for the active day (for parsing opening hours)
   const dayIndex = trip.days.findIndex((d) => d.id === activeDayId);
   const dayDate = trip.startDate && dayIndex >= 0 ? getDayDate(trip.startDate, dayIndex) : null;
 
-  const getSearchCenter = useCallback((): { lat: number; lng: number } => {
-    if (nearPinId === "trip-center") {
+  const getSearchCenter = useCallback((): { lat: number; lng: number } | null => {
+    if (activeNearId === null) return null;
+    if (activeNearId === "trip-center") {
       return trip.center ?? { lat: 0, lng: 0 };
     }
-    const pin = allPins.find((p) => p.id === nearPinId);
+    if (typeof activeNearId === "string" && activeNearId.startsWith("hotel-")) {
+      const hotel = trip.hotels.find((h) => h.id === activeNearId);
+      if (hotel) return { lat: hotel.y, lng: hotel.x };
+    }
+    const pin = allPins.find((p) => p.id === activeNearId);
     if (pin) return { lat: pin.y, lng: pin.x };
-    return trip.center ?? { lat: 0, lng: 0 };
+    return null;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nearPinId, trip.center, allPins.length]);
+  }, [activeNearId, trip.center, trip.hotels.length, allPins.length]);
 
   const doSearch = useCallback((nameFilter?: string) => {
     const center = getSearchCenter();
-    if (!center.lat && !center.lng) return;
+    if (!center || (!center.lat && !center.lng)) return;
+    const cacheKey = `${discoverTab}|${center.lat.toFixed(4)},${center.lng.toFixed(4)}|${nameFilter || ""}`;
+    const cached = cacheRef.current.get(cacheKey);
+    if (cached) {
+      setResults(cached);
+      setSearched(true);
+      return;
+    }
     setLoading(true);
     setSearched(true);
-    searchOverpass(center, discoverTab, nameFilter || undefined).then((r) => {
+    searchOverpass(center, discoverTab, nameFilter || undefined, 5000).then((r) => {
+      r.sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity));
+      cacheRef.current.set(cacheKey, r);
       setResults(r);
       setLoading(false);
     });
@@ -210,10 +238,10 @@ export default function DiscoverPanel() {
 
   // Auto-search when tab/location changes
   useEffect(() => {
-    if (!discoverOpen) return;
+    if (!discoverOpen || !hasSearchCenter) return;
     doSearch();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discoverTab, nearPinId, discoverOpen]);
+  }, [discoverTab, activeNearId, discoverOpen]);
 
   const handleSearch = () => {
     doSearch(searchQuery.trim() || undefined);
@@ -256,7 +284,7 @@ export default function DiscoverPanel() {
   const panelLeft = (sidebarWidth ?? 310) + 20;
 
   return (
-    <GlassPanel className="absolute top-4 bottom-4 w-[310px] z-20 flex flex-col overflow-hidden" style={{ left: `${panelLeft}px` }}>
+    <GlassPanel className="absolute top-4 bottom-4 w-[360px] z-20 flex flex-col overflow-hidden" style={{ left: `${panelLeft}px` }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-inherit">
         <div className="flex items-center gap-1">
@@ -266,8 +294,8 @@ export default function DiscoverPanel() {
               onClick={() => toggleDiscover(tab.key)}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 discoverTab === tab.key
-                  ? dark ? "bg-white/15 text-white" : "bg-black/10 text-zinc-900"
-                  : dark ? "text-zinc-400 hover:bg-white/5" : "text-zinc-500 hover:bg-black/5"
+                  ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+                  : dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-500 hover:bg-[#4E8098]/8"
               }`}
             >
               {tab.emoji} {tab.label}
@@ -276,7 +304,7 @@ export default function DiscoverPanel() {
         </div>
         <button
           onClick={closeDiscover}
-          className={`p-1 rounded-lg transition-colors ${dark ? "hover:bg-white/10" : "hover:bg-black/5"}`}
+          className={`p-1 rounded-lg transition-colors ${dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -291,34 +319,57 @@ export default function DiscoverPanel() {
             Search near:
           </span>
           <select
-            value={nearPinId}
-            onChange={(e) => setNearPinId(e.target.value === "trip-center" ? "trip-center" : Number(e.target.value))}
+            value={activeNearId ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setNearPinId(v === "trip-center" || v.startsWith("hotel-") ? v : Number(v));
+            }}
+            disabled={!hasSearchCenter}
             className={`flex-1 min-w-0 text-xs px-2 py-1.5 rounded-lg outline-none truncate ${
-              dark ? "bg-white/10 text-white" : "bg-black/5 text-zinc-900"
-            }`}
+              dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-[#4E8098]/8 text-zinc-900"
+            } ${!hasSearchCenter ? "opacity-50" : ""}`}
           >
-            <option value="trip-center">{trip.destination || "Trip center"}</option>
-            {allPins.map((pin) => (
-              <option key={pin.id} value={pin.id}>{pin.name}</option>
+            {!hasSearchCenter && (
+              <option value="">Add a stop or hotel first</option>
+            )}
+            {trip.hotels.map((h) => (
+              <option key={h.id} value={h.id}>{"\u{1F3E8}"} {h.name}</option>
             ))}
+            {dayPins.length > 0 && (
+              <optgroup label={day?.label ?? "Today"}>
+                {dayPins.map((pin) => (
+                  <option key={pin.id} value={pin.id}>{pin.name}</option>
+                ))}
+              </optgroup>
+            )}
+            {allPins.filter((p) => !dayPins.some((dp) => dp.id === p.id)).length > 0 && (
+              <optgroup label="Other days">
+                {allPins.filter((p) => !dayPins.some((dp) => dp.id === p.id)).map((pin) => (
+                  <option key={pin.id} value={pin.id}>{pin.name}</option>
+                ))}
+              </optgroup>
+            )}
+            <option value="trip-center">{trip.destination || "Trip center"}</option>
           </select>
         </div>
 
-        <div className="flex gap-1.5">
+        <div className={`flex gap-1.5 ${!hasSearchCenter ? "opacity-50 pointer-events-none" : ""}`}>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
             placeholder="Filter by name..."
+            disabled={!hasSearchCenter}
             className={`flex-1 px-3 py-2 rounded-xl text-sm outline-none transition-colors ${
-              dark ? "bg-white/10 placeholder:text-zinc-500 focus:bg-white/15" : "bg-black/5 placeholder:text-zinc-400 focus:bg-black/[.08]"
+              dark ? "bg-[#F5E8D8]/10 placeholder:text-zinc-500 focus:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 placeholder:text-zinc-400 focus:bg-black/[.08]"
             }`}
           />
           <button
             onClick={handleSearch}
+            disabled={!hasSearchCenter}
             className={`px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
-              dark ? "bg-white/10 text-white hover:bg-white/15" : "bg-black/5 text-zinc-700 hover:bg-black/10"
+              dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-700 hover:bg-[#4E8098]/12"
             }`}
           >
             Search
@@ -342,20 +393,30 @@ export default function DiscoverPanel() {
 
       {/* Results */}
       <div className="flex-1 overflow-y-auto px-1 pb-2 scrollbar-hide">
-        {loading && (
+        {!hasSearchCenter && (
+          <div className={`text-center py-12 px-6 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <div className="text-2xl mb-3">{"\u{1F4CD}"}</div>
+            <div className="text-sm font-medium mb-1">No search location set</div>
+            <div className="text-xs leading-relaxed">
+              Add a hotel/base or a stop to your day first, then come back to discover nearby places.
+            </div>
+          </div>
+        )}
+
+        {hasSearchCenter && loading && (
           <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
             <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
             Searching nearby places...
           </div>
         )}
 
-        {!loading && searched && results.length === 0 && (
+        {hasSearchCenter && !loading && searched && results.length === 0 && (
           <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
             No places found nearby. Try a different location or search term.
           </div>
         )}
 
-        {!loading && results.map((result) => (
+        {hasSearchCenter && !loading && results.map((result) => (
           <ResultItem
             key={result.id}
             result={result}

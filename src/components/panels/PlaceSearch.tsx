@@ -40,7 +40,7 @@ export default function PlaceSearch({
   }, [query, center]);
 
   return (
-    <div className={`mx-2 mt-1 rounded-xl overflow-hidden ${dark ? "bg-white/10" : "bg-black/5"}`}>
+    <div className={`mx-2 mt-1 rounded-xl overflow-hidden ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
       <div className="px-3 pt-2.5 pb-1.5">
         <input
           ref={inputRef}
@@ -50,7 +50,7 @@ export default function PlaceSearch({
           onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
           placeholder="Search for a place..."
           className={`w-full px-2.5 py-2 rounded-lg text-sm outline-none ${
-            dark ? "bg-white/10 text-white placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
+            dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
           }`}
         />
       </div>
@@ -68,7 +68,7 @@ export default function PlaceSearch({
               key={r.placeId}
               onClick={() => onAdd(r.name, r.lat, r.lng, r.displayName)}
               className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors ${
-                dark ? "hover:bg-white/10" : "hover:bg-black/5"
+                dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
               }`}
             >
               <span className={`text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>&#128205;</span>
@@ -76,7 +76,7 @@ export default function PlaceSearch({
                 <div className="text-sm font-medium truncate">{r.name}</div>
                 <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{r.displayName}</div>
               </div>
-              <span className={`text-xs font-semibold ${dark ? "text-blue-400" : "text-blue-500"}`}>+ Add</span>
+              <span className={`text-xs font-semibold ${dark ? "text-[#DAA520]" : "text-[#4E8098]"}`}>+ Add</span>
             </button>
           ))}
         </div>
@@ -92,7 +92,7 @@ export default function PlaceSearch({
         <button
           onClick={onCancel}
           className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-            dark ? "text-zinc-400 hover:bg-white/10" : "text-zinc-500 hover:bg-black/5"
+            dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
           }`}
         >
           Cancel

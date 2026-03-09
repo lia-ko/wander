@@ -42,16 +42,19 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
 
   // Hotel info
   y = 95;
-  if (trip.hotel) {
+  if (trip.hotels && trip.hotels.length > 0) {
     const hc = hex(HOTEL_COLOR);
-    doc.setFillColor(hc.r, hc.g, hc.b);
-    doc.roundedRect(MARGIN, y, CONTENT_W, 18, 3, 3, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.text(`Accommodation: ${trip.hotel.name}`, MARGIN + 5, y + 8);
-    doc.setFontSize(9);
-    doc.text(trip.hotel.address, MARGIN + 5, y + 14);
-    y += 25;
+    for (const hotel of trip.hotels) {
+      doc.setFillColor(hc.r, hc.g, hc.b);
+      doc.roundedRect(MARGIN, y, CONTENT_W, 18, 3, 3, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(11);
+      doc.text(`Accommodation: ${hotel.name}`, MARGIN + 5, y + 8);
+      doc.setFontSize(9);
+      doc.text(hotel.address, MARGIN + 5, y + 14);
+      y += 22;
+    }
+    y += 3;
   }
 
   // Summary

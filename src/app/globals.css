@@ -3,6 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Light palette */
+  --wander-blue: #4E8098;
+  --wander-teal: #90CCB8;
+  --wander-sand: #F0D5A8;
+  --wander-coral: #E8745A;
+  /* Dark palette */
+  --wander-dark-bg: #1C1C1C;
+  --wander-dark-cream: #F5E8D8;
+  --wander-dark-coral: #FF6F61;
+  --wander-dark-gold: #DAA520;
+  --wander-dark-orange: #FF4500;
 }
 
 @theme inline {
@@ -53,4 +64,20 @@ html, body {
 
 .leaflet-popup-tip {
   box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+/* Walking radius labels */
+.radius-label {
+  background: rgba(59, 130, 246, 0.85) !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 1px 6px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: white !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15) !important;
+  white-space: nowrap !important;
+}
+.radius-label::before {
+  display: none !important;
 }

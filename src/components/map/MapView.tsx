@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useTripStore } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
@@ -36,17 +36,18 @@ function MapPins() {
 
   return (
     <>
-      {trip.hotel && (
+      {trip.hotels.map((hotel) => (
         <Marker
-          position={[trip.hotel.y, trip.hotel.x]}
+          key={hotel.id}
+          position={[hotel.y, hotel.x]}
           icon={createPinIcon(HOTEL_COLOR, true)}
         >
           <Popup>
-            <div className="text-sm font-semibold">{trip.hotel.name}</div>
-            <div className="text-xs text-zinc-500">{trip.hotel.address}</div>
+            <div className="text-sm font-semibold">{hotel.name}</div>
+            <div className="text-xs text-zinc-500">{hotel.address}</div>
           </Popup>
         </Marker>
-      )}
+      ))}
 
       {trip.days.map((day) => {
         const isActive = day.id === activeDayId;
@@ -69,6 +70,61 @@ function MapPins() {
             </Marker>
           ));
       })}
+    </>
+  );
+}
+
+// Average walking speed ~5km/h → ~833m per 10 min
+const WALK_RINGS = [
+  { minutes: 30, radius: 2500, opacity: 0.05 },
+  { minutes: 20, radius: 1667, opacity: 0.08 },
+  { minutes: 10, radius: 833, opacity: 0.12 },
+];
+
+function WalkingRadius() {
+  const radiusCenter = useTripStore((s) => s.radiusCenter);
+  const dark = useTripStore((s) => s.darkMode);
+
+  if (!radiusCenter) return null;
+
+  const ringColor = dark ? "#60A5FA" : "#3B82F6";
+
+  return (
+    <>
+      {/* Render largest first so smaller rings are on top and clickable */}
+      {WALK_RINGS.map((ring) => (
+        <Circle
+          key={ring.minutes}
+          center={[radiusCenter.lat, radiusCenter.lng]}
+          radius={ring.radius}
+          pathOptions={{
+            color: ringColor,
+            weight: 1.5,
+            fillColor: ringColor,
+            fillOpacity: ring.opacity,
+            dashArray: ring.minutes > 10 ? "6 4" : undefined,
+          }}
+        >
+          <Tooltip
+            permanent
+            direction="top"
+            className="radius-label"
+          >
+            {ring.minutes} min
+          </Tooltip>
+        </Circle>
+      ))}
+      {/* Center dot */}
+      <Circle
+        center={[radiusCenter.lat, radiusCenter.lng]}
+        radius={30}
+        pathOptions={{
+          color: ringColor,
+          weight: 2,
+          fillColor: ringColor,
+          fillOpacity: 0.6,
+        }}
+      />
     </>
   );
 }
@@ -143,6 +199,7 @@ export default function MapView() {
     >
       <TileLayer url={dark ? darkTiles : lightTiles} />
       <MapPins />
+      <WalkingRadius />
       <MapSync />
     </MapContainer>
   );

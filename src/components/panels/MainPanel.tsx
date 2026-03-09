@@ -69,7 +69,7 @@ export default function MainPanel() {
         className={`absolute top-0 right-0 bottom-0 w-1.5 cursor-col-resize group z-30`}
       >
         <div className={`absolute inset-y-0 right-0 w-0.5 transition-colors ${
-          dark ? "group-hover:bg-white/20" : "group-hover:bg-black/10"
+          dark ? "group-hover:bg-[#F5E8D8]/20" : "group-hover:bg-black/10"
         }`} />
       </div>
     </GlassPanel>

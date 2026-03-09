@@ -31,7 +31,7 @@ export default function DayChips() {
       <button
         onClick={addDay}
         className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm transition-colors ${
-          dark ? "text-zinc-400 hover:bg-white/10" : "text-zinc-400 hover:bg-black/5"
+          dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-400 hover:bg-[#4E8098]/8"
         }`}
       >
         +

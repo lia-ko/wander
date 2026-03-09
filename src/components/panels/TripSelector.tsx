@@ -37,7 +37,7 @@ function NewTripModal() {
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const emojis = ["\u{1F30D}", "\u{1F338}", "\u2708\uFE0F", "\u{1F3D6}\uFE0F", "\u26F0\uFE0F", "\u{1F3EF}", "\u{1F1EF}\u{1F1F5}", "\u{1F1EB}\u{1F1F7}", "\u{1F1EE}\u{1F1F9}", "\u{1F1EC}\u{1F1E7}", "\u{1F1FA}\u{1F1F8}", "\u{1F1F9}\u{1F1ED}"];
+  const emojis = ["\u{1F30D}", "\u{1F3D9}\uFE0F", "\u{1F3F0}", "\u{1F333}", "\u26F0\uFE0F", "\u{1F3D6}\uFE0F", "\u2708\uFE0F"];
 
   useEffect(() => {
     if (!destQuery.trim() || destQuery.length < 2 || selectedDest) {
@@ -101,14 +101,14 @@ function NewTripModal() {
   };
 
   const inputClass = `w-full px-3 py-2 rounded-xl text-sm outline-none transition-colors ${
-    dark ? "bg-white/10 placeholder:text-zinc-500 focus:bg-white/15" : "bg-black/5 placeholder:text-zinc-400 focus:bg-black/[.08]"
+    dark ? "bg-[#F5E8D8]/10 placeholder:text-zinc-500 focus:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 placeholder:text-zinc-400 focus:bg-black/[.08]"
   }`;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setNewTripModalOpen(false)} />
       <div className={`relative w-[380px] rounded-2xl border shadow-2xl p-5 ${
-        dark ? "bg-zinc-900 border-white/10 text-white" : "bg-white border-black/5 text-zinc-900"
+        dark ? "bg-[#1C1C1C] border-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white border-[#4E8098]/10 text-zinc-900"
       }`}>
         <h2 className="text-lg font-bold mb-4">New Trip</h2>
 
@@ -121,21 +121,21 @@ function NewTripModal() {
             onChange={(e) => { setDestQuery(e.target.value); setSelectedDest(null); }}
             placeholder="Search for a city..."
             autoFocus
-            className={`${inputClass} ${selectedDest ? "ring-2 ring-emerald-500" : ""}`}
+            className={`${inputClass} ${selectedDest ? "ring-2 ring-[#90CCB8]" : ""}`}
           />
           {selectedDest && (
-            <span className="absolute right-3 top-[34px] text-emerald-500 text-sm">&#10003;</span>
+            <span className="absolute right-3 top-[34px] text-[#90CCB8] text-sm">&#10003;</span>
           )}
           {destResults.length > 0 && (
             <div className={`absolute top-full left-0 right-0 mt-1 rounded-xl border shadow-lg z-50 overflow-hidden max-h-48 overflow-y-auto ${
-              dark ? "bg-zinc-800 border-white/10" : "bg-white border-black/10"
+              dark ? "bg-[#252525] border-[#F5E8D8]/10" : "bg-white border-[#4E8098]/15"
             }`}>
               {destResults.map((r) => (
                 <button
                   key={r.placeId}
                   onClick={() => handleSelectDest(r)}
                   className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors ${
-                    dark ? "hover:bg-white/10" : "hover:bg-black/5"
+                    dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
                   }`}
                 >
                   <span className="text-base">&#128205;</span>
@@ -149,7 +149,7 @@ function NewTripModal() {
           )}
           {searching && (
             <div className={`absolute top-full left-0 right-0 mt-1 rounded-xl border px-3 py-2 text-xs ${
-              dark ? "bg-zinc-800 border-white/10 text-zinc-400" : "bg-white border-black/10 text-zinc-500"
+              dark ? "bg-[#252525] border-[#F5E8D8]/10 text-zinc-400" : "bg-white border-[#4E8098]/15 text-zinc-500"
             }`}>Searching...</div>
           )}
         </div>
@@ -164,8 +164,8 @@ function NewTripModal() {
                 onClick={() => setEmoji(e)}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
                   emoji === e
-                    ? "ring-2 ring-blue-500 scale-110"
-                    : dark ? "hover:bg-white/10" : "hover:bg-black/5"
+                    ? "ring-2 ring-[#4E8098] scale-110"
+                    : dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
                 }`}
               >
                 {e}
@@ -221,14 +221,14 @@ function NewTripModal() {
           <button
             onClick={handleCreate}
             disabled={!name.trim() || !selectedDest || !startDate || !endDate}
-            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#4E8098] hover:bg-[#3D6B80] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Create Trip
           </button>
           <button
             onClick={() => setNewTripModalOpen(false)}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-              dark ? "bg-white/10 hover:bg-white/15" : "bg-black/5 hover:bg-black/10"
+              dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
             }`}
           >
             Cancel
@@ -259,7 +259,7 @@ export default function TripSelector() {
           <button
             onClick={() => setOpen(!open)}
             className={`flex items-center gap-2 w-full text-left rounded-lg px-2 py-1.5 transition-colors ${
-              dark ? "hover:bg-white/10" : "hover:bg-black/5"
+              dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
             }`}
           >
             <span className="text-lg">{activeTrip.emoji}</span>
@@ -274,14 +274,14 @@ export default function TripSelector() {
 
           {open && (
             <div className={`absolute top-full left-0 right-0 mt-1 rounded-lg border shadow-lg z-50 overflow-hidden
-              ${dark ? "bg-zinc-800 border-white/10" : "bg-white border-black/10"}`}>
+              ${dark ? "bg-[#252525] border-[#F5E8D8]/10" : "bg-white border-[#4E8098]/15"}`}>
               {trips.map((trip) => (
                 <div
                   key={trip.id}
                   className={`flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors
                     ${trip.id === activeTripId
-                      ? dark ? "bg-white/10" : "bg-black/5"
-                      : dark ? "hover:bg-white/5" : "hover:bg-black/5"
+                      ? dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
+                      : dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#4E8098]/8"
                     }`}
                 >
                   <button
@@ -303,7 +303,7 @@ export default function TripSelector() {
                         if (trips.length <= 2) setOpen(false);
                       }}
                       className={`p-1 rounded transition-colors flex-shrink-0 ${
-                        dark ? "text-zinc-500 hover:text-red-400 hover:bg-white/10" : "text-zinc-400 hover:text-red-500 hover:bg-black/5"
+                        dark ? "text-zinc-500 hover:text-red-400 hover:bg-[#F5E8D8]/10" : "text-zinc-400 hover:text-red-500 hover:bg-[#4E8098]/8"
                       }`}
                       title="Delete trip"
                     >
@@ -317,7 +317,7 @@ export default function TripSelector() {
               <button
                 onClick={() => { setOpen(false); setNewTripModalOpen(true); }}
                 className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm border-t
-                  ${dark ? "border-white/10 text-zinc-400 hover:bg-white/5" : "border-black/5 text-zinc-500 hover:bg-black/5"}`}
+                  ${dark ? "border-[#F5E8D8]/10 text-zinc-400 hover:bg-[#F5E8D8]/6" : "border-[#4E8098]/10 text-zinc-500 hover:bg-[#4E8098]/8"}`}
               >
                 <span>+</span>
                 <span>New trip</span>
@@ -328,7 +328,7 @@ export default function TripSelector() {
 
         <button
           onClick={toggleSidebar}
-          className={`p-1.5 rounded-lg transition-colors ${dark ? "hover:bg-white/10" : "hover:bg-black/5"}`}
+          className={`p-1.5 rounded-lg transition-colors ${dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"}`}
           title="Collapse panel"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

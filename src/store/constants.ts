@@ -1,6 +1,28 @@
 import type { TransportKey, FoodTypeKey, AttrTypeKey } from "@/types";
 
-export const DAY_COLORS = ["#E8845A", "#5A8FE8", "#5ABD8C", "#B87FE8", "#E85A7A", "#5AE8D4", "#E8D45A", "#8C5AE8"];
+// Ordered so adjacent days always have high contrast (alternating warm/cool)
+export const DAY_COLORS = [
+  "#E8745A", // coral
+  "#4E8098", // steel blue
+  "#DAA520", // goldenrod
+  "#90CCB8", // teal
+  "#D946EF", // magenta
+  "#FF4500", // orange-red
+  "#3B82F6", // blue
+  "#22C55E", // green
+  "#F97316", // orange
+  "#8B5CF6", // purple
+  "#E11D48", // rose
+  "#0EA5E9", // sky blue
+  "#A3E635", // lime
+  "#F472B6", // pink
+  "#14B8A6", // teal-dark
+  "#EF4444", // red
+  "#6366F1", // indigo
+  "#FACC15", // yellow
+  "#EC4899", // hot pink
+  "#059669", // emerald
+];
 
 export const TRANSPORT_META: Record<TransportKey, { emoji: string; label: string; color: string }> = {
   walk:    { emoji: "\u{1F6B6}", label: "Walking",          color: "#6B7280" },
@@ -35,4 +57,4 @@ export const ATTR_TYPE_META: Record<AttrTypeKey, { emoji: string; label: string;
   hidden:    { emoji: "\u{1F48E}",       label: "Hidden Gem",   color: "#0EA5E9" },
 };
 
-export const HOTEL_COLOR = "#C9A227";
+export const HOTEL_COLOR = "#DAA520";

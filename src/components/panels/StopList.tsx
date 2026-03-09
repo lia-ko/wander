@@ -23,6 +23,8 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
   const dark = useTripStore((s) => s.darkMode);
   const setSelectedPinId = useTripStore((s) => s.setSelectedPinId);
   const selectedPinId = useTripStore((s) => s.selectedPinId);
+  const radiusCenter = useTripStore((s) => s.radiusCenter);
+  const setRadiusCenter = useTripStore((s) => s.setRadiusCenter);
   const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
   const day = useTripStore((s) => {
     const tr = s.trips.find((t) => t.id === s.activeTripId)!;
@@ -66,7 +68,7 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
 
   if (editing) {
     return (
-      <div className={`px-3 py-2 rounded-xl mx-2 ${dark ? "bg-white/10" : "bg-black/5"}`}>
+      <div className={`px-3 py-2 rounded-xl mx-2 ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
         <input
           type="text"
           value={editName}
@@ -74,7 +76,7 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
           onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
           autoFocus
           className={`w-full px-2 py-1.5 rounded-lg text-sm outline-none mb-1.5 ${
-            dark ? "bg-white/10 text-white" : "bg-white text-zinc-900"
+            dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white text-zinc-900"
           }`}
           placeholder="Stop name"
         />
@@ -84,13 +86,13 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
           onChange={(e) => setEditNote(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
           className={`w-full px-2 py-1.5 rounded-lg text-sm outline-none mb-2 ${
-            dark ? "bg-white/10 text-white" : "bg-white text-zinc-900"
+            dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8]" : "bg-white text-zinc-900"
           }`}
           placeholder="Note (optional)"
         />
         <div className="flex gap-1.5">
-          <button onClick={handleSaveEdit} className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-500 hover:bg-blue-600 transition-colors">Save</button>
-          <button onClick={() => setEditing(false)} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${dark ? "bg-white/10 hover:bg-white/15" : "bg-zinc-200 hover:bg-zinc-300"}`}>Cancel</button>
+          <button onClick={handleSaveEdit} className="flex-1 py-1.5 rounded-lg text-xs font-semibold text-white bg-[#4E8098] hover:bg-[#3D6B80] transition-colors">Save</button>
+          <button onClick={() => setEditing(false)} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-zinc-200 hover:bg-zinc-300"}`}>Cancel</button>
         </div>
       </div>
     );
@@ -104,10 +106,10 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
       onDrop={() => onDrop(index)}
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
         isDragOver
-          ? dark ? "bg-white/15 border border-dashed border-white/30" : "bg-blue-50 border border-dashed border-blue-300"
+          ? dark ? "bg-[#F5E8D8]/15 border border-dashed border-[#F5E8D8]/30" : "bg-[#4E8098]/10 border border-dashed border-[#4E8098]/30"
           : isSelected
-            ? dark ? "bg-white/10" : "bg-black/5"
-            : dark ? "hover:bg-white/5" : "hover:bg-black/[.03]"
+            ? dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
+            : dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#F0D5A8]/25"
       }`}
       onClick={() => { setSelectedPinId(isSelected ? null : pin.id); setExpanded(!expanded); }}
     >
@@ -160,7 +162,7 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
           <button
             onClick={() => { setEditName(pin.name); setEditNote(pin.note || ""); setEditing(true); }}
             className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-              dark ? "bg-white/10 hover:bg-white/15" : "bg-black/5 hover:bg-black/10"
+              dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
             }`}
           >
             Edit
@@ -171,6 +173,22 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
           >
             Remove
           </button>
+          {pin.y !== 0 && pin.x !== 0 && (
+            <button
+              onClick={() => {
+                const isActive = radiusCenter && Math.abs(radiusCenter.lat - pin.y) < 0.0001 && Math.abs(radiusCenter.lng - pin.x) < 0.0001;
+                setRadiusCenter(isActive ? null : { lat: pin.y, lng: pin.x, label: pin.name });
+              }}
+              className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+                radiusCenter && Math.abs(radiusCenter.lat - pin.y) < 0.0001 && Math.abs(radiusCenter.lng - pin.x) < 0.0001
+                  ? "bg-[#4E8098]/20 text-[#4E8098]"
+                  : dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
+              }`}
+              title="Show walking radius"
+            >
+              Radius
+            </button>
+          )}
           {pinCount > 1 && (
             <span className={`text-[10px] ml-1 ${dark ? "text-zinc-600" : "text-zinc-400"}`}>
               Drag to reorder
@@ -207,11 +225,11 @@ function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; prevPin: Pin; day
     <div className="mx-2 my-1">
       {/* Dashed connector */}
       <div className="ml-3 mb-1">
-        <div className={`w-px h-3 border-l border-dashed ${dark ? "border-white/20" : "border-black/15"}`} style={{ marginLeft: "8px" }} />
+        <div className={`w-px h-3 border-l border-dashed ${dark ? "border-[#F5E8D8]/20" : "border-[#4E8098]/15"}`} style={{ marginLeft: "8px" }} />
       </div>
 
       {/* Transport options — each is a Google Maps link */}
-      <div className={`rounded-xl overflow-hidden ${dark ? "bg-white/5" : "bg-black/[.02]"}`}>
+      <div className={`rounded-xl overflow-hidden ${dark ? "bg-[#F5E8D8]/6" : "bg-[#F0D5A8]/15"}`}>
         <div className={`px-3 py-1.5 text-[10px] font-medium ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
           {prevPin.name} &rarr; {pin.name}
         </div>
@@ -226,7 +244,7 @@ function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; prevPin: Pin; day
                   className={`flex items-center gap-1.5 flex-1 justify-center px-2 py-2 rounded-lg text-xs font-medium transition-all ${
                     isActive
                       ? "text-white shadow-sm"
-                      : dark ? "text-zinc-400 hover:bg-white/10" : "text-zinc-500 hover:bg-black/5"
+                      : dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
                   }`}
                   style={isActive ? { backgroundColor: mode.color } : undefined}
                 >
@@ -245,7 +263,7 @@ function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; prevPin: Pin; day
                 className={`flex items-center gap-1.5 flex-1 justify-center px-2 py-2 rounded-lg text-xs font-medium transition-all ${
                   isActive
                     ? "text-white shadow-sm"
-                    : dark ? "text-zinc-400 hover:bg-white/10" : "text-zinc-500 hover:bg-black/5"
+                    : dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
                 }`}
                 style={isActive ? { backgroundColor: mode.color } : undefined}
               >
@@ -277,7 +295,7 @@ function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; prevPin: Pin; day
                 setEditingNote(false);
               }}
               autoFocus
-              className={`w-full px-2 py-1 rounded-lg text-xs outline-none ${dark ? "bg-white/10 text-white placeholder:text-zinc-500" : "bg-black/5 text-zinc-900 placeholder:text-zinc-400"}`}
+              className={`w-full px-2 py-1 rounded-lg text-xs outline-none ${dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-[#4E8098]/8 text-zinc-900 placeholder:text-zinc-400"}`}
               placeholder="e.g. 20 min walk, Line 1 subway 15 min"
             />
           ) : (
@@ -286,7 +304,7 @@ function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; prevPin: Pin; day
               className={`w-full text-left px-2 py-1 rounded-lg text-xs transition-colors ${
                 pin.travelTime
                   ? dark ? "text-zinc-300" : "text-zinc-600"
-                  : dark ? "text-zinc-600 hover:bg-white/5" : "text-zinc-400 hover:bg-black/[.03]"
+                  : dark ? "text-zinc-600 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:bg-[#F0D5A8]/25"
               }`}
             >
               {pin.travelTime || "+ Add note"}
@@ -297,7 +315,7 @@ function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; prevPin: Pin; day
 
       {/* Dashed connector */}
       <div className="ml-3 mt-1">
-        <div className={`w-px h-3 border-l border-dashed ${dark ? "border-white/20" : "border-black/15"}`} style={{ marginLeft: "8px" }} />
+        <div className={`w-px h-3 border-l border-dashed ${dark ? "border-[#F5E8D8]/20" : "border-[#4E8098]/15"}`} style={{ marginLeft: "8px" }} />
       </div>
     </div>
   );
@@ -313,7 +331,7 @@ function AddStopSearch({ dayId, dayColor }: { dayId: number; dayColor: string })
       <button
         onClick={() => setOpen(true)}
         className={`flex items-center gap-2 w-full mx-2 mt-1 px-3 py-2.5 rounded-xl text-sm transition-colors ${
-          dark ? "text-zinc-400 hover:bg-white/5" : "text-zinc-400 hover:bg-black/[.03]"
+          dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:bg-[#F0D5A8]/25"
         }`}
       >
         <span className="w-6 h-6 rounded-full border-2 border-dashed flex items-center justify-center text-xs"

@@ -19,12 +19,12 @@ export default function BottomActionBar() {
   const btnClass = (active: boolean) =>
     `flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold transition-all ${
       active
-        ? dark ? "bg-white/15 text-white" : "bg-black/10 text-zinc-900"
-        : dark ? "bg-white/5 text-zinc-300 hover:bg-white/10" : "bg-black/[.03] text-zinc-600 hover:bg-black/[.06]"
+        ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+        : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
     }`;
 
   return (
-    <div className={`border-t px-3 py-2.5 flex flex-col gap-2 ${dark ? "border-white/10" : "border-black/5"}`}>
+    <div className={`border-t px-3 py-2.5 flex flex-col gap-2 ${dark ? "border-[#F5E8D8]/10" : "border-[#4E8098]/10"}`}>
       {/* Discover row */}
       <div className="flex items-center gap-1.5">
         {discoverButtons.map((btn) => (

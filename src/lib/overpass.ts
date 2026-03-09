@@ -78,13 +78,14 @@ function buildQuery(
   const tags = TAG_MAP[category];
   const around = `(around:${radiusM},${center.lat},${center.lng})`;
 
-  // Build union of node+way queries for each tag set
+  // Build union of node+way+relation queries for each tag set
   const parts = tags.flatMap((tag) => [
     `node${tag}${around};`,
     `way${tag}${around};`,
+    ...(category === "attractions" ? [`relation${tag}${around};`] : []),
   ]);
 
-  let query = `[out:json][timeout:15];(\n${parts.join("\n")}\n);out center body qt 40;`;
+  let query = `[out:json][timeout:25];(\n${parts.join("\n")}\n);out center body qt 50;`;
 
   // If there's a name filter, we use a regex filter
   if (nameFilter) {
@@ -92,8 +93,9 @@ function buildQuery(
     const filterParts = tags.flatMap((tag) => [
       `node${tag}["name"~"${escaped}",i]${around};`,
       `way${tag}["name"~"${escaped}",i]${around};`,
+      ...(category === "attractions" ? [`relation${tag}["name"~"${escaped}",i]${around};`] : []),
     ]);
-    query = `[out:json][timeout:15];(\n${filterParts.join("\n")}\n);out center body qt 40;`;
+    query = `[out:json][timeout:25];(\n${filterParts.join("\n")}\n);out center body qt 50;`;
   }
 
   return query;
@@ -143,10 +145,11 @@ export async function searchOverpass(
   center: { lat: number; lng: number },
   category: DiscoverCategory,
   nameFilter?: string,
+  customRadiusM?: number,
 ): Promise<OverpassResult[]> {
   if (!center.lat && !center.lng) return [];
 
-  const radius = RADIUS_MAP[category];
+  const radius = customRadiusM ?? RADIUS_MAP[category];
   const query = buildQuery(center, category, radius, nameFilter);
 
   try {
