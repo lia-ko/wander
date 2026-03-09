@@ -220,7 +220,12 @@ function MapSync() {
 
   // Count all pins with valid coords in the active day
   const activeDay = trip.days.find((d) => d.id === activeDayId);
-  const validPins = activeDay?.pins.filter((p) => p.y !== 0 && p.x !== 0) ?? [];
+  const validPins = useMemo(
+    () => activeDay?.pins.filter((p) => p.y !== 0 && p.x !== 0) ?? [],
+    // Stabilize: only recompute when the pin IDs or coordinates actually change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeDay?.pins.map((p) => `${p.id}:${p.y}:${p.x}`).join(",")]
+  );
 
   useEffect(() => {
     // Trip changed — fly to trip center
@@ -256,7 +261,7 @@ function MapSync() {
     }
 
     prevPinCount.current = validPins.length;
-  }, [activeTripId, activeDayId, validPins.length, trip.center, map, validPins]);
+  }, [activeTripId, activeDayId, validPins, trip.center, map]);
 
   return null;
 }

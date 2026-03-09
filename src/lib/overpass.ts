@@ -147,6 +147,7 @@ export async function searchOverpass(
   category: DiscoverCategory,
   nameFilter?: string,
   customRadiusM?: number,
+  signal?: AbortSignal,
 ): Promise<OverpassResult[]> {
   if (!center.lat && !center.lng) return [];
 
@@ -158,6 +159,7 @@ export async function searchOverpass(
       method: "POST",
       body: `data=${encodeURIComponent(query)}`,
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal,
     });
 
     if (!res.ok) {

@@ -205,6 +205,7 @@ export default function DiscoverPanel() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const cacheRef = useRef<Map<string, OverpassResult[]>>(new Map());
+  const abortRef = useRef<AbortController | null>(null);
 
   const allPins: Pin[] = trip.days.flatMap((d) => d.pins).filter((p) => p.y !== 0 && p.x !== 0);
   const dayPins: Pin[] = (day?.pins ?? []).filter((p) => p.y !== 0 && p.x !== 0);
@@ -250,9 +251,15 @@ export default function DiscoverPanel() {
       setSearched(true);
       return;
     }
+    // Abort any in-flight request before starting a new one
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setLoading(true);
     setSearched(true);
-    searchOverpass(center, discoverTab, nameFilter || undefined, 5000).then((r) => {
+    searchOverpass(center, discoverTab, nameFilter || undefined, 5000, controller.signal).then((r) => {
+      if (controller.signal.aborted) return; // stale — discard
       r.sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity));
       cacheRef.current.set(cacheKey, r);
       setResults(r);
@@ -260,10 +267,11 @@ export default function DiscoverPanel() {
     });
   }, [getSearchCenter, discoverTab]);
 
-  // Auto-search when tab/location changes
+  // Auto-search when tab/location changes; abort on cleanup
   useEffect(() => {
     if (!discoverOpen || !hasSearchCenter) return;
     doSearch();
+    return () => { abortRef.current?.abort(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discoverTab, activeNearId, discoverOpen]);
 
