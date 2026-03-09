@@ -6,6 +6,7 @@ import MainPanel from "@/components/panels/MainPanel";
 import DiscoverPanel from "@/components/panels/DiscoverPanel";
 import MapControls from "@/components/map/MapControls";
 import ToastContainer from "@/components/ui/ToastContainer";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useTripStore } from "@/store/tripStore";
 import { useUndoStore } from "@/store/undoStore";
 
@@ -31,15 +32,17 @@ export default function Home() {
   }, [undo, hasSnapshot]);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      {/* Map layer — full bleed */}
-      <MapView />
+    <ErrorBoundary>
+      <div className="relative w-screen h-screen overflow-hidden">
+        {/* Map layer — full bleed */}
+        <MapView />
 
-      {/* Floating UI panels */}
-      <MainPanel />
-      <DiscoverPanel />
-      <MapControls />
-      <ToastContainer />
-    </div>
+        {/* Floating UI panels */}
+        <MainPanel />
+        <DiscoverPanel />
+        <MapControls />
+        <ToastContainer />
+      </div>
+    </ErrorBoundary>
   );
 }

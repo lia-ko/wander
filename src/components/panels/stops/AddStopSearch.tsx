@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { sectionBg, inputBase } from "@/lib/styles";
 import PlaceSearch from "../PlaceSearch";
 
 function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
@@ -15,7 +16,7 @@ function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
   const [arrTime, setArrTime] = useState("");
 
   const inputCls = `w-full px-2.5 py-2 rounded-lg text-xs outline-none ${
-    dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
+    inputBase(dark)
   }`;
 
   const handleAdd = () => {
@@ -39,7 +40,7 @@ function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
   };
 
   return (
-    <div className={`mx-2 mt-1 rounded-xl overflow-hidden px-3 py-2.5 space-y-1.5 ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
+    <div className={`mx-2 mt-1 rounded-xl overflow-hidden px-3 py-2.5 space-y-1.5 ${sectionBg(dark)}`}>
       <div className="flex gap-2">
         <input type="text" value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Airline" autoFocus className={inputCls} />
         <input type="text" value={flightNum} onChange={(e) => setFlightNum(e.target.value)} placeholder="Flight #" className={inputCls} />

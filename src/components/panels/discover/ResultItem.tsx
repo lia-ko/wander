@@ -3,6 +3,7 @@ import { getHoursForDate } from "@/lib/hours";
 import type { OverpassResult } from "@/lib/overpass";
 import type { DiscoverTab } from "@/types";
 import { getTagPills, formatDist } from "./helpers";
+import { textMuted, textSubtle, softHoverBg, accentActive } from "@/lib/styles";
 
 function TagPill({ label, color }: { label: string; color: string }) {
   return (
@@ -31,17 +32,17 @@ export default function ResultItem({ result, tab, added, wishlisted, onAdd, onWi
   const dist = result.dist ?? 0;
 
   return (
-    <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#F0D5A8]/25"}`}>
+    <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${softHoverBg(dark)}`}>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">{result.name}</div>
         {address && (
-          <div className={`text-xs truncate mt-0.5 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{address}</div>
+          <div className={`text-xs truncate mt-0.5 ${textMuted(dark)}`}>{address}</div>
         )}
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           {pills.map((pill, i) => (
             <TagPill key={i} label={pill.label} color={pill.color} />
           ))}
-          <span className={`text-[10px] ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+          <span className={`text-[10px] ${textSubtle(dark)}`}>
             {formatDist(dist)}
           </span>
         </div>
@@ -49,7 +50,7 @@ export default function ResultItem({ result, tab, added, wishlisted, onAdd, onWi
           const parsed = dayDate ? getHoursForDate(result.tags.opening_hours, dayDate) : result.tags.opening_hours;
           const isClosed = parsed?.toLowerCase().includes("closed");
           return (
-            <div className={`text-[10px] mt-0.5 flex items-center gap-1 ${isClosed ? "text-red-400" : dark ? "text-zinc-500" : "text-zinc-400"}`}>
+            <div className={`text-[10px] mt-0.5 flex items-center gap-1 ${isClosed ? "text-red-400" : textSubtle(dark)}`}>
               <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -74,7 +75,7 @@ export default function ResultItem({ result, tab, added, wishlisted, onAdd, onWi
           onClick={onWishlist}
           className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
             wishlisted
-              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+              ? accentActive(dark)
               : dark ? "bg-[#F5E8D8]/10 text-zinc-500 hover:text-[#DAA520] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-400 hover:text-[#4E8098] hover:bg-[#4E8098]/12"
           }`}
           title="Save to wishlist"

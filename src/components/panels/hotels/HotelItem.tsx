@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import type { Hotel } from "@/types";
+import { textMuted, textSubtle, inputBase, ghostBtn, deleteBtn } from "@/lib/styles";
 
 function HotelItem({ hotel }: { hotel: Hotel }) {
   const removeHotel = useTripStore((s) => s.removeHotel);
@@ -28,7 +29,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
   };
 
   const inputCls = `w-full px-2 py-1.5 rounded-lg text-xs outline-none ${
-    dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
+    inputBase(dark)
   }`;
 
   return (
@@ -51,9 +52,9 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
         </div>
         <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpanded(!expanded)}>
           <div className="text-sm font-semibold truncate">{hotel.name}</div>
-          <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{hotel.address}</div>
+          <div className={`text-xs truncate ${textMuted(dark)}`}>{hotel.address}</div>
           {!expanded && (hotel.checkIn || hotel.checkOut) && (
-            <div className={`text-[10px] mt-0.5 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+            <div className={`text-[10px] mt-0.5 ${textSubtle(dark)}`}>
               {hotel.checkIn && `In: ${hotel.checkIn}`}
               {hotel.checkIn && hotel.checkOut && " · "}
               {hotel.checkOut && `Out: ${hotel.checkOut}`}
@@ -81,7 +82,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
               if (isRadiusActive) setRadiusCenter(null);
               removeHotel(hotel.id);
             }}
-            className={`p-1.5 rounded-lg transition-colors ${dark ? "text-zinc-500 hover:text-red-400 hover:bg-[#F5E8D8]/10" : "text-zinc-400 hover:text-red-500 hover:bg-[#4E8098]/8"}`}
+            className={`p-1.5 rounded-lg transition-colors ${deleteBtn(dark)}`}
             title="Remove hotel"
           >
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,7 +96,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
         <div className="px-3 pb-2.5 space-y-2">
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className={`text-[10px] font-medium mb-0.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Check-in</label>
+              <label className={`text-[10px] font-medium mb-0.5 block ${textMuted(dark)}`}>Check-in</label>
               <input
                 type="text"
                 value={checkIn}
@@ -105,7 +106,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
               />
             </div>
             <div className="flex-1">
-              <label className={`text-[10px] font-medium mb-0.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Check-out</label>
+              <label className={`text-[10px] font-medium mb-0.5 block ${textMuted(dark)}`}>Check-out</label>
               <input
                 type="text"
                 value={checkOut}
@@ -116,7 +117,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
             </div>
           </div>
           <div>
-            <label className={`text-[10px] font-medium mb-0.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Notes</label>
+            <label className={`text-[10px] font-medium mb-0.5 block ${textMuted(dark)}`}>Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -129,7 +130,7 @@ function HotelItem({ hotel }: { hotel: Hotel }) {
             <button
               onClick={() => setExpanded(false)}
               className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
+                ghostBtn(dark)
               }`}
             >
               Cancel

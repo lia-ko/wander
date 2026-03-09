@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { exportTripPdf } from "@/components/export/exportPdf";
 import { toast } from "@/store/toastStore";
+import { accentActive } from "@/lib/styles";
 import html2canvas from "html2canvas";
 import type { Trip } from "@/types";
 
@@ -44,7 +45,7 @@ export default function BottomActionBar() {
   const btnClass = (active: boolean) =>
     `flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold transition-all ${
       active
-        ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+        ? accentActive(dark)
         : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
     }`;
 
@@ -102,7 +103,7 @@ export default function BottomActionBar() {
           onClick={() => setSidebarView(isWishlist ? "day" : "wishlist")}
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
             isWishlist
-              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+              ? accentActive(dark)
               : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
           }`}
         >
@@ -125,7 +126,7 @@ export default function BottomActionBar() {
           onClick={() => setSidebarView(isBudget ? "day" : "budget")}
           className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
             isBudget
-              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+              ? accentActive(dark)
               : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
           }`}
         >

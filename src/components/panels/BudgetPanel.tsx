@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { EXPENSE_CATEGORY_META, CURRENCIES } from "@/store/constants";
+import { textMuted, textSubtle } from "@/lib/styles";
 import type { ExpenseCategory, Expense } from "@/types";
 
 const categories = Object.keys(EXPENSE_CATEGORY_META) as ExpenseCategory[];

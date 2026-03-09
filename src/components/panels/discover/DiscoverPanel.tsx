@@ -8,6 +8,7 @@ import { getDayDate } from "@/lib/hours";
 import type { DiscoverTab, Pin } from "@/types";
 import { mapOsmToFoodType, mapOsmToAttrType, formatCuisine } from "./helpers";
 import ResultItem from "./ResultItem";
+import { textMuted, textSubtle, hoverBg, accentActive } from "@/lib/styles";
 
 export default function DiscoverPanel() {
   const discoverOpen = useTripStore((s) => s.discoverOpen);
@@ -156,7 +157,7 @@ export default function DiscoverPanel() {
               onClick={() => toggleDiscover(tab.key)}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                 discoverTab === tab.key
-                  ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+                  ? accentActive(dark)
                   : dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-500 hover:bg-[#4E8098]/8"
               }`}
             >
@@ -166,7 +167,7 @@ export default function DiscoverPanel() {
         </div>
         <button
           onClick={closeDiscover}
-          className={`p-1 rounded-lg transition-colors ${dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"}`}
+          className={`p-1 rounded-lg transition-colors ${hoverBg(dark)}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -177,7 +178,7 @@ export default function DiscoverPanel() {
       {/* Search near + filter */}
       <div className="px-3 py-2 space-y-2">
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-medium flex-shrink-0 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <span className={`text-xs font-medium flex-shrink-0 ${textMuted(dark)}`}>
             Search near:
           </span>
           <select
@@ -241,7 +242,7 @@ export default function DiscoverPanel() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: day?.color }} />
-            <span className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <span className={`text-xs ${textMuted(dark)}`}>
               Adding to {day?.label}
             </span>
           </div>
@@ -256,7 +257,7 @@ export default function DiscoverPanel() {
       {/* Results */}
       <div className="flex-1 overflow-y-auto px-1 pb-2 scrollbar-hide">
         {!hasSearchCenter && (
-          <div className={`text-center py-12 px-6 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <div className={`text-center py-12 px-6 ${textMuted(dark)}`}>
             <div className="text-2xl mb-3">{"\u{1F4CD}"}</div>
             <div className="text-sm font-medium mb-1">No search location set</div>
             <div className="text-xs leading-relaxed">
@@ -266,14 +267,14 @@ export default function DiscoverPanel() {
         )}
 
         {hasSearchCenter && loading && (
-          <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+          <div className={`text-center py-8 text-sm ${textSubtle(dark)}`}>
             <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
             Searching nearby places...
           </div>
         )}
 
         {hasSearchCenter && !loading && searched && results.length === 0 && (
-          <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+          <div className={`text-center py-8 text-sm ${textSubtle(dark)}`}>
             No places found nearby. Try a different location or search term.
           </div>
         )}

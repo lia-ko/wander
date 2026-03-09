@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { searchCities, type GeoResult } from "@/lib/geocode";
 import { DAY_COLORS } from "@/store/constants";
+import { textMuted, textSubtle, hoverBg, inputFocus, btnHover } from "@/lib/styles";
 
 function formatDateRange(start: string, end: string): string {
   const s = new Date(start + "T12:00:00");
@@ -110,7 +111,7 @@ function NewTripModal() {
   };
 
   const inputClass = `w-full px-3 py-2 rounded-xl text-sm outline-none transition-colors ${
-    dark ? "bg-[#F5E8D8]/10 placeholder:text-zinc-500 focus:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 placeholder:text-zinc-400 focus:bg-black/[.08]"
+    inputFocus(dark)
   }`;
 
   return (
@@ -123,7 +124,7 @@ function NewTripModal() {
 
         {/* Destination search */}
         <div className="mb-3 relative">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Destination</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Destination</label>
           <input
             type="text"
             value={destQuery}
@@ -144,13 +145,13 @@ function NewTripModal() {
                   key={r.placeId}
                   onClick={() => handleSelectDest(r)}
                   className={`flex items-center gap-2 w-full px-3 py-2 text-left text-sm transition-colors ${
-                    dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+                    hoverBg(dark)
                   }`}
                 >
                   <span className="text-base">&#128205;</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{r.name}</div>
-                    <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{r.displayName}</div>
+                    <div className={`text-xs truncate ${textMuted(dark)}`}>{r.displayName}</div>
                   </div>
                 </button>
               ))}
@@ -165,7 +166,7 @@ function NewTripModal() {
 
         {/* Emoji picker */}
         <div className="mb-3">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Icon</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Icon</label>
           <div className="flex flex-wrap gap-1.5">
             {emojis.map((e) => (
               <button
@@ -174,7 +175,7 @@ function NewTripModal() {
                 className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
                   emoji === e
                     ? "ring-2 ring-[#4E8098] scale-110"
-                    : dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+                    : hoverBg(dark)
                 }`}
               >
                 {e}
@@ -185,7 +186,7 @@ function NewTripModal() {
 
         {/* Name */}
         <div className="mb-3">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Trip Name</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Trip Name</label>
           <input
             type="text"
             value={name}
@@ -198,7 +199,7 @@ function NewTripModal() {
 
         {/* Date range */}
         <div className="mb-5">
-          <label className={`text-xs font-medium mb-1.5 block ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Dates</label>
+          <label className={`text-xs font-medium mb-1.5 block ${textMuted(dark)}`}>Dates</label>
           <div className="flex gap-2 items-center">
             <input
               type="date"
@@ -209,7 +210,7 @@ function NewTripModal() {
               }}
               className={`flex-1 ${inputClass}`}
             />
-            <span className={`text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>to</span>
+            <span className={`text-xs ${textSubtle(dark)}`}>to</span>
             <input
               type="date"
               value={endDate}
@@ -219,7 +220,7 @@ function NewTripModal() {
             />
           </div>
           {numDays > 0 && (
-            <div className={`text-xs mt-1.5 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <div className={`text-xs mt-1.5 ${textMuted(dark)}`}>
               {dateLabel} &middot; {numDays} {numDays === 1 ? "day" : "days"}
             </div>
           )}
@@ -237,7 +238,7 @@ function NewTripModal() {
           <button
             onClick={() => setNewTripModalOpen(false)}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-              dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
+              btnHover(dark)
             }`}
           >
             Cancel

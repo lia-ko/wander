@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { searchPlaces, type GeoResult } from "@/lib/geocode";
+import { textMuted, textSubtle, sectionBg, hoverBg, inputBase, ghostBtn } from "@/lib/styles";
 
 export default function PlaceSearch({
   onAdd,
@@ -49,7 +50,7 @@ export default function PlaceSearch({
   }, [query, center]);
 
   return (
-    <div className={`mx-2 mt-1 rounded-xl overflow-hidden ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
+    <div className={`mx-2 mt-1 rounded-xl overflow-hidden ${sectionBg(dark)}`}>
       <div className="px-3 pt-2.5 pb-1.5">
         <input
           ref={inputRef}
@@ -59,13 +60,13 @@ export default function PlaceSearch({
           onKeyDown={(e) => { if (e.key === "Escape") onCancel(); }}
           placeholder="Search for a place..."
           className={`w-full px-2.5 py-2 rounded-lg text-sm outline-none ${
-            dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
+            inputBase(dark)
           }`}
         />
       </div>
 
       {searching && (
-        <div className={`px-5 py-2 text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+        <div className={`px-5 py-2 text-xs ${textMuted(dark)}`}>
           Searching...
         </div>
       )}
@@ -77,13 +78,13 @@ export default function PlaceSearch({
               key={r.placeId}
               onClick={() => onAdd(r.name, r.lat, r.lng, r.displayName)}
               className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors ${
-                dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+                hoverBg(dark)
               }`}
             >
-              <span className={`text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>&#128205;</span>
+              <span className={`text-xs ${textSubtle(dark)}`}>&#128205;</span>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate">{r.name}</div>
-                <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{r.displayName}</div>
+                <div className={`text-xs truncate ${textMuted(dark)}`}>{r.displayName}</div>
               </div>
               <span className={`text-xs font-semibold ${dark ? "text-[#DAA520]" : "text-[#4E8098]"}`}>+ Add</span>
             </button>
@@ -92,7 +93,7 @@ export default function PlaceSearch({
       )}
 
       {query.length >= 2 && !searching && results.length === 0 && (
-        <div className={`px-5 py-3 text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+        <div className={`px-5 py-3 text-xs ${textSubtle(dark)}`}>
           No results found
         </div>
       )}
@@ -101,7 +102,7 @@ export default function PlaceSearch({
         <button
           onClick={onCancel}
           className={`w-full py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-            dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
+            ghostBtn(dark)
           }`}
         >
           Cancel

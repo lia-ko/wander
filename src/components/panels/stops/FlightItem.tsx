@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { textMuted, textSubtle, sectionBg, inputBase, btnHover, dragOverBg } from "@/lib/styles";
 import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
 
@@ -37,12 +38,12 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
   };
 
   const inputCls = `w-full px-2 py-1.5 rounded-lg text-xs outline-none ${
-    dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400"
+    inputBase(dark)
   }`;
 
   if (editing) {
     return (
-      <div className={`px-3 py-2 rounded-xl mx-2 ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
+      <div className={`px-3 py-2 rounded-xl mx-2 ${sectionBg(dark)}`}>
         <div className="flex gap-2 mb-1.5">
           <input type="text" value={airline} onChange={(e) => setAirline(e.target.value)} placeholder="Airline" className={inputCls} />
           <input type="text" value={flightNum} onChange={(e) => setFlightNum(e.target.value)} placeholder="Flight #" className={inputCls} />
@@ -71,7 +72,7 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
       onDrop={() => onDrop(index)}
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
         isDragOver
-          ? dark ? "bg-[#F5E8D8]/15 border border-dashed border-[#F5E8D8]/30" : "bg-[#4E8098]/10 border border-dashed border-[#4E8098]/30"
+          ? dragOverBg(dark)
           : dark ? "bg-[#3B82F6]/10 hover:bg-[#3B82F6]/15" : "bg-[#3B82F6]/8 hover:bg-[#3B82F6]/12"
       }`}
       style={{ border: isDragOver ? undefined : "1px solid rgba(59,130,246,0.2)" }}
@@ -87,13 +88,13 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
           <div className="text-sm font-medium truncate">
             {pin.airline && pin.flightNumber ? `${pin.airline} ${pin.flightNumber}` : "Flight"}
           </div>
-          <div className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <div className={`text-xs ${textMuted(dark)}`}>
             {pin.departureAirport && pin.arrivalAirport
               ? `${pin.departureAirport} \u2192 ${pin.arrivalAirport}`
               : "No route set"}
           </div>
           {(pin.departureTime || pin.arrivalTime) && (
-            <div className={`text-[10px] mt-0.5 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+            <div className={`text-[10px] mt-0.5 ${textSubtle(dark)}`}>
               {pin.departureTime && `Dep: ${pin.departureTime}`}
               {pin.departureTime && pin.arrivalTime && " \u00B7 "}
               {pin.arrivalTime && `Arr: ${pin.arrivalTime}`}
@@ -107,7 +108,7 @@ export default function FlightItem({ pin, index, dayId, onDragStart, onDragOver,
           <button
             onClick={() => setEditing(true)}
             className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-              dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
+              btnHover(dark)
             }`}
           >
             Edit

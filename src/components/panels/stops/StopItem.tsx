@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
 import { getHoursForDate, getDayDate, fetchOpeningHours } from "@/lib/hours";
+import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg } from "@/lib/styles";
 import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
 
@@ -64,7 +65,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
 
   if (editing) {
     return (
-      <div className={`px-3 py-2 rounded-xl mx-2 ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"}`}>
+      <div className={`px-3 py-2 rounded-xl mx-2 ${sectionBg(dark)}`}>
         <input
           type="text"
           value={editName}
@@ -102,10 +103,10 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
       onDrop={() => onDrop(index)}
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
         isDragOver
-          ? dark ? "bg-[#F5E8D8]/15 border border-dashed border-[#F5E8D8]/30" : "bg-[#4E8098]/10 border border-dashed border-[#4E8098]/30"
+          ? dragOverBg(dark)
           : isSelected
-            ? dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
-            : dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#F0D5A8]/25"
+            ? sectionBg(dark)
+            : softHoverBg(dark)
       }`}
       onClick={() => { setSelectedPinId(isSelected ? null : pin.id); setExpanded(!expanded); }}
     >
@@ -123,7 +124,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium truncate">{pin.name}</div>
           {pin.note && (
-            <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <div className={`text-xs truncate ${textMuted(dark)}`}>
               {pin.note}
             </div>
           )}
@@ -131,7 +132,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
             <div className={`text-[10px] mt-0.5 flex items-center gap-1 ${
               dayHours?.toLowerCase().includes("closed")
                 ? "text-red-400"
-                : dark ? "text-zinc-500" : "text-zinc-400"
+                : textSubtle(dark)
             }`}>
               <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -147,7 +148,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           </div>
         )}
         {pin.price && (
-          <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <span className={`text-xs font-medium ${textMuted(dark)}`}>
             {pin.price}
           </span>
         )}
@@ -158,7 +159,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
           <button
             onClick={() => { setEditName(pin.name); setEditNote(pin.note || ""); setEditing(true); }}
             className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-              dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
+              btnHover(dark)
             }`}
           >
             Edit
@@ -192,7 +193,7 @@ export default function StopItem({ pin, index, dayId, dayColor, onDragStart, onD
               className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
                 radiusCenter && Math.abs(radiusCenter.lat - pin.y) < 0.0001 && Math.abs(radiusCenter.lng - pin.x) < 0.0001
                   ? "bg-[#4E8098]/20 text-[#4E8098]"
-                  : dark ? "bg-[#F5E8D8]/10 hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 hover:bg-[#4E8098]/12"
+                  : btnHover(dark)
               }`}
               title="Show walking radius"
             >

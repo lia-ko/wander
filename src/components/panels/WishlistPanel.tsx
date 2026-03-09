@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
+import { textMuted, textSubtle, sectionBg, softHoverBg, ghostBtn, deleteBtn } from "@/lib/styles";
 import type { Pin } from "@/types";
 import PlaceSearch from "./PlaceSearch";
 
@@ -29,7 +30,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
         e.dataTransfer.effectAllowed = "move";
       }}
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
-        dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#F0D5A8]/25"
+        softHoverBg(dark)
       }`}
     >
       <div className="flex items-center gap-2.5">
@@ -37,7 +38,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
           <span className="w-6 h-6 flex items-center justify-center text-sm">{badge}</span>
         ) : (
           <span className={`w-6 h-6 rounded-full flex items-center justify-center ${
-            dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
+            sectionBg(dark)
           }`}>
             <svg className="w-3 h-3 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -47,7 +48,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium truncate">{pin.name}</div>
           {pin.note && (
-            <div className={`text-xs truncate ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <div className={`text-xs truncate ${textMuted(dark)}`}>
               {pin.note}
             </div>
           )}
@@ -56,7 +57,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
           <button
             onClick={(e) => { e.stopPropagation(); setShowDayPicker(!showDayPicker); }}
             className={`p-1.5 rounded-lg text-xs transition-colors ${
-              dark ? "text-zinc-400 hover:bg-[#F5E8D8]/10" : "text-zinc-500 hover:bg-[#4E8098]/8"
+              ghostBtn(dark)
             }`}
             title="Add to day"
           >
@@ -67,7 +68,7 @@ function WishlistItem({ pin }: { pin: Pin }) {
           <button
             onClick={(e) => { e.stopPropagation(); removeFromWishlist(pin.id); }}
             className={`p-1.5 rounded-lg transition-colors ${
-              dark ? "text-zinc-500 hover:text-red-400 hover:bg-[#F5E8D8]/10" : "text-zinc-400 hover:text-red-500 hover:bg-[#4E8098]/8"
+              deleteBtn(dark)
             }`}
             title="Remove"
           >
@@ -115,7 +116,7 @@ export default function WishlistPanel() {
           </svg>
           <span className="font-semibold text-sm">Wishlist</span>
         </div>
-        <span className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+        <span className={`text-xs ${textMuted(dark)}`}>
           {(trip.wishlist ?? []).length} {(trip.wishlist ?? []).length === 1 ? "place" : "places"}
         </span>
       </div>
@@ -126,7 +127,7 @@ export default function WishlistPanel() {
       ))}
 
       {(trip.wishlist ?? []).length === 0 && !searching && (
-        <div className={`text-center py-8 px-6 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+        <div className={`text-center py-8 px-6 ${textSubtle(dark)}`}>
           <div className="text-2xl mb-3">{"\u{1F516}"}</div>
           <div className="text-sm font-medium mb-1">No saved places yet</div>
           <div className="text-xs leading-relaxed">

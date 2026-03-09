@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
+import { textSubtle, dashedBorder } from "@/lib/styles";
 import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
 import { STOP_DRAG_TYPE } from "./stops/types";
 import StopItem from "./stops/StopItem";
@@ -90,7 +91,7 @@ export default function StopList() {
             {showTransport && <TransportSegment pin={pin} prevPin={prev!} dayId={day.id} />}
             {i > 0 && !showTransport && (
               <div className="ml-5 my-1">
-                <div className={`w-px h-4 border-l border-dashed ${dark ? "border-[#F5E8D8]/20" : "border-[#4E8098]/15"}`} style={{ marginLeft: "8px" }} />
+                <div className={`w-px h-4 border-l border-dashed ${dashedBorder(dark)}`} style={{ marginLeft: "8px" }} />
               </div>
             )}
             {isFlight ? (
@@ -121,7 +122,7 @@ export default function StopList() {
       })}
 
       {day.pins.length === 0 && (
-        <div className={`text-center py-8 text-sm ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+        <div className={`text-center py-8 text-sm ${textSubtle(dark)}`}>
           No stops yet. Add a stop below or drop a pin on the map.
         </div>
       )}
