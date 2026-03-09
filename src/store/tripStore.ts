@@ -48,6 +48,7 @@ interface TripState {
   updatePin: (dayId: number, pinId: number, updates: Partial<Pin>) => void;
   removePin: (dayId: number, pinId: number) => void;
   reorderPin: (dayId: number, fromIndex: number, toIndex: number) => void;
+  movePinToDay: (fromDayId: number, pinId: number, toDayId: number) => void;
 
   // Hotels
   addHotel: (hotel: Omit<Hotel, "id" | "notes" | "checkIn" | "checkOut"> & { notes?: string | null; checkIn?: string | null; checkOut?: string | null }) => void;
@@ -273,6 +274,29 @@ export const useTripStore = create<TripState>()(
             };
           }),
         })),
+
+      movePinToDay: (fromDayId, pinId, toDayId) => {
+        if (fromDayId === toDayId) return;
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const fromDay = trip?.days.find((d) => d.id === fromDayId);
+        const toDay = trip?.days.find((d) => d.id === toDayId);
+        const pin = fromDay?.pins.find((p) => p.id === pinId);
+        if (!pin || !toDay) return;
+        snapBeforeAction(get, `Moved "${pin.name}" to ${toDay.label}`);
+        set((s) => ({
+          trips: s.trips.map((t) => {
+            if (t.id !== s.activeTripId) return t;
+            return {
+              ...t,
+              days: t.days.map((d) => {
+                if (d.id === fromDayId) return { ...d, pins: d.pins.filter((p) => p.id !== pinId) };
+                if (d.id === toDayId) return { ...d, pins: [...d.pins, { ...pin, transport: null, travelTime: null }] };
+                return d;
+              }),
+            };
+          }),
+        }));
+      },
 
       addHotel: (hotel) =>
         set((s) => ({

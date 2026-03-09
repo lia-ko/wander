@@ -8,9 +8,11 @@ import type { Pin, TransportKey } from "@/types";
 import PlaceSearch from "./PlaceSearch";
 import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
 
+export const STOP_DRAG_TYPE = "application/wander-stop";
+
 function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop, isDragOver }: {
   pin: Pin; index: number; dayId: number; dayColor: string;
-  onDragStart: (i: number) => void;
+  onDragStart: (e: React.DragEvent, i: number) => void;
   onDragOver: (e: React.DragEvent, i: number) => void;
   onDrop: (i: number) => void;
   isDragOver: boolean;
@@ -103,7 +105,7 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
   return (
     <div
       draggable
-      onDragStart={() => onDragStart(index)}
+      onDragStart={(e) => onDragStart(e, index)}
       onDragOver={(e) => onDragOver(e, index)}
       onDrop={() => onDrop(index)}
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
@@ -218,7 +220,7 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
 
 function FlightItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop, isDragOver }: {
   pin: Pin; index: number; dayId: number; dayColor: string;
-  onDragStart: (i: number) => void;
+  onDragStart: (e: React.DragEvent, i: number) => void;
   onDragOver: (e: React.DragEvent, i: number) => void;
   onDrop: (i: number) => void;
   isDragOver: boolean;
@@ -280,7 +282,7 @@ function FlightItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDr
   return (
     <div
       draggable
-      onDragStart={() => onDragStart(index)}
+      onDragStart={(e) => onDragStart(e, index)}
       onDragOver={(e) => onDragOver(e, index)}
       onDrop={() => onDrop(index)}
       className={`group px-3 py-2 rounded-xl mx-2 transition-colors cursor-grab active:cursor-grabbing ${
@@ -599,7 +601,14 @@ export default function StopList() {
   const day = trip.days.find((d) => d.id === activeDayId);
   if (!day) return null;
 
-  const handleDragStart = (i: number) => setDragFrom(i);
+  const handleDragStart = (e: React.DragEvent, i: number) => {
+    setDragFrom(i);
+    const pin = day.pins[i];
+    if (pin) {
+      e.dataTransfer.setData(STOP_DRAG_TYPE, JSON.stringify({ pinId: pin.id, fromDayId: day.id }));
+      e.dataTransfer.effectAllowed = "move";
+    }
+  };
   const handleDragOver = (e: React.DragEvent, i: number) => {
     e.preventDefault();
     setDragOver(i);
