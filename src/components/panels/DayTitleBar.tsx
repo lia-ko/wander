@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { useRatesStore } from "@/store/ratesStore";
+import { CURRENCIES } from "@/store/constants";
 import { getDayDate, formatDayDate } from "@/lib/hours";
-import { textMuted } from "@/lib/styles";
+import { textMuted, textSubtle } from "@/lib/styles";
 
 export default function DayTitleBar() {
   const trip = useTripStore(selectActiveTrip);
@@ -17,11 +19,31 @@ export default function DayTitleBar() {
   const [sublabelValue, setSublabelValue] = useState("");
   const [editingDate, setEditingDate] = useState(false);
 
+  const convert = useRatesStore((s) => s.convert);
+  const rates = useRatesStore((s) => s.rates);
+
   const day = trip.days.find((d) => d.id === activeDayId);
   if (!day) return null;
 
   const dayIndex = trip.days.findIndex((d) => d.id === activeDayId);
   const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
+
+  // Daily spending
+  const homeCurrency = trip.budget?.currency ?? "USD";
+  const homeSymbol = CURRENCIES.find((c) => c.code === homeCurrency)?.symbol ?? homeCurrency;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const daySpend = useMemo(() => {
+    const dayExpenses = (trip.expenses ?? []).filter((e) => e.dayId === day.id);
+    if (dayExpenses.length === 0) return null;
+    let total = 0;
+    for (const e of dayExpenses) {
+      const from = e.currency ?? homeCurrency;
+      if (from === homeCurrency) { total += e.amount; continue; }
+      const converted = convert(e.amount, from, homeCurrency);
+      total += converted ?? 0;
+    }
+    return { total, count: dayExpenses.length };
+  }, [trip.expenses, day.id, homeCurrency, rates, convert]);
 
   const handleSaveSublabel = () => {
     updateDay(day.id, { sublabel: sublabelValue.trim() });
@@ -94,6 +116,11 @@ export default function DayTitleBar() {
         )}
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
+        {daySpend && (
+          <span className={`text-xs font-medium ${textSubtle(dark)}`} title={`${daySpend.count} expense${daySpend.count > 1 ? "s" : ""} today`}>
+            {homeSymbol}{daySpend.total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+          </span>
+        )}
         <span className={`text-xs font-medium ${textMuted(dark)}`}>
           {day.pins.length} {day.pins.length === 1 ? "stop" : "stops"}
         </span>
