@@ -54,7 +54,6 @@ export default function TimelineSummary({ dayId }: { dayId: number }) {
   const dayIndex = trip.days.findIndex((d) => d.id === dayId);
   const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const timeline = useMemo(
     () => buildTimeline(day.pins, dayDate),
     [day.pins, dayDate],

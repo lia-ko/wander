@@ -128,7 +128,6 @@ export default function StopList() {
                 pin={pin}
                 index={i}
                 dayId={day.id}
-                dayColor={day.color}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}

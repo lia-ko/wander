@@ -3,7 +3,6 @@
 import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
 import { getHoursForDate, getDayDate, parseTimeToMinutes, minutesToDisplay, checkTimeConflict } from "@/lib/hours";
-import { getPinBadge } from "@/lib/pinUtils";
 import { useUIStore } from "@/store/uiStore";
 import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg, formInput, saveBtn, cancelBtn, wishlistBtn, removeBtn, isSameLocation } from "@/lib/styles";
 import type { Pin } from "@/types";
@@ -42,8 +41,6 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
   const conflict = startMins !== null
     ? checkTimeConflict(startMins, pin.openingHours, dayDate)
     : null;
-
-  const badge = getPinBadge(pin);
 
   const handleSaveEdit = () => {
     if (editName.trim()) {
@@ -128,8 +125,6 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
               <span className="text-[7px] text-red-400 leading-tight">closed</span>
             )}
           </div>
-        ) : badge ? (
-          <span className="w-6 h-6 flex items-center justify-center text-sm">{badge}</span>
         ) : (
           <span
             className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"

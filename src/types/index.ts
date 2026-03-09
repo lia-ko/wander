@@ -34,6 +34,9 @@ export type Pin = {
   // Scheduling
   startTime?: string;         // 24h format e.g. "09:00", "14:30"
 
+  // Wishlist priority (1 = nice, 2 = want, 3 = must-do)
+  priority?: 1 | 2 | 3;
+
   // Hours
   openingHours?: string | null;
 

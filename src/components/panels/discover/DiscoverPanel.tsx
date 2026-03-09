@@ -7,7 +7,7 @@ import GlassPanel from "@/components/ui/GlassPanel";
 import { searchOverpass, type OverpassResult } from "@/lib/overpass";
 import { getDayDate } from "@/lib/hours";
 import type { DiscoverTab, Pin } from "@/types";
-import { mapOsmToFoodType, mapOsmToAttrType, formatCuisine } from "./helpers";
+import { mapOsmToFoodType, mapOsmToAttrType, formatCuisine, formatOsmType, formatDist } from "./helpers";
 import ResultItem from "./ResultItem";
 import { textMuted, textSubtle, hoverBg, accentActive, isSameLocation } from "@/lib/styles";
 
@@ -110,10 +110,24 @@ export default function DiscoverPanel() {
     const foodType = isFood ? mapOsmToFoodType(result) : undefined;
     const attrType = !isFood ? mapOsmToAttrType(result) : undefined;
     const cuisine = result.cuisine ? formatCuisine(result.cuisine) : null;
+
+    // Build a rich note that preserves type, cuisine/brand, distance, and address
+    const parts: string[] = [];
+    parts.push(formatOsmType(result.osmType));
+    if (cuisine) parts.push(cuisine);
+    if (discoverTab === "grocers") {
+      const brand = result.tags["brand:en"] || result.tags.brand;
+      if (brand && brand.toLowerCase() !== result.name.toLowerCase()) parts.push(brand);
+    }
+    if (result.tags.fee === "no") parts.push("Free");
+    else if (result.tags.fee === "yes") parts.push("Paid entry");
+    if (result.dist != null) parts.push(formatDist(result.dist));
+    if (result.address) parts.push(result.address);
+
     return {
       name: result.name,
       category: isFood ? "Food" : "Attraction",
-      note: cuisine || result.address || null,
+      note: parts.join(" · ") || null,
       transport: null as null,
       travelTime: null as null,
       x: result.lng,

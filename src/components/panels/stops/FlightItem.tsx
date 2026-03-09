@@ -7,7 +7,7 @@ import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
 
 export default memo(function FlightItem({ pin, index, dayId, onDragStart, onDragOver, onDrop, isDragOver }: {
-  pin: Pin; index: number; dayId: number; dayColor: string;
+  pin: Pin; index: number; dayId: number;
   isDragOver: boolean;
 } & DragHandlers) {
   const [expanded, setExpanded] = useState(false);
