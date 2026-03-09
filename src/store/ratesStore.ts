@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { toast } from "@/store/toastStore";
 
 interface RatesState {
   // rates keyed by base currency, e.g. { "USD": { "EUR": 0.92, "JPY": 149.5 } }
@@ -26,7 +27,11 @@ export const useRatesStore = create<RatesState>((set, get) => ({
     set((s) => ({ loading: { ...s.loading, [base]: true } }));
     try {
       const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=${base}`);
-      if (!res.ok) throw new Error("Failed to fetch rates");
+      if (!res.ok) {
+        if (res.status === 429) toast("Exchange rate limit hit — try again shortly.");
+        else toast("Could not fetch exchange rates — conversion may be unavailable.");
+        throw new Error("Failed to fetch rates");
+      }
       const data = await res.json();
       const newRates = data.rates as Record<string, number>;
       // Add self-rate

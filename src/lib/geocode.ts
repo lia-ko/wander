@@ -32,7 +32,7 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
       });
     const res = await throttledFetch(url, signal);
     if (!res.ok) {
-      toast("City search failed — try again.");
+      toastHttpError(res, "City search failed");
       return [];
     }
     const data = await res.json();
@@ -45,8 +45,7 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
       type: item.type,
     }));
   } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") return [];
-    toast("City search failed — check your connection and try again.");
+    toastNetworkError(err, "City search failed");
     return [];
   }
 }
@@ -95,7 +94,7 @@ export async function searchNearby(
       });
     const res = await throttledFetch(url, signal);
     if (!res.ok) {
-      toast("Place search failed — try again.");
+      toastHttpError(res, "Place search failed");
       return [];
     }
     let data = await res.json();
@@ -125,8 +124,7 @@ export async function searchNearby(
       .filter((r) => r._dist <= maxDistKm)
       .sort((a, b) => a._dist - b._dist);
   } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") return [];
-    toast("Place search failed — check your connection and try again.");
+    toastNetworkError(err, "Place search failed");
     return [];
   }
 }
@@ -156,7 +154,7 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
       });
     const res = await throttledFetch(url, signal);
     if (!res.ok) {
-      toast("Place search failed — try again.");
+      toastHttpError(res, "Place search failed");
       return [];
     }
     const data = await res.json();
@@ -173,14 +171,13 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
       });
     const widerRes = await throttledFetch(widerUrl, signal);
     if (!widerRes.ok) {
-      toast("Place search failed — try again.");
+      toastHttpError(widerRes, "Place search failed");
       return [];
     }
     const widerData = await widerRes.json();
     return parseResults(widerData);
   } catch (err) {
-    if (err instanceof DOMException && err.name === "AbortError") return [];
-    toast("Place search failed — check your connection and try again.");
+    toastNetworkError(err, "Place search failed");
     return [];
   }
 }
