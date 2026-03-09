@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
-import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
+import { ATTR_TYPE_META } from "@/store/constants";
 import GlassPanel from "@/components/ui/GlassPanel";
 import { searchOverpass, type OverpassResult } from "@/lib/overpass";
 import { getHoursForDate, getDayDate } from "@/lib/hours";
@@ -55,80 +55,87 @@ function formatCuisine(cuisine: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function StarRating({ rating }: { rating: number }) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.3;
-  const empty = 5 - full - (half ? 1 : 0);
+function formatOsmType(osmType: string): string {
+  const overrides: Record<string, string> = {
+    fast_food: "Fast Food",
+    ice_cream: "Ice Cream",
+    arts_centre: "Arts Centre",
+    theme_park: "Theme Park",
+    archaeological_site: "Archaeological Site",
+    wayside_shrine: "Shrine",
+  };
+  if (overrides[osmType]) return overrides[osmType];
+  return osmType
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function getTagPills(result: OverpassResult, tab: DiscoverTab): { label: string; color: string }[] {
+  const pills: { label: string; color: string }[] = [];
+  const type = formatOsmType(result.osmType);
+
+  if (tab === "eat") {
+    pills.push({ label: type, color: "#E8745A" });
+    if (result.cuisine) {
+      pills.push({ label: formatCuisine(result.cuisine), color: "#DAA520" });
+    }
+  } else if (tab === "grocers") {
+    pills.push({ label: type, color: "#22C55E" });
+    const brand = result.tags["brand:en"] || result.tags.brand;
+    if (brand && brand.toLowerCase() !== result.name.toLowerCase()) {
+      pills.push({ label: brand, color: "#3B82F6" });
+    }
+  } else {
+    const at = mapOsmToAttrType(result);
+    const meta = ATTR_TYPE_META[at];
+    pills.push({ label: type, color: meta?.color || "#8B5CF6" });
+    if (result.tags.fee === "no") {
+      pills.push({ label: "Free", color: "#22C55E" });
+    } else if (result.tags.fee === "yes") {
+      pills.push({ label: "Paid Entry", color: "#F97316" });
+    }
+  }
+
+  return pills;
+}
+
+function TagPill({ label, color }: { label: string; color: string }) {
   return (
-    <div className="flex items-center gap-px">
-      {Array.from({ length: full }).map((_, i) => (
-        <span key={`f${i}`} className="text-amber-400 text-[10px]">&#9733;</span>
-      ))}
-      {half && <span className="text-amber-400 text-[10px] opacity-50">&#9733;</span>}
-      {Array.from({ length: empty }).map((_, i) => (
-        <span key={`e${i}`} className="text-zinc-300 dark:text-zinc-600 text-[10px]">&#9733;</span>
-      ))}
-    </div>
+    <span
+      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
+      style={{ color, backgroundColor: `${color}18` }}
+    >
+      {label}
+    </span>
   );
 }
 
-function ResultItem({ result, tab, added, onAdd, dayDate }: {
+function ResultItem({ result, tab, added, wishlisted, onAdd, onWishlist, dayDate }: {
   result: OverpassResult;
   tab: DiscoverTab;
   added: boolean;
+  wishlisted: boolean;
   onAdd: () => void;
+  onWishlist: () => void;
   dayDate: Date | null;
 }) {
   const dark = useTripStore((s) => s.darkMode);
 
-  let emoji = "";
-  let categoryLabel = "";
-  let labelColor = "";
-  let cuisineLabel = "";
-
-  if (tab === "eat" || tab === "grocers") {
-    const ft = mapOsmToFoodType(result);
-    if (FOOD_TYPE_META[ft]) emoji = FOOD_TYPE_META[ft].emoji;
-    if (result.cuisine) cuisineLabel = formatCuisine(result.cuisine);
-  } else {
-    const at = mapOsmToAttrType(result);
-    if (ATTR_TYPE_META[at]) {
-      emoji = ATTR_TYPE_META[at].emoji;
-      categoryLabel = ATTR_TYPE_META[at].label;
-      labelColor = ATTR_TYPE_META[at].color;
-    }
-  }
-
-  const subtitle = result.address || "";
+  const pills = getTagPills(result, tab);
+  const address = result.address || "";
   const dist = result.dist ?? 0;
-
-  // Pseudo-rating: hash name for consistent display (OSM doesn't have ratings)
-  let hash = 0;
-  for (let i = 0; i < result.name.length; i++) hash = ((hash << 5) - hash + result.name.charCodeAt(i)) | 0;
-  const pseudoRating = 3.2 + (Math.abs(hash) % 18) / 10;
-  const clampedRating = Math.min(5, Math.round(pseudoRating * 10) / 10);
 
   return (
     <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${dark ? "hover:bg-[#F5E8D8]/6" : "hover:bg-[#F0D5A8]/25"}`}>
-      <span className="text-lg flex-shrink-0 mt-0.5">{emoji}</span>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">{result.name}</div>
-        {/* Subtitle: cuisine for eat, address for others */}
-        {(tab === "eat" || tab === "grocers") && cuisineLabel ? (
-          <div className={`text-xs mt-0.5 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{cuisineLabel}</div>
-        ) : subtitle ? (
-          <div className={`text-xs truncate mt-0.5 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{subtitle}</div>
-        ) : null}
-        <div className="flex items-center gap-2 mt-1">
-          {(tab === "eat" || tab === "grocers") && <StarRating rating={clampedRating} />}
-          {tab === "attractions" && categoryLabel && (
-            <span
-              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-              style={{ color: labelColor, backgroundColor: `${labelColor}15` }}
-            >
-              {categoryLabel}
-            </span>
-          )}
+        {address && (
+          <div className={`text-xs truncate mt-0.5 ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{address}</div>
+        )}
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          {pills.map((pill, i) => (
+            <TagPill key={i} label={pill.label} color={pill.color} />
+          ))}
           <span className={`text-[10px] ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
             {formatDist(dist)}
           </span>
@@ -146,16 +153,32 @@ function ResultItem({ result, tab, added, onAdd, dayDate }: {
           );
         })()}
       </div>
-      <button
-        onClick={onAdd}
-        className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all flex-shrink-0 mt-1 ${
-          added
-            ? "bg-[#90CCB8]/25 text-[#4E8098]"
-            : dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-700 hover:bg-[#4E8098]/12"
-        }`}
-      >
-        {added ? "\u2713" : "+"}
-      </button>
+      <div className="flex flex-col gap-1 flex-shrink-0 mt-1">
+        <button
+          onClick={onAdd}
+          className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all ${
+            added
+              ? "bg-[#90CCB8]/25 text-[#4E8098]"
+              : dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-700 hover:bg-[#4E8098]/12"
+          }`}
+          title="Add to day"
+        >
+          {added ? "\u2713" : "+"}
+        </button>
+        <button
+          onClick={onWishlist}
+          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+            wishlisted
+              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+              : dark ? "bg-[#F5E8D8]/10 text-zinc-500 hover:text-[#DAA520] hover:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 text-zinc-400 hover:text-[#4E8098] hover:bg-[#4E8098]/12"
+          }`}
+          title="Save to wishlist"
+        >
+          <svg className="w-3.5 h-3.5" fill={wishlisted ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
@@ -167,6 +190,7 @@ export default function DiscoverPanel() {
   const closeDiscover = useTripStore((s) => s.closeDiscover);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const addPin = useTripStore((s) => s.addPin);
+  const addToWishlist = useTripStore((s) => s.addToWishlist);
   const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
   const sidebarWidth = useTripStore((s) => s.sidebarWidth);
   const day = useTripStore((s) => {
@@ -252,25 +276,37 @@ export default function DiscoverPanel() {
     return day.pins.some((p) => Math.abs(p.y - result.lat) < 0.0001 && Math.abs(p.x - result.lng) < 0.0001);
   };
 
-  const handleAdd = (result: OverpassResult) => {
-    if (isAdded(result)) return;
+  const isWishlisted = (result: OverpassResult) => {
+    return (trip.wishlist ?? []).some((p) => Math.abs(p.y - result.lat) < 0.0001 && Math.abs(p.x - result.lng) < 0.0001);
+  };
+
+  const buildPinData = (result: OverpassResult) => {
     const isFood = discoverTab === "eat" || discoverTab === "grocers";
     const foodType = isFood ? mapOsmToFoodType(result) : undefined;
     const attrType = !isFood ? mapOsmToAttrType(result) : undefined;
     const cuisine = result.cuisine ? formatCuisine(result.cuisine) : null;
-
-    addPin(activeDayId, {
+    return {
       name: result.name,
       category: isFood ? "Food" : "Attraction",
       note: cuisine || result.address || null,
-      transport: null,
-      travelTime: null,
+      transport: null as null,
+      travelTime: null as null,
       x: result.lng,
       y: result.lat,
       openingHours: result.tags.opening_hours || null,
       ...(foodType ? { foodType } : {}),
       ...(attrType ? { attrType } : {}),
-    });
+    };
+  };
+
+  const handleAdd = (result: OverpassResult) => {
+    if (isAdded(result)) return;
+    addPin(activeDayId, buildPinData(result));
+  };
+
+  const handleWishlist = (result: OverpassResult) => {
+    if (isWishlisted(result)) return;
+    addToWishlist(buildPinData(result));
   };
 
   if (!discoverOpen) return null;
@@ -422,7 +458,9 @@ export default function DiscoverPanel() {
             result={result}
             tab={discoverTab}
             added={isAdded(result)}
+            wishlisted={isWishlisted(result)}
             onAdd={() => handleAdd(result)}
+            onWishlist={() => handleWishlist(result)}
             dayDate={dayDate}
           />
         ))}

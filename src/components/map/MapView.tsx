@@ -7,17 +7,25 @@ import { useTripStore } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
 import "leaflet/dist/leaflet.css";
 
-const createPinIcon = (color: string, isHotel = false) => {
-  const svg = isHotel
-    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
+const createPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" = "default") => {
+  let svg: string;
+  if (variant === "hotel") {
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
         <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
         <circle cx="12" cy="12" r="5" fill="white" opacity="0.9"/>
         <path d="M9.5 13.5v-1.5h1.5v-1.5h2v1.5h1.5v1.5h-5z M10 10.5h4v1h-4z" fill="${color}"/>
-      </svg>`
-    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
+      </svg>`;
+  } else if (variant === "wishlist") {
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
+        <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="${color}" stroke="white" stroke-width="1.5" opacity="0.7"/>
+        <path d="M12 7l1.5 3 3.3.5-2.4 2.3.6 3.2L12 14.2 8.9 16l.6-3.2L7.1 10.5l3.3-.5z" fill="white" opacity="0.9"/>
+      </svg>`;
+  } else {
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
         <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
         <circle cx="12" cy="11" r="4.5" fill="white" opacity="0.9"/>
       </svg>`;
+  }
 
   return L.divIcon({
     html: svg,
@@ -40,7 +48,7 @@ function MapPins() {
         <Marker
           key={hotel.id}
           position={[hotel.y, hotel.x]}
-          icon={createPinIcon(HOTEL_COLOR, true)}
+          icon={createPinIcon(HOTEL_COLOR, "hotel")}
         >
           <Popup>
             <div className="text-sm font-semibold">{hotel.name}</div>
@@ -70,6 +78,24 @@ function MapPins() {
             </Marker>
           ));
       })}
+
+      {/* Wishlist pins — distinct star markers, semi-transparent */}
+      {(trip.wishlist ?? [])
+        .filter((pin) => pin.y !== 0 && pin.x !== 0)
+        .map((pin) => (
+          <Marker
+            key={`wish-${pin.id}`}
+            position={[pin.y, pin.x]}
+            icon={createPinIcon("#9CA3AF", "wishlist")}
+            opacity={0.6}
+          >
+            <Popup>
+              <div className="text-sm font-semibold">{pin.name}</div>
+              {pin.note && <div className="text-xs text-zinc-500">{pin.note}</div>}
+              <div className="text-[10px] text-zinc-400 mt-0.5">Wishlist</div>
+            </Popup>
+          </Marker>
+        ))}
     </>
   );
 }

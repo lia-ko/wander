@@ -8,6 +8,7 @@ import HotelStrip from "./HotelStrip";
 import DayChips from "./DayChips";
 import DayTitleBar from "./DayTitleBar";
 import StopList from "./StopList";
+import WishlistPanel from "./WishlistPanel";
 import BottomActionBar from "./BottomActionBar";
 import CollapsedSidebar from "./CollapsedSidebar";
 
@@ -15,6 +16,7 @@ export default function MainPanel() {
   const collapsed = useTripStore((s) => s.sidebarCollapsed);
   const sidebarWidth = useTripStore((s) => s.sidebarWidth);
   const setSidebarWidth = useTripStore((s) => s.setSidebarWidth);
+  const sidebarView = useTripStore((s) => s.sidebarView);
   const dark = useTripStore((s) => s.darkMode);
   const dragging = useRef(false);
   const startX = useRef(0);
@@ -59,8 +61,14 @@ export default function MainPanel() {
       <TripSelector />
       <HotelStrip />
       <DayChips />
-      <DayTitleBar />
-      <StopList />
+      {sidebarView === "wishlist" ? (
+        <WishlistPanel />
+      ) : (
+        <>
+          <DayTitleBar />
+          <StopList />
+        </>
+      )}
       <BottomActionBar />
 
       {/* Resize handle */}

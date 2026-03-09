@@ -8,7 +8,13 @@ export default function BottomActionBar() {
   const toggleDiscover = useTripStore((s) => s.toggleDiscover);
   const discoverOpen = useTripStore((s) => s.discoverOpen);
   const discoverTab = useTripStore((s) => s.discoverTab);
+  const sidebarView = useTripStore((s) => s.sidebarView);
+  const setSidebarView = useTripStore((s) => s.setSidebarView);
+  const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
   const dark = useTripStore((s) => s.darkMode);
+
+  const wishlistCount = (trip.wishlist ?? []).length;
+  const isWishlist = sidebarView === "wishlist";
 
   const discoverButtons = [
     { key: "eat" as const, emoji: "\u{1F37D}\uFE0F", label: "Eat Out" },
@@ -25,6 +31,30 @@ export default function BottomActionBar() {
 
   return (
     <div className={`border-t px-3 py-2.5 flex flex-col gap-2 ${dark ? "border-[#F5E8D8]/10" : "border-[#4E8098]/10"}`}>
+      {/* Wishlist toggle */}
+      <button
+        onClick={() => setSidebarView(isWishlist ? "day" : "wishlist")}
+        className={`flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+          isWishlist
+            ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+            : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
+        }`}
+      >
+        <svg className="w-3.5 h-3.5" fill={isWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        </svg>
+        Wishlist
+        {wishlistCount > 0 && (
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+            isWishlist
+              ? dark ? "bg-[#DAA520]/30" : "bg-[#4E8098]/20"
+              : dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
+          }`}>
+            {wishlistCount}
+          </span>
+        )}
+      </button>
+
       {/* Discover row */}
       <div className="flex items-center gap-1.5">
         {discoverButtons.map((btn) => (
@@ -42,13 +72,13 @@ export default function BottomActionBar() {
       {/* Export */}
       <button
         onClick={async () => {
-          const trip = useTripStore.getState().getActiveTrip();
+          const t = useTripStore.getState().getActiveTrip();
           const mapEl = document.querySelector(".leaflet-container") as HTMLElement | null;
           let mapCanvas: HTMLCanvasElement | null = null;
           if (mapEl) {
             mapCanvas = await html2canvas(mapEl, { useCORS: true, allowTaint: true });
           }
-          await exportTripPdf(trip, mapCanvas);
+          await exportTripPdf(t, mapCanvas);
         }}
         className={btnClass(false)}
       >

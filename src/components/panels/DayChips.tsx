@@ -7,12 +7,15 @@ export default function DayChips() {
   const activeDayId = useTripStore((s) => s.activeDayId);
   const setActiveDayId = useTripStore((s) => s.setActiveDayId);
   const addDay = useTripStore((s) => s.addDay);
+  const sidebarView = useTripStore((s) => s.sidebarView);
   const dark = useTripStore((s) => s.darkMode);
+
+  const isWishlist = sidebarView === "wishlist";
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-2.5 overflow-x-auto scrollbar-hide">
       {trip.days.map((day) => {
-        const isActive = day.id === activeDayId;
+        const isActive = day.id === activeDayId && !isWishlist;
         return (
           <button
             key={day.id}

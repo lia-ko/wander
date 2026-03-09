@@ -71,6 +71,7 @@ export type Trip = {
   destination: string;
   center: { lat: number; lng: number };
   hotels: Hotel[];
+  wishlist: Pin[];
   days: Day[];
 };
 

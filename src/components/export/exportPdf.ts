@@ -34,7 +34,7 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
   // Trip emoji + name
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(32);
-  doc.text(`${trip.emoji}  ${trip.name}`, MARGIN, 45);
+  doc.text(trip.name, MARGIN, 45);
 
   // Dates
   doc.setFontSize(14);
@@ -93,7 +93,7 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
     doc.roundedRect(MARGIN, y, CONTENT_W, 14, 3, 3, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(13);
-    doc.text(`${day.label}${day.sublabel ? `  —  ${day.sublabel}` : ""}`, MARGIN + 5, y + 9);
+    doc.text(`${day.label}${day.sublabel ? `  -  ${day.sublabel}` : ""}`, MARGIN + 5, y + 9);
     doc.setFontSize(9);
     doc.text(`${day.pins.length} stops`, MARGIN + CONTENT_W - 25, y + 9);
     y += 20;
@@ -124,7 +124,7 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
         doc.circle(MARGIN + 6, y + 4, 4, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(8);
-        doc.text("\u2708", MARGIN + 6, y + 5.5, { align: "center" });
+        doc.text("F", MARGIN + 6, y + 5.5, { align: "center" });
         doc.setTextColor(30, 30, 30);
         doc.setFontSize(11);
         doc.text(pin.name || "Flight", MARGIN + 14, y + 5);
@@ -132,7 +132,7 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
         doc.setFontSize(8);
         doc.setTextColor(120, 120, 120);
         const flightDetails: string[] = [];
-        if (pin.departureAirport && pin.arrivalAirport) flightDetails.push(`${pin.departureAirport} → ${pin.arrivalAirport}`);
+        if (pin.departureAirport && pin.arrivalAirport) flightDetails.push(`${pin.departureAirport} -> ${pin.arrivalAirport}`);
         if (pin.departureTime) flightDetails.push(`Dep: ${pin.departureTime}`);
         if (pin.arrivalTime) flightDetails.push(`Arr: ${pin.arrivalTime}`);
         if (flightDetails.length > 0) {
@@ -169,7 +169,7 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
       doc.setTextColor(120, 120, 120);
       const details: string[] = [];
       if (badge) details.push(badge);
-      if (pin.rating) details.push(`★ ${pin.rating}`);
+      if (pin.rating) details.push(`${pin.rating} stars`);
       if (pin.price) details.push(pin.price);
       if (pin.duration) details.push(pin.duration);
       if (pin.cost === null && pin.attrType) details.push("Free");

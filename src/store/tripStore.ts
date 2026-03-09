@@ -13,12 +13,14 @@ interface TripState {
   discoverTab: DiscoverTab;
   sidebarCollapsed: boolean;
   sidebarWidth: number;
+  sidebarView: "day" | "wishlist";
   darkMode: boolean;
   newTripModalOpen: boolean;
 
   // Actions
   setActiveTripId: (id: number) => void;
   setActiveDayId: (id: number) => void;
+  setSidebarView: (view: "day" | "wishlist") => void;
   setSelectedPinId: (id: number | null) => void;
   setRadiusCenter: (center: { lat: number; lng: number; label: string } | null) => void;
   toggleDiscover: (tab?: DiscoverTab) => void;
@@ -49,6 +51,12 @@ interface TripState {
   updateHotel: (hotelId: string, updates: Partial<Pick<Hotel, "notes" | "checkIn" | "checkOut">>) => void;
   removeHotel: (hotelId: string) => void;
 
+  // Wishlist
+  addToWishlist: (pin: Omit<Pin, "id" | "pinType"> & { pinType?: Pin["pinType"] }) => void;
+  removeFromWishlist: (pinId: number) => void;
+  moveWishlistToDay: (pinId: number, dayId: number, insertIndex?: number) => void;
+  movePinToWishlist: (dayId: number, pinId: number) => void;
+
   // Helpers
   getActiveTrip: () => Trip;
   getActiveDay: () => Day;
@@ -70,6 +78,7 @@ const defaultTrip: Trip = {
   destination: "Tokyo, Japan",
   center: { lat: 35.6895, lng: 139.7500 },
   hotels: [],
+  wishlist: [],
   days: [
     { id: 1, label: "Day 1", sublabel: "", color: DAY_COLORS[0], pins: [] },
   ],
@@ -87,11 +96,13 @@ export const useTripStore = create<TripState>()(
       discoverTab: "eat",
       sidebarCollapsed: false,
       sidebarWidth: 310,
+      sidebarView: "day",
       darkMode: false,
       newTripModalOpen: false,
 
-      setActiveTripId: (id) => set({ activeTripId: id, activeDayId: get().trips.find(t => t.id === id)!.days[0]?.id ?? 1 }),
-      setActiveDayId: (id) => set({ activeDayId: id }),
+      setActiveTripId: (id) => set({ activeTripId: id, activeDayId: get().trips.find(t => t.id === id)!.days[0]?.id ?? 1, sidebarView: "day" }),
+      setActiveDayId: (id) => set({ activeDayId: id, sidebarView: "day" }),
+      setSidebarView: (view) => set({ sidebarView: view }),
       setSelectedPinId: (id) => set({ selectedPinId: id }),
       setRadiusCenter: (center) => set({ radiusCenter: center }),
 
@@ -117,9 +128,10 @@ export const useTripStore = create<TripState>()(
           destination,
           center,
           hotels: [],
+          wishlist: [],
           days: [{ id: genId(), label: "Day 1", sublabel: "", color: DAY_COLORS[0], pins: [] }],
         };
-        set((s) => ({ trips: [...s.trips, trip], activeTripId: id, activeDayId: trip.days[0].id }));
+        set((s) => ({ trips: [...s.trips, trip], activeTripId: id, activeDayId: trip.days[0].id, sidebarView: "day" }));
       },
 
       updateTrip: (tripId, updates) =>
@@ -246,6 +258,66 @@ export const useTripStore = create<TripState>()(
           ),
         })),
 
+      addToWishlist: (pin) =>
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, wishlist: [...(t.wishlist ?? []), { pinType: "location", ...pin, id: genId() }] }
+              : t
+          ),
+        })),
+
+      removeFromWishlist: (pinId) =>
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, wishlist: (t.wishlist ?? []).filter((p) => p.id !== pinId) }
+              : t
+          ),
+        })),
+
+      moveWishlistToDay: (pinId, dayId, insertIndex) =>
+        set((s) => ({
+          trips: s.trips.map((t) => {
+            if (t.id !== s.activeTripId) return t;
+            const wl = t.wishlist ?? [];
+            const pin = wl.find((p) => p.id === pinId);
+            if (!pin) return t;
+            return {
+              ...t,
+              wishlist: wl.filter((p) => p.id !== pinId),
+              days: t.days.map((d) => {
+                if (d.id !== dayId) return d;
+                const pins = [...d.pins];
+                if (insertIndex !== undefined && insertIndex >= 0) {
+                  pins.splice(insertIndex, 0, pin);
+                } else {
+                  pins.push(pin);
+                }
+                return { ...d, pins };
+              }),
+            };
+          }),
+        })),
+
+      movePinToWishlist: (dayId, pinId) =>
+        set((s) => ({
+          trips: s.trips.map((t) => {
+            if (t.id !== s.activeTripId) return t;
+            const day = t.days.find((d) => d.id === dayId);
+            const pin = day?.pins.find((p) => p.id === pinId);
+            if (!pin) return t;
+            return {
+              ...t,
+              wishlist: [...(t.wishlist ?? []), { ...pin, transport: null, travelTime: null }],
+              days: t.days.map((d) =>
+                d.id === dayId ? { ...d, pins: d.pins.filter((p) => p.id !== pinId) } : d
+              ),
+            };
+          }),
+          selectedPinId: s.selectedPinId === pinId ? null : s.selectedPinId,
+        })),
+
       getActiveTrip: () => {
         const s = get();
         return s.trips.find((t) => t.id === s.activeTripId)!;
@@ -259,7 +331,7 @@ export const useTripStore = create<TripState>()(
     }),
     {
       name: "wander-trips",
-      version: 6,
+      version: 7,
       migrate: (persisted: unknown) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const state = persisted as any;
@@ -279,6 +351,8 @@ export const useTripStore = create<TripState>()(
               trip.hotels = trip.hotel ? [trip.hotel] : [];
               delete trip.hotel;
             }
+            // v7: wishlist
+            if (!Array.isArray(trip.wishlist)) trip.wishlist = [];
             // v6: hotel notes
             if (Array.isArray(trip.hotels)) {
               for (const hotel of trip.hotels) {

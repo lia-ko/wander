@@ -6,6 +6,7 @@ import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
 import { getHoursForDate, getDayDate, fetchOpeningHours } from "@/lib/hours";
 import type { Pin, TransportKey } from "@/types";
 import PlaceSearch from "./PlaceSearch";
+import { WISHLIST_DRAG_TYPE } from "./WishlistPanel";
 
 function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop, isDragOver }: {
   pin: Pin; index: number; dayId: number; dayColor: string;
@@ -20,6 +21,7 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
   const [editNote, setEditNote] = useState(pin.note || "");
   const removePin = useTripStore((s) => s.removePin);
   const updatePin = useTripStore((s) => s.updatePin);
+  const movePinToWishlist = useTripStore((s) => s.movePinToWishlist);
   const dark = useTripStore((s) => s.darkMode);
   const setSelectedPinId = useTripStore((s) => s.setSelectedPinId);
   const selectedPinId = useTripStore((s) => s.selectedPinId);
@@ -168,6 +170,20 @@ function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop
             Edit
           </button>
           <button
+            onClick={() => { movePinToWishlist(dayId, pin.id); setSelectedPinId(null); }}
+            className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+              dark ? "bg-[#DAA520]/10 text-[#DAA520] hover:bg-[#DAA520]/20" : "bg-[#4E8098]/8 text-[#4E8098] hover:bg-[#4E8098]/15"
+            }`}
+            title="Move to wishlist"
+          >
+            <span className="flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              Save
+            </span>
+          </button>
+          <button
             onClick={() => { removePin(dayId, pin.id); setSelectedPinId(null); }}
             className="text-xs px-2.5 py-1 rounded-md text-red-500 transition-colors bg-red-500/10 hover:bg-red-500/20"
           >
@@ -211,6 +227,7 @@ function FlightItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDr
   const [editing, setEditing] = useState(false);
   const removePin = useTripStore((s) => s.removePin);
   const updatePin = useTripStore((s) => s.updatePin);
+  const movePinToWishlist = useTripStore((s) => s.movePinToWishlist);
   const dark = useTripStore((s) => s.darkMode);
 
   const [airline, setAirline] = useState(pin.airline || "");
@@ -308,6 +325,20 @@ function FlightItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDr
             }`}
           >
             Edit
+          </button>
+          <button
+            onClick={() => movePinToWishlist(dayId, pin.id)}
+            className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+              dark ? "bg-[#DAA520]/10 text-[#DAA520] hover:bg-[#DAA520]/20" : "bg-[#4E8098]/8 text-[#4E8098] hover:bg-[#4E8098]/15"
+            }`}
+            title="Move to wishlist"
+          >
+            <span className="flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+              </svg>
+              Save
+            </span>
           </button>
           <button
             onClick={() => removePin(dayId, pin.id)}
@@ -558,10 +589,12 @@ export default function StopList() {
   const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
   const activeDayId = useTripStore((s) => s.activeDayId);
   const reorderPin = useTripStore((s) => s.reorderPin);
+  const moveWishlistToDay = useTripStore((s) => s.moveWishlistToDay);
   const dark = useTripStore((s) => s.darkMode);
 
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const [wishlistDragOver, setWishlistDragOver] = useState(false);
 
   const day = trip.days.find((d) => d.id === activeDayId);
   if (!day) return null;
@@ -579,10 +612,38 @@ export default function StopList() {
     setDragOver(null);
   };
 
+  const handleContainerDragOver = (e: React.DragEvent) => {
+    if (e.dataTransfer.types.includes(WISHLIST_DRAG_TYPE)) {
+      e.preventDefault();
+      setWishlistDragOver(true);
+    }
+  };
+
+  const handleContainerDragLeave = () => {
+    setWishlistDragOver(false);
+  };
+
+  const handleContainerDrop = (e: React.DragEvent) => {
+    setWishlistDragOver(false);
+    const data = e.dataTransfer.getData(WISHLIST_DRAG_TYPE);
+    if (!data) return;
+    try {
+      const { pinId } = JSON.parse(data);
+      moveWishlistToDay(pinId, day.id);
+    } catch { /* ignore */ }
+  };
+
   return (
     <div
-      className="flex-1 overflow-y-auto py-1 scrollbar-hide"
-      onDragEnd={() => { setDragFrom(null); setDragOver(null); }}
+      className={`flex-1 overflow-y-auto py-1 scrollbar-hide transition-colors ${
+        wishlistDragOver
+          ? dark ? "bg-[#DAA520]/5 ring-1 ring-inset ring-[#DAA520]/20 rounded-xl" : "bg-[#4E8098]/5 ring-1 ring-inset ring-[#4E8098]/20 rounded-xl"
+          : ""
+      }`}
+      onDragEnd={() => { setDragFrom(null); setDragOver(null); setWishlistDragOver(false); }}
+      onDragOver={handleContainerDragOver}
+      onDragLeave={handleContainerDragLeave}
+      onDrop={handleContainerDrop}
     >
       {day.pins.map((pin, i) => {
         const prev = i > 0 ? day.pins[i - 1] : null;
