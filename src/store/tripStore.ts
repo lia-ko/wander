@@ -53,6 +53,7 @@ interface TripState {
   addExpense: (expense: Omit<Expense, "id">) => void;
   updateExpense: (expenseId: number, updates: Partial<Expense>) => void;
   removeExpense: (expenseId: number) => void;
+  clearAllExpenses: () => void;
 
   // Import/Export
   importTrips: (trips: Trip[]) => void;
@@ -406,6 +407,16 @@ export const useTripStore = create<TripState>()(
           trips: mapActiveTrip(s, (t) => ({
             ...t, expenses: (t.expenses ?? []).filter((e) => e.id !== expenseId),
           })),
+        }));
+      },
+
+      clearAllExpenses: () => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const count = (trip?.expenses ?? []).length;
+        if (count === 0) return;
+        snapBeforeAction(get, `Cleared ${count} expense${count > 1 ? "s" : ""}`);
+        set((s) => ({
+          trips: mapActiveTrip(s, (t) => ({ ...t, expenses: [] })),
         }));
       },
 

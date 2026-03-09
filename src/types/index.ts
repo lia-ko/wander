@@ -80,6 +80,7 @@ export type BudgetConfig = {
   currency: string;           // home currency (budget/totals shown in this)
   spendingCurrency?: string;  // local currency at destination (new expenses default to this)
   totalBudget: number | null;
+  categoryLimits?: Partial<Record<ExpenseCategory, number>>;  // optional per-category budget caps
 };
 
 export type Trip = {

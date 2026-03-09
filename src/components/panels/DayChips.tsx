@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { useRatesStore } from "@/store/ratesStore";
+import { CURRENCIES } from "@/store/constants";
 import { useUIStore } from "@/store/uiStore";
 import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE } from "./stops/types";
 
@@ -15,8 +17,26 @@ export default function DayChips() {
   const dark = useTripStore((s) => s.darkMode);
   const sidebarView = useUIStore((s) => s.sidebarView);
 
+  const convert = useRatesStore((s) => s.convert);
+  const rates = useRatesStore((s) => s.rates);
+
   const isWishlist = sidebarView === "wishlist";
   const [dropTargetId, setDropTargetId] = useState<number | null>(null);
+
+  const homeCurrency = trip.budget?.currency ?? "USD";
+  const homeSymbol = CURRENCIES.find((c) => c.code === homeCurrency)?.symbol ?? homeCurrency;
+  // Pre-compute per-day totals so each chip can show spend
+  const daySpendMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const e of trip.expenses ?? []) {
+      if (e.dayId == null) continue;
+      const from = e.currency ?? homeCurrency;
+      const amt = from === homeCurrency ? e.amount : (convert(e.amount, from, homeCurrency) ?? 0);
+      map.set(e.dayId, (map.get(e.dayId) ?? 0) + amt);
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trip.expenses, homeCurrency, rates, convert]);
 
   const handleDragOver = (e: React.DragEvent, dayId: number) => {
     if (
@@ -66,6 +86,7 @@ export default function DayChips() {
       {trip.days.map((day) => {
         const isActive = day.id === activeDayId && !isWishlist;
         const isDropTarget = dropTargetId === day.id;
+        const spend = daySpendMap.get(day.id);
         return (
           <button
             key={day.id}
@@ -83,6 +104,11 @@ export default function DayChips() {
             }}
           >
             {day.label}
+            {spend != null && spend > 0 && (
+              <span className="ml-1 opacity-70 font-normal">
+                {homeSymbol}{spend < 1000 ? Math.round(spend) : `${(spend / 1000).toFixed(1)}k`}
+              </span>
+            )}
           </button>
         );
       })}
