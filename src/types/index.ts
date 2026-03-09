@@ -62,6 +62,24 @@ export type Hotel = {
   checkOut: string | null;
 };
 
+export type ExpenseCategory =
+  | "food" | "transport" | "accommodation" | "activities"
+  | "shopping" | "flights" | "other";
+
+export type Expense = {
+  id: number;
+  name: string;
+  amount: number;
+  category: ExpenseCategory;
+  dayId: number | null;
+  note: string | null;
+};
+
+export type BudgetConfig = {
+  currency: string;
+  totalBudget: number | null;
+};
+
 export type Trip = {
   id: number;
   name: string;
@@ -73,6 +91,8 @@ export type Trip = {
   hotels: Hotel[];
   wishlist: Pin[];
   days: Day[];
+  expenses: Expense[];
+  budget: BudgetConfig;
 };
 
 export type FoodResult = {

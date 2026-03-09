@@ -1,4 +1,4 @@
-import type { TransportKey, FoodTypeKey, AttrTypeKey } from "@/types";
+import type { TransportKey, FoodTypeKey, AttrTypeKey, ExpenseCategory } from "@/types";
 
 // Ordered so adjacent days always have high contrast (alternating warm/cool)
 export const DAY_COLORS = [
@@ -56,5 +56,38 @@ export const ATTR_TYPE_META: Record<AttrTypeKey, { emoji: string; label: string;
   nightlife: { emoji: "\u{1F378}",       label: "Nightlife",    color: "#7C3AED" },
   hidden:    { emoji: "\u{1F48E}",       label: "Hidden Gem",   color: "#0EA5E9" },
 };
+
+export const EXPENSE_CATEGORY_META: Record<ExpenseCategory, { label: string; color: string }> = {
+  food:          { label: "Food & Drink",   color: "#E8745A" },
+  transport:     { label: "Transport",      color: "#3B82F6" },
+  accommodation: { label: "Accommodation",  color: "#DAA520" },
+  activities:    { label: "Activities",     color: "#8B5CF6" },
+  shopping:      { label: "Shopping",       color: "#D946EF" },
+  flights:       { label: "Flights",        color: "#0EA5E9" },
+  other:         { label: "Other",          color: "#6B7280" },
+};
+
+export const CURRENCIES = [
+  { code: "USD", symbol: "$" },
+  { code: "EUR", symbol: "\u20AC" },
+  { code: "GBP", symbol: "\u00A3" },
+  { code: "JPY", symbol: "\u00A5" },
+  { code: "AUD", symbol: "A$" },
+  { code: "CAD", symbol: "C$" },
+  { code: "CHF", symbol: "CHF" },
+  { code: "SEK", symbol: "kr" },
+  { code: "NOK", symbol: "kr" },
+  { code: "DKK", symbol: "kr" },
+  { code: "NZD", symbol: "NZ$" },
+  { code: "SGD", symbol: "S$" },
+  { code: "HKD", symbol: "HK$" },
+  { code: "KRW", symbol: "\u20A9" },
+  { code: "THB", symbol: "\u0E3F" },
+  { code: "MXN", symbol: "MX$" },
+  { code: "BRL", symbol: "R$" },
+  { code: "INR", symbol: "\u20B9" },
+  { code: "ILS", symbol: "\u20AA" },
+  { code: "TRY", symbol: "\u20BA" },
+];
 
 export const HOTEL_COLOR = "#DAA520";

@@ -9,6 +9,7 @@ import DayChips from "./DayChips";
 import DayTitleBar from "./DayTitleBar";
 import StopList from "./StopList";
 import WishlistPanel from "./WishlistPanel";
+import BudgetPanel from "./BudgetPanel";
 import BottomActionBar from "./BottomActionBar";
 import UndoBar from "@/components/ui/UndoBar";
 import CollapsedSidebar from "./CollapsedSidebar";
@@ -64,6 +65,8 @@ export default function MainPanel() {
       <DayChips />
       {sidebarView === "wishlist" ? (
         <WishlistPanel />
+      ) : sidebarView === "budget" ? (
+        <BudgetPanel />
       ) : (
         <>
           <DayTitleBar />

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Trip, Day, Pin, Hotel, DiscoverTab } from "@/types";
+import type { Trip, Day, Pin, Hotel, DiscoverTab, Expense, BudgetConfig } from "@/types";
 import { DAY_COLORS } from "./constants";
 import { useUndoStore } from "./undoStore";
 import { toast } from "./toastStore";
@@ -15,14 +15,14 @@ interface TripState {
   discoverTab: DiscoverTab;
   sidebarCollapsed: boolean;
   sidebarWidth: number;
-  sidebarView: "day" | "wishlist";
+  sidebarView: "day" | "wishlist" | "budget";
   darkMode: boolean;
   newTripModalOpen: boolean;
 
   // Actions
   setActiveTripId: (id: number) => void;
   setActiveDayId: (id: number) => void;
-  setSidebarView: (view: "day" | "wishlist") => void;
+  setSidebarView: (view: "day" | "wishlist" | "budget") => void;
   setSelectedPinId: (id: number | null) => void;
   setRadiusCenter: (center: { lat: number; lng: number; label: string } | null) => void;
   toggleDiscover: (tab?: DiscoverTab) => void;
@@ -61,6 +61,12 @@ interface TripState {
   moveWishlistToDay: (pinId: number, dayId: number, insertIndex?: number) => void;
   movePinToWishlist: (dayId: number, pinId: number) => void;
 
+  // Budget
+  setBudget: (config: Partial<BudgetConfig>) => void;
+  addExpense: (expense: Omit<Expense, "id">) => void;
+  updateExpense: (expenseId: number, updates: Partial<Expense>) => void;
+  removeExpense: (expenseId: number) => void;
+
   // Import/Export
   importTrips: (trips: Trip[]) => void;
 
@@ -89,6 +95,8 @@ const defaultTrip: Trip = {
   center: { lat: 35.6895, lng: 139.7500 },
   hotels: [],
   wishlist: [],
+  expenses: [],
+  budget: { currency: "USD", totalBudget: null },
   days: [
     { id: 1, label: "Day 1", sublabel: "", color: DAY_COLORS[0], pins: [] },
   ],
@@ -145,6 +153,8 @@ export const useTripStore = create<TripState>()(
           center,
           hotels: [],
           wishlist: [],
+          expenses: [],
+          budget: { currency: "USD", totalBudget: null },
           days: [{ id: genId(), label: "Day 1", sublabel: "", color: DAY_COLORS[0], pins: [] }],
         };
         set((s) => ({ trips: [...s.trips, trip], activeTripId: id, activeDayId: trip.days[0].id, sidebarView: "day" }));
@@ -393,6 +403,44 @@ export const useTripStore = create<TripState>()(
           selectedPinId: s.selectedPinId === pinId ? null : s.selectedPinId,
         })),
 
+      setBudget: (config) =>
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId ? { ...t, budget: { ...(t.budget ?? { currency: "USD", totalBudget: null }), ...config } } : t
+          ),
+        })),
+
+      addExpense: (expense) =>
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, expenses: [...(t.expenses ?? []), { ...expense, id: genId() }] }
+              : t
+          ),
+        })),
+
+      updateExpense: (expenseId, updates) =>
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, expenses: (t.expenses ?? []).map((e) => (e.id === expenseId ? { ...e, ...updates } : e)) }
+              : t
+          ),
+        })),
+
+      removeExpense: (expenseId) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const expName = (trip?.expenses ?? []).find((e) => e.id === expenseId)?.name ?? "Expense";
+        snapBeforeAction(get, `Removed "${expName}"`);
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, expenses: (t.expenses ?? []).filter((e) => e.id !== expenseId) }
+              : t
+          ),
+        }));
+      },
+
       importTrips: (trips) =>
         set(() => ({
           trips,
@@ -426,7 +474,7 @@ export const useTripStore = create<TripState>()(
     }),
     {
       name: "wander-trips",
-      version: 7,
+      version: 8,
       migrate: (persisted: unknown) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const state = persisted as any;
@@ -448,6 +496,9 @@ export const useTripStore = create<TripState>()(
             }
             // v7: wishlist
             if (!Array.isArray(trip.wishlist)) trip.wishlist = [];
+            // v8: budget tracking
+            if (!Array.isArray(trip.expenses)) trip.expenses = [];
+            if (!trip.budget) trip.budget = { currency: "USD", totalBudget: null };
             // v6: hotel notes
             if (Array.isArray(trip.hotels)) {
               for (const hotel of trip.hotels) {

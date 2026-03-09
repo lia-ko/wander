@@ -32,6 +32,8 @@ export default function BottomActionBar() {
 
   const wishlistCount = (trip.wishlist ?? []).length;
   const isWishlist = sidebarView === "wishlist";
+  const isBudget = sidebarView === "budget";
+  const expenseCount = (trip.expenses ?? []).length;
 
   const discoverButtons = [
     { key: "eat" as const, emoji: "\u{1F37D}\uFE0F", label: "Eat Out" },
@@ -94,29 +96,54 @@ export default function BottomActionBar() {
 
   return (
     <div className={`border-t px-3 py-2.5 flex flex-col gap-2 ${dark ? "border-[#F5E8D8]/10" : "border-[#4E8098]/10"}`}>
-      {/* Wishlist toggle */}
-      <button
-        onClick={() => setSidebarView(isWishlist ? "day" : "wishlist")}
-        className={`flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-          isWishlist
-            ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
-            : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
-        }`}
-      >
-        <svg className="w-3.5 h-3.5" fill={isWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-        </svg>
-        Wishlist
-        {wishlistCount > 0 && (
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+      {/* Wishlist & Budget toggles */}
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={() => setSidebarView(isWishlist ? "day" : "wishlist")}
+          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
             isWishlist
-              ? dark ? "bg-[#DAA520]/30" : "bg-[#4E8098]/20"
-              : dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
-          }`}>
-            {wishlistCount}
-          </span>
-        )}
-      </button>
+              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+              : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
+          }`}
+        >
+          <svg className="w-3.5 h-3.5" fill={isWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          Wishlist
+          {wishlistCount > 0 && (
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              isWishlist
+                ? dark ? "bg-[#DAA520]/30" : "bg-[#4E8098]/20"
+                : dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
+            }`}>
+              {wishlistCount}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setSidebarView(isBudget ? "day" : "budget")}
+          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+            isBudget
+              ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+              : dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35"
+          }`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Budget
+          {expenseCount > 0 && (
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+              isBudget
+                ? dark ? "bg-[#DAA520]/30" : "bg-[#4E8098]/20"
+                : dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
+            }`}>
+              {expenseCount}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Discover row */}
       <div className="flex items-center gap-1.5">
