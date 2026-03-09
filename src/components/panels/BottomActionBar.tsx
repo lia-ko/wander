@@ -35,6 +35,7 @@ export default function BottomActionBar() {
   const wishlistCount = (trip.wishlist ?? []).length;
   const isWishlist = sidebarView === "wishlist";
   const isBudget = sidebarView === "budget";
+  const isStats = sidebarView === "stats";
   const expenseCount = (trip.expenses ?? []).length;
 
   const discoverButtons = [
@@ -144,6 +145,20 @@ export default function BottomActionBar() {
               {expenseCount}
             </span>
           )}
+        </button>
+
+        <button
+          onClick={() => setSidebarView(isStats ? "day" : "stats")}
+          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+            isStats
+              ? accentActive(dark)
+              : inactiveBtn(dark)
+          }`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          Stats
         </button>
       </div>
 

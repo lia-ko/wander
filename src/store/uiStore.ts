@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import type { DiscoverTab } from "@/types";
 
+export type SidebarView = "day" | "wishlist" | "budget" | "stats";
+
 interface UIState {
   selectedPinId: number | null;
   radiusCenter: { lat: number; lng: number; label: string } | null;
   sidebarCollapsed: boolean;
-  sidebarView: "day" | "wishlist" | "budget";
+  sidebarView: SidebarView;
   discoverOpen: boolean;
   discoverTab: DiscoverTab;
   newTripModalOpen: boolean;
@@ -13,7 +15,7 @@ interface UIState {
   setSelectedPinId: (id: number | null) => void;
   setRadiusCenter: (center: { lat: number; lng: number; label: string } | null) => void;
   toggleSidebar: () => void;
-  setSidebarView: (view: "day" | "wishlist" | "budget") => void;
+  setSidebarView: (view: SidebarView) => void;
   toggleDiscover: (tab?: DiscoverTab) => void;
   closeDiscover: () => void;
   setNewTripModalOpen: (open: boolean) => void;

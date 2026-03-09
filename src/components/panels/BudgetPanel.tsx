@@ -5,20 +5,13 @@ import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { EXPENSE_CATEGORY_META, CURRENCIES } from "@/store/constants";
 import { getDayDate, formatDayDate } from "@/lib/hours";
+import { symbolFor, fmtAmt } from "@/lib/formatUtils";
 import { textMuted, textSubtle, textStrong, formInputBordered, formSelect, ghostBtn } from "@/lib/styles";
 import type { ExpenseCategory, Expense, Trip } from "@/types";
 
 const categories = Object.keys(EXPENSE_CATEGORY_META) as ExpenseCategory[];
 
 type SortKey = "newest" | "oldest" | "amount" | "category" | "day";
-
-function symbolFor(code: string) {
-  return CURRENCIES.find((c) => c.code === code)?.symbol ?? code;
-}
-
-function fmtAmt(n: number) {
-  return n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-}
 
 function exportExpensesCsv(
   trip: Trip,

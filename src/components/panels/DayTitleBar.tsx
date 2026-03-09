@@ -3,8 +3,8 @@
 import { useState, useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
-import { CURRENCIES } from "@/store/constants";
 import { getDayDate, formatDayDate } from "@/lib/hours";
+import { symbolFor } from "@/lib/formatUtils";
 import { textMuted, textSubtle } from "@/lib/styles";
 
 export default function DayTitleBar() {
@@ -30,7 +30,7 @@ export default function DayTitleBar() {
 
   // Daily spending
   const homeCurrency = trip.budget?.currency ?? "USD";
-  const homeSymbol = CURRENCIES.find((c) => c.code === homeCurrency)?.symbol ?? homeCurrency;
+  const homeSymbol = symbolFor(homeCurrency);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const daySpend = useMemo(() => {
     const dayExpenses = (trip.expenses ?? []).filter((e) => e.dayId === day.id);
