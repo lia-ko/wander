@@ -1,3 +1,5 @@
+import { toast } from "@/store/toastStore";
+
 export type GeoResult = {
   placeId: string;
   name: string;
@@ -19,25 +21,33 @@ async function throttledFetch(url: string): Promise<Response> {
 
 export async function searchCities(query: string): Promise<GeoResult[]> {
   if (!query.trim() || query.length < 2) return [];
-  const url = `https://nominatim.openstreetmap.org/search?` +
-    new URLSearchParams({
-      q: query,
-      format: "json",
-      limit: "6",
-      featuretype: "city",
-      addressdetails: "1",
-    });
-  const res = await throttledFetch(url);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.map((item: Record<string, string>) => ({
-    placeId: item.place_id,
-    name: item.display_name?.split(",")[0] || item.name,
-    displayName: item.display_name,
-    lat: parseFloat(item.lat),
-    lng: parseFloat(item.lon),
-    type: item.type,
-  }));
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?` +
+      new URLSearchParams({
+        q: query,
+        format: "json",
+        limit: "6",
+        featuretype: "city",
+        addressdetails: "1",
+      });
+    const res = await throttledFetch(url);
+    if (!res.ok) {
+      toast("City search failed — try again.");
+      return [];
+    }
+    const data = await res.json();
+    return data.map((item: Record<string, string>) => ({
+      placeId: item.place_id,
+      name: item.display_name?.split(",")[0] || item.name,
+      displayName: item.display_name,
+      lat: parseFloat(item.lat),
+      lng: parseFloat(item.lon),
+      type: item.type,
+    }));
+  } catch {
+    toast("City search failed — check your connection and try again.");
+    return [];
+  }
 }
 
 /** Haversine distance in km */
@@ -71,43 +81,51 @@ export async function searchNearby(
       type: item.type,
     }));
 
-  const url = `https://nominatim.openstreetmap.org/search?` +
-    new URLSearchParams({
-      q: searchQuery,
-      format: "json",
-      limit: "15",
-      viewbox: `${center.lng - radiusDeg},${center.lat + radiusDeg},${center.lng + radiusDeg},${center.lat - radiusDeg}`,
-      bounded: "1",
-      addressdetails: "1",
-    });
-  const res = await throttledFetch(url);
-  if (!res.ok) return [];
-  let data = await res.json();
-
-  // If tight search returns too few, widen
-  if (data.length < 3) {
-    const wider = radiusDeg * 4;
-    const widerUrl = `https://nominatim.openstreetmap.org/search?` +
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?` +
       new URLSearchParams({
         q: searchQuery,
         format: "json",
         limit: "15",
-        viewbox: `${center.lng - wider},${center.lat + wider},${center.lng + wider},${center.lat - wider}`,
+        viewbox: `${center.lng - radiusDeg},${center.lat + radiusDeg},${center.lng + radiusDeg},${center.lat - radiusDeg}`,
         bounded: "1",
         addressdetails: "1",
       });
-    const widerRes = await throttledFetch(widerUrl);
-    if (widerRes.ok) {
-      const widerData = await widerRes.json();
-      if (widerData.length > data.length) data = widerData;
+    const res = await throttledFetch(url);
+    if (!res.ok) {
+      toast("Place search failed — try again.");
+      return [];
     }
-  }
+    let data = await res.json();
 
-  // Parse, filter by max distance, sort by distance
-  return parseResults(data)
-    .map((r) => ({ ...r, _dist: distanceKm(center, { lat: r.lat, lng: r.lng }) }))
-    .filter((r) => r._dist <= maxDistKm)
-    .sort((a, b) => a._dist - b._dist);
+    // If tight search returns too few, widen
+    if (data.length < 3) {
+      const wider = radiusDeg * 4;
+      const widerUrl = `https://nominatim.openstreetmap.org/search?` +
+        new URLSearchParams({
+          q: searchQuery,
+          format: "json",
+          limit: "15",
+          viewbox: `${center.lng - wider},${center.lat + wider},${center.lng + wider},${center.lat - wider}`,
+          bounded: "1",
+          addressdetails: "1",
+        });
+      const widerRes = await throttledFetch(widerUrl);
+      if (widerRes.ok) {
+        const widerData = await widerRes.json();
+        if (widerData.length > data.length) data = widerData;
+      }
+    }
+
+    // Parse, filter by max distance, sort by distance
+    return parseResults(data)
+      .map((r) => ({ ...r, _dist: distanceKm(center, { lat: r.lat, lng: r.lng }) }))
+      .filter((r) => r._dist <= maxDistKm)
+      .sort((a, b) => a._dist - b._dist);
+  } catch {
+    toast("Place search failed — check your connection and try again.");
+    return [];
+  }
 }
 
 export async function searchPlaces(query: string, center: { lat: number; lng: number }): Promise<GeoResult[]> {
@@ -123,31 +141,42 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
       type: item.type,
     }));
 
-  // Tight search: ~55km around trip center
-  const url = `https://nominatim.openstreetmap.org/search?` +
-    new URLSearchParams({
-      q: query,
-      format: "json",
-      limit: "6",
-      viewbox: `${center.lng - 0.5},${center.lat + 0.5},${center.lng + 0.5},${center.lat - 0.5}`,
-      bounded: "1",
-    });
-  const res = await throttledFetch(url);
-  if (!res.ok) return [];
-  const data = await res.json();
-  if (data.length > 0) return parseResults(data);
+  try {
+    // Tight search: ~55km around trip center
+    const url = `https://nominatim.openstreetmap.org/search?` +
+      new URLSearchParams({
+        q: query,
+        format: "json",
+        limit: "6",
+        viewbox: `${center.lng - 0.5},${center.lat + 0.5},${center.lng + 0.5},${center.lat - 0.5}`,
+        bounded: "1",
+      });
+    const res = await throttledFetch(url);
+    if (!res.ok) {
+      toast("Place search failed — try again.");
+      return [];
+    }
+    const data = await res.json();
+    if (data.length > 0) return parseResults(data);
 
-  // Widen to ~220km if tight search returns nothing
-  const widerUrl = `https://nominatim.openstreetmap.org/search?` +
-    new URLSearchParams({
-      q: query,
-      format: "json",
-      limit: "6",
-      viewbox: `${center.lng - 2},${center.lat + 2},${center.lng + 2},${center.lat - 2}`,
-      bounded: "1",
-    });
-  const widerRes = await throttledFetch(widerUrl);
-  if (!widerRes.ok) return [];
-  const widerData = await widerRes.json();
-  return parseResults(widerData);
+    // Widen to ~220km if tight search returns nothing
+    const widerUrl = `https://nominatim.openstreetmap.org/search?` +
+      new URLSearchParams({
+        q: query,
+        format: "json",
+        limit: "6",
+        viewbox: `${center.lng - 2},${center.lat + 2},${center.lng + 2},${center.lat - 2}`,
+        bounded: "1",
+      });
+    const widerRes = await throttledFetch(widerUrl);
+    if (!widerRes.ok) {
+      toast("Place search failed — try again.");
+      return [];
+    }
+    const widerData = await widerRes.json();
+    return parseResults(widerData);
+  } catch {
+    toast("Place search failed — check your connection and try again.");
+    return [];
+  }
 }

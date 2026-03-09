@@ -1,4 +1,5 @@
 import { distanceKm } from "./geocode";
+import { toast } from "@/store/toastStore";
 
 export type OverpassResult = {
   id: string;
@@ -159,7 +160,10 @@ export async function searchOverpass(
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      toast("Search failed — the Overpass API is unavailable. Try again shortly.");
+      return [];
+    }
     const data = await res.json();
 
     if (!data.elements) return [];
@@ -184,7 +188,11 @@ export async function searchOverpass(
     results.sort((a, b) => (a.dist ?? 0) - (b.dist ?? 0));
 
     return results;
-  } catch {
+  } catch (err) {
+    const msg = err instanceof Error && err.name === "AbortError"
+      ? "Search timed out — try again."
+      : "Search failed — check your connection and try again.";
+    toast(msg);
     return [];
   }
 }

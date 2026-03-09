@@ -10,6 +10,7 @@ import DayTitleBar from "./DayTitleBar";
 import StopList from "./StopList";
 import WishlistPanel from "./WishlistPanel";
 import BottomActionBar from "./BottomActionBar";
+import UndoBar from "@/components/ui/UndoBar";
 import CollapsedSidebar from "./CollapsedSidebar";
 
 export default function MainPanel() {
@@ -69,6 +70,7 @@ export default function MainPanel() {
           <StopList />
         </>
       )}
+      <UndoBar />
       <BottomActionBar />
 
       {/* Resize handle */}

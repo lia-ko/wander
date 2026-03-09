@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Trip, Day, Pin, Hotel, DiscoverTab } from "@/types";
 import { DAY_COLORS } from "./constants";
+import { useUndoStore } from "./undoStore";
+import { toast } from "./toastStore";
 
 interface TripState {
   trips: Trip[];
@@ -38,6 +40,7 @@ interface TripState {
   // Day CRUD
   addDay: () => void;
   removeDay: (dayId: number) => void;
+  clearDay: (dayId: number) => void;
   updateDay: (dayId: number, updates: Partial<Pick<Day, "label" | "sublabel">>) => void;
 
   // Pin CRUD
@@ -56,6 +59,12 @@ interface TripState {
   removeFromWishlist: (pinId: number) => void;
   moveWishlistToDay: (pinId: number, dayId: number, insertIndex?: number) => void;
   movePinToWishlist: (dayId: number, pinId: number) => void;
+
+  // Import/Export
+  importTrips: (trips: Trip[]) => void;
+
+  // Undo
+  undo: () => void;
 
   // Helpers
   getActiveTrip: () => Trip;
@@ -83,6 +92,12 @@ const defaultTrip: Trip = {
     { id: 1, label: "Day 1", sublabel: "", color: DAY_COLORS[0], pins: [] },
   ],
 };
+
+/** Save a snapshot before a destructive action (UndoBar in sidebar handles the UI) */
+function snapBeforeAction(get: () => TripState, label: string) {
+  const s = get();
+  useUndoStore.getState().saveSnapshot(s.trips, s.activeTripId, s.activeDayId, label);
+}
 
 export const useTripStore = create<TripState>()(
   persist(
@@ -139,7 +154,9 @@ export const useTripStore = create<TripState>()(
           trips: s.trips.map((t) => (t.id === tripId ? { ...t, ...updates } : t)),
         })),
 
-      removeTrip: (tripId) =>
+      removeTrip: (tripId) => {
+        const tripName = get().trips.find((t) => t.id === tripId)?.name ?? "Trip";
+        snapBeforeAction(get, `Deleted trip "${tripName}"`);
         set((s) => {
           const remaining = s.trips.filter((t) => t.id !== tripId);
           if (remaining.length === 0) return s; // don't delete the last trip
@@ -150,7 +167,8 @@ export const useTripStore = create<TripState>()(
             activeTripId: newActiveId,
             activeDayId: newActiveTrip.days[0]?.id ?? 1,
           };
-        }),
+        });
+      },
 
       addDay: () =>
         set((s) => {
@@ -169,13 +187,33 @@ export const useTripStore = create<TripState>()(
           };
         }),
 
-      removeDay: (dayId) =>
+      removeDay: (dayId) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const dayLabel = trip?.days.find((d) => d.id === dayId)?.label ?? "Day";
+        snapBeforeAction(get, `Deleted ${dayLabel}`);
         set((s) => ({
           trips: s.trips.map((t) =>
             t.id === s.activeTripId ? { ...t, days: t.days.filter((d) => d.id !== dayId) } : t
           ),
           activeDayId: s.activeDayId === dayId ? s.trips.find((t) => t.id === s.activeTripId)!.days[0]?.id ?? 1 : s.activeDayId,
-        })),
+        }));
+      },
+
+      clearDay: (dayId) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const day = trip?.days.find((d) => d.id === dayId);
+        const count = day?.pins.length ?? 0;
+        if (count === 0) return;
+        snapBeforeAction(get, `Cleared ${count} stop${count > 1 ? "s" : ""} from ${day?.label ?? "day"}`);
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, days: t.days.map((d) => (d.id === dayId ? { ...d, pins: [] } : d)) }
+              : t
+          ),
+          selectedPinId: null,
+        }));
+      },
 
       updateDay: (dayId, updates) =>
         set((s) => ({
@@ -204,7 +242,11 @@ export const useTripStore = create<TripState>()(
           ),
         })),
 
-      removePin: (dayId, pinId) =>
+      removePin: (dayId, pinId) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const day = trip?.days.find((d) => d.id === dayId);
+        const pinName = day?.pins.find((p) => p.id === pinId)?.name ?? "Stop";
+        snapBeforeAction(get, `Removed "${pinName}"`);
         set((s) => ({
           trips: s.trips.map((t) =>
             t.id === s.activeTripId
@@ -212,7 +254,8 @@ export const useTripStore = create<TripState>()(
               : t
           ),
           selectedPinId: s.selectedPinId === pinId ? null : s.selectedPinId,
-        })),
+        }));
+      },
 
       reorderPin: (dayId, fromIndex, toIndex) =>
         set((s) => ({
@@ -249,14 +292,18 @@ export const useTripStore = create<TripState>()(
           ),
         })),
 
-      removeHotel: (hotelId) =>
+      removeHotel: (hotelId) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const hotelName = trip?.hotels.find((h) => h.id === hotelId)?.name ?? "Hotel";
+        snapBeforeAction(get, `Removed "${hotelName}"`);
         set((s) => ({
           trips: s.trips.map((t) =>
             t.id === s.activeTripId
               ? { ...t, hotels: t.hotels.filter((h) => h.id !== hotelId) }
               : t
           ),
-        })),
+        }));
+      },
 
       addToWishlist: (pin) =>
         set((s) => ({
@@ -267,14 +314,18 @@ export const useTripStore = create<TripState>()(
           ),
         })),
 
-      removeFromWishlist: (pinId) =>
+      removeFromWishlist: (pinId) => {
+        const trip = get().trips.find((t) => t.id === get().activeTripId);
+        const pinName = (trip?.wishlist ?? []).find((p) => p.id === pinId)?.name ?? "Item";
+        snapBeforeAction(get, `Removed "${pinName}" from wishlist`);
         set((s) => ({
           trips: s.trips.map((t) =>
             t.id === s.activeTripId
               ? { ...t, wishlist: (t.wishlist ?? []).filter((p) => p.id !== pinId) }
               : t
           ),
-        })),
+        }));
+      },
 
       moveWishlistToDay: (pinId, dayId, insertIndex) =>
         set((s) => ({
@@ -317,6 +368,26 @@ export const useTripStore = create<TripState>()(
           }),
           selectedPinId: s.selectedPinId === pinId ? null : s.selectedPinId,
         })),
+
+      importTrips: (trips) =>
+        set(() => ({
+          trips,
+          activeTripId: trips[0].id,
+          activeDayId: trips[0].days[0]?.id ?? 1,
+          sidebarView: "day" as const,
+        })),
+
+      undo: () => {
+        const snap = useUndoStore.getState().snapshot;
+        if (!snap) return;
+        set({
+          trips: snap.trips,
+          activeTripId: snap.activeTripId,
+          activeDayId: snap.activeDayId,
+        });
+        useUndoStore.getState().clearSnapshot();
+        toast("Undone!", "success");
+      },
 
       getActiveTrip: () => {
         const s = get();

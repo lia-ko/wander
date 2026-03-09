@@ -132,6 +132,7 @@ export function formatDayDate(date: Date): string {
 /**
  * Fetch opening_hours for a POI from Overpass by coordinates.
  * Tries name-matched search first (200m), then falls back to nearest POI with hours (100m).
+ * Note: This is a background fetch so errors are silent (no toast) to avoid noise.
  */
 export async function fetchOpeningHours(lat: number, lng: number, name: string): Promise<string | null> {
   async function tryQuery(query: string): Promise<string | null> {

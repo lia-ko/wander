@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Circle, Tooltip, useMap } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import { useTripStore } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
@@ -36,6 +37,56 @@ const createPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" 
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createClusterIcon = (color: string, opacity: number) => (cluster: any) => {
+  const count = cluster.getChildCount();
+  return L.divIcon({
+    html: `<div style="
+      background: ${color};
+      opacity: ${opacity};
+      color: white;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      border: 2.5px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    ">${count}</div>`,
+    className: "custom-cluster",
+    iconSize: L.point(34, 34),
+  });
+};
+
+function DayCluster({ dayId, color, isActive, children }: {
+  dayId: number;
+  color: string;
+  isActive: boolean;
+  children: React.ReactNode;
+}) {
+  const iconFn = useMemo(
+    () => createClusterIcon(color, isActive ? 1 : 0.15),
+    [color, isActive]
+  );
+
+  return (
+    <MarkerClusterGroup
+      key={`cluster-${dayId}-${isActive}`}
+      iconCreateFunction={iconFn}
+      maxClusterRadius={40}
+      spiderfyOnMaxZoom
+      showCoverageOnHover={false}
+      zoomToBoundsOnClick
+      disableClusteringAtZoom={16}
+    >
+      {children}
+    </MarkerClusterGroup>
+  );
+}
+
 function MapPins() {
   const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
   const activeDayId = useTripStore((s) => s.activeDayId);
@@ -59,24 +110,27 @@ function MapPins() {
 
       {trip.days.map((day) => {
         const isActive = day.id === activeDayId;
-        return day.pins
-          .filter((pin) => pin.y !== 0 && pin.x !== 0)
-          .map((pin) => (
-            <Marker
-              key={`${day.id}-${pin.id}`}
-              position={[pin.y, pin.x]}
-              icon={createPinIcon(day.color)}
-              opacity={isActive ? 1 : 0.15}
-              eventHandlers={{
-                click: () => setSelectedPinId(selectedPinId === pin.id ? null : pin.id),
-              }}
-            >
-              <Popup>
-                <div className="text-sm font-semibold">{pin.name}</div>
-                {pin.note && <div className="text-xs text-zinc-500">{pin.note}</div>}
-              </Popup>
-            </Marker>
-          ));
+        const validPins = day.pins.filter((pin) => pin.y !== 0 && pin.x !== 0);
+        return (
+          <DayCluster key={day.id} dayId={day.id} color={day.color} isActive={isActive}>
+            {validPins.map((pin) => (
+              <Marker
+                key={`${day.id}-${pin.id}`}
+                position={[pin.y, pin.x]}
+                icon={createPinIcon(day.color)}
+                opacity={isActive ? 1 : 0.15}
+                eventHandlers={{
+                  click: () => setSelectedPinId(selectedPinId === pin.id ? null : pin.id),
+                }}
+              >
+                <Popup>
+                  <div className="text-sm font-semibold">{pin.name}</div>
+                  {pin.note && <div className="text-xs text-zinc-500">{pin.note}</div>}
+                </Popup>
+              </Marker>
+            ))}
+          </DayCluster>
+        );
       })}
 
       {/* Wishlist pins — distinct star markers, semi-transparent */}

@@ -10,16 +10,7 @@ export default function DayTitleBar() {
   const updateDay = useTripStore((s) => s.updateDay);
   const updateTrip = useTripStore((s) => s.updateTrip);
   const removeDay = useTripStore((s) => s.removeDay);
-  const clearDay = () => {
-    useTripStore.setState((s) => ({
-      trips: s.trips.map((t) =>
-        t.id === s.activeTripId
-          ? { ...t, days: t.days.map((d) => (d.id === activeDayId ? { ...d, pins: [] } : d)) }
-          : t
-      ),
-      selectedPinId: null,
-    }));
-  };
+  const clearDayAction = useTripStore((s) => s.clearDay);
   const dark = useTripStore((s) => s.darkMode);
   const [editingSublabel, setEditingSublabel] = useState(false);
   const [sublabelValue, setSublabelValue] = useState("");
@@ -105,7 +96,7 @@ export default function DayTitleBar() {
         </span>
         {day.pins.length > 0 && (
           <button
-            onClick={clearDay}
+            onClick={() => clearDayAction(activeDayId)}
             className={`text-xs p-1 rounded transition-colors ${dark ? "text-zinc-500 hover:text-red-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:text-red-500 hover:bg-[#4E8098]/8"}`}
             title="Clear all stops"
           >
