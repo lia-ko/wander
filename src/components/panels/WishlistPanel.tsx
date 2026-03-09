@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { FOOD_TYPE_META, ATTR_TYPE_META } from "@/store/constants";
-import { textMuted, textSubtle, sectionBg, softHoverBg, ghostBtn, deleteBtn } from "@/lib/styles";
+import { textMuted, textSubtle, sectionBg, softHoverBg, ghostBtn, ghostBtnSoft, deleteBtn } from "@/lib/styles";
 import type { Pin } from "@/types";
 import PlaceSearch from "./PlaceSearch";
 
@@ -158,7 +158,7 @@ export default function WishlistPanel() {
         <button
           onClick={() => setSearching(true)}
           className={`flex items-center gap-2 w-full mx-2 mt-1 px-3 py-2.5 rounded-xl text-sm transition-colors ${
-            dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:bg-[#F0D5A8]/25"
+            ghostBtnSoft(dark)
           }`}
         >
           <span className={`w-6 h-6 rounded-full border-2 border-dashed flex items-center justify-center text-xs ${

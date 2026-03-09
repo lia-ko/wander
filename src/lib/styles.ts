@@ -19,6 +19,10 @@ export const deleteBtn = (dark: boolean) => dark ? "text-zinc-500 hover:text-red
 export const inputBase = (dark: boolean) => dark ? "bg-[#F5E8D8]/10 text-[#F5E8D8] placeholder:text-zinc-500" : "bg-white text-zinc-900 placeholder:text-zinc-400";
 export const inputFocus = (dark: boolean) => dark ? "bg-[#F5E8D8]/10 placeholder:text-zinc-500 focus:bg-[#F5E8D8]/15" : "bg-[#4E8098]/8 placeholder:text-zinc-400 focus:bg-black/[.08]";
 
+export const textStrong = (dark: boolean) => dark ? "text-zinc-200" : "text-zinc-700";
+export const ghostBtnSoft = (dark: boolean) => dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:bg-[#F0D5A8]/25";
+export const inactiveBtn = (dark: boolean) => dark ? "bg-[#F5E8D8]/6 text-zinc-300 hover:bg-[#F5E8D8]/10" : "bg-[#F0D5A8]/20 text-zinc-600 hover:bg-[#F0D5A8]/35";
+
 // Borders
 export const dashedBorder = (dark: boolean) => dark ? "border-[#F5E8D8]/20" : "border-[#4E8098]/15";
 export const dragOverBg = (dark: boolean) => dark ? "bg-[#F5E8D8]/15 border border-dashed border-[#F5E8D8]/30" : "bg-[#4E8098]/10 border border-dashed border-[#4E8098]/30";

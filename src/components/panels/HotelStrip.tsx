@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { HOTEL_COLOR } from "@/store/constants";
+import { ghostBtnSoft } from "@/lib/styles";
 import HotelSearch from "./hotels/HotelSearch";
 import HotelItem from "./hotels/HotelItem";
 
@@ -32,7 +33,7 @@ export default function HotelStrip() {
       <button
         onClick={() => setSearching(true)}
         className={`flex items-center gap-2 mx-3 mt-2 px-3 py-2 rounded-xl text-sm transition-colors w-auto ${
-          dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:bg-[#F0D5A8]/25"
+          ghostBtnSoft(dark)
         }`}
       >
         <span className="w-7 h-7 rounded-lg border-2 border-dashed flex items-center justify-center text-xs"

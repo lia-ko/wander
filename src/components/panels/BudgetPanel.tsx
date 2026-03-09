@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { EXPENSE_CATEGORY_META, CURRENCIES } from "@/store/constants";
-import { textMuted, textSubtle } from "@/lib/styles";
+import { textMuted, textSubtle, textStrong } from "@/lib/styles";
 import type { ExpenseCategory, Expense } from "@/types";
 
 const categories = Object.keys(EXPENSE_CATEGORY_META) as ExpenseCategory[];
@@ -218,7 +218,7 @@ export default function BudgetPanel() {
             <div key={c.cat} className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color }} />
               <span className={`text-xs flex-1 ${dark ? "text-zinc-300" : "text-zinc-600"}`}>{c.label}</span>
-              <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+              <span className={`text-xs font-semibold ${textStrong(dark)}`}>
                 {homeSymbol}{fmtAmt(c.total)}
               </span>
             </div>
@@ -232,7 +232,7 @@ export default function BudgetPanel() {
       {/* Add/Edit expense form */}
       {adding ? (
         <div className={`rounded-xl p-3 flex flex-col gap-2 ${dark ? "bg-white/5" : "bg-zinc-50"}`}>
-          <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+          <span className={`text-xs font-semibold ${textStrong(dark)}`}>
             {editingId !== null ? "Edit Expense" : "New Expense"}
           </span>
           <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
@@ -341,7 +341,7 @@ export default function BudgetPanel() {
               >
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
                 <div className="flex-1 min-w-0">
-                  <div className={`text-xs font-medium truncate ${dark ? "text-zinc-200" : "text-zinc-700"}`}>{exp.name}</div>
+                  <div className={`text-xs font-medium truncate ${textStrong(dark)}`}>{exp.name}</div>
                   <div className={`text-[10px] flex items-center gap-1 ${textSubtle(dark)}`}>
                     <span>{meta.label}</span>
                     {dayLabel && <><span>·</span><span>{dayLabel}</span></>}
@@ -354,12 +354,12 @@ export default function BudgetPanel() {
                       <span className={`text-[10px] ${textMuted(dark)}`}>
                         {foreignSymbol}{fmtAmt(exp.amount)}
                       </span>
-                      <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+                      <span className={`text-xs font-semibold ${textStrong(dark)}`}>
                         {converted !== null ? `${homeSymbol}${fmtAmt(converted)}` : "..."}
                       </span>
                     </>
                   ) : (
-                    <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
+                    <span className={`text-xs font-semibold ${textStrong(dark)}`}>
                       {homeSymbol}{fmtAmt(exp.amount)}
                     </span>
                   )}

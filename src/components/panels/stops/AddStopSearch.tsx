@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
-import { sectionBg, inputBase } from "@/lib/styles";
+import { sectionBg, inputBase, ghostBtnSoft } from "@/lib/styles";
 import PlaceSearch from "../PlaceSearch";
 
 function FlightForm({ dayId, onDone }: { dayId: number; onDone: () => void }) {
@@ -72,7 +72,7 @@ export default function AddStopSearch({ dayId, dayColor }: { dayId: number; dayC
         <button
           onClick={() => setMode("stop")}
           className={`flex items-center gap-2 flex-1 px-3 py-2.5 rounded-xl text-sm transition-colors ${
-            dark ? "text-zinc-400 hover:bg-[#F5E8D8]/6" : "text-zinc-400 hover:bg-[#F0D5A8]/25"
+            ghostBtnSoft(dark)
           }`}
         >
           <span className="w-6 h-6 rounded-full border-2 border-dashed flex items-center justify-center text-xs"
