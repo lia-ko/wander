@@ -1,6 +1,7 @@
 "use client";
 
 import { useTripStore } from "@/store/tripStore";
+import { hoverBg } from "@/lib/styles";
 import GlassPanel from "@/components/ui/GlassPanel";
 
 export default function CollapsedSidebar() {
@@ -13,7 +14,7 @@ export default function CollapsedSidebar() {
     <GlassPanel className="absolute top-4 left-4 bottom-4 w-[52px] z-20 flex flex-col items-center py-3 gap-3">
       <button
         onClick={toggleSidebar}
-        className={`text-lg transition-colors ${dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"} w-9 h-9 rounded-xl flex items-center justify-center`}
+        className={`text-lg transition-colors ${hoverBg(dark)} w-9 h-9 rounded-xl flex items-center justify-center`}
         title={trip.name}
       >
         {trip.emoji}
@@ -34,7 +35,7 @@ export default function CollapsedSidebar() {
         <button
           onClick={() => { toggleSidebar(); toggleDiscover("eat"); }}
           className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-colors ${
-            dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+            hoverBg(dark)
           }`}
           title="Eat Out"
         >
@@ -43,7 +44,7 @@ export default function CollapsedSidebar() {
         <button
           onClick={() => { toggleSidebar(); toggleDiscover("grocers"); }}
           className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-colors ${
-            dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+            hoverBg(dark)
           }`}
           title="Grocers"
         >
@@ -52,7 +53,7 @@ export default function CollapsedSidebar() {
         <button
           onClick={() => { toggleSidebar(); toggleDiscover("attractions"); }}
           className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-colors ${
-            dark ? "hover:bg-[#F5E8D8]/10" : "hover:bg-[#4E8098]/8"
+            hoverBg(dark)
           }`}
           title="Attractions"
         >

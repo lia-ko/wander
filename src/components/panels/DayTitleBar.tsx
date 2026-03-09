@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { getDayDate, formatDayDate } from "@/lib/hours";
+import { textMuted } from "@/lib/styles";
 
 export default function DayTitleBar() {
   const trip = useTripStore((s) => s.trips.find((t) => t.id === s.activeTripId)!);
@@ -91,7 +92,7 @@ export default function DayTitleBar() {
         )}
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+        <span className={`text-xs font-medium ${textMuted(dark)}`}>
           {day.pins.length} {day.pins.length === 1 ? "stop" : "stops"}
         </span>
         {day.pins.length > 0 && (

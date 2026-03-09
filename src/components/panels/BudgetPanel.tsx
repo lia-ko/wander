@@ -141,7 +141,7 @@ export default function BudgetPanel() {
               <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>
             ))}
           </select>
-          <svg className={`w-3.5 h-3.5 flex-shrink-0 ${dark ? "text-zinc-500" : "text-zinc-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className={`w-3.5 h-3.5 flex-shrink-0 ${textSubtle(dark)}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
           </svg>
           <select
@@ -155,7 +155,7 @@ export default function BudgetPanel() {
           </select>
         </div>
         {isForeignTrip && (
-          <div className={`text-[10px] text-center ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+          <div className={`text-[10px] text-center ${textSubtle(dark)}`}>
             {isLoadingRates ? "Fetching rate..." : liveRate !== null
               ? `1 ${spendingCurrency} = ${homeSymbol}${fmtAmt(liveRate)} ${homeCurrency}`
               : "Rate unavailable"}
@@ -166,9 +166,9 @@ export default function BudgetPanel() {
       {/* Total budget card */}
       <div className={`rounded-xl p-3 ${dark ? "bg-white/5" : "bg-zinc-50"}`}>
         <div className="flex items-center justify-between mb-2">
-          <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>Total Budget</span>
+          <span className={`text-xs font-medium ${textMuted(dark)}`}>Total Budget</span>
           <div className="flex items-center gap-1">
-            <span className={`text-xs ${dark ? "text-zinc-400" : "text-zinc-500"}`}>{homeSymbol}</span>
+            <span className={`text-xs ${textMuted(dark)}`}>{homeSymbol}</span>
             <input
               type="number"
               placeholder="No limit"
@@ -192,7 +192,7 @@ export default function BudgetPanel() {
             )}
           </div>
           {budget.totalBudget !== null && (
-            <span className={`text-xs ${totalSpent > budget.totalBudget ? "text-red-500" : dark ? "text-zinc-400" : "text-zinc-500"}`}>
+            <span className={`text-xs ${totalSpent > budget.totalBudget ? "text-red-500" : textMuted(dark)}`}>
               / {homeSymbol}{budget.totalBudget.toLocaleString()}
             </span>
           )}
@@ -212,7 +212,7 @@ export default function BudgetPanel() {
 
       {/* Category breakdown */}
       <div className={`rounded-xl p-3 ${dark ? "bg-white/5" : "bg-zinc-50"}`}>
-        <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>By Category</span>
+        <span className={`text-xs font-medium ${textMuted(dark)}`}>By Category</span>
         <div className="mt-2 flex flex-col gap-1.5">
           {byCategory.filter((c) => c.total > 0).map((c) => (
             <div key={c.cat} className="flex items-center gap-2">
@@ -224,7 +224,7 @@ export default function BudgetPanel() {
             </div>
           ))}
           {byCategory.every((c) => c.total === 0) && (
-            <span className={`text-xs ${dark ? "text-zinc-500" : "text-zinc-400"}`}>No expenses yet</span>
+            <span className={`text-xs ${textSubtle(dark)}`}>No expenses yet</span>
           )}
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function BudgetPanel() {
           </div>
           {/* Live conversion preview */}
           {expCurrency && expCurrency !== homeCurrency && amount && !isNaN(parseFloat(amount)) && (
-            <div className={`text-[10px] px-1 flex items-center gap-1 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+            <div className={`text-[10px] px-1 flex items-center gap-1 ${textSubtle(dark)}`}>
               <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
@@ -322,7 +322,7 @@ export default function BudgetPanel() {
       {/* Expense list */}
       {expenses.length > 0 && (
         <div className="flex flex-col gap-1">
-          <span className={`text-xs font-medium ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+          <span className={`text-xs font-medium ${textMuted(dark)}`}>
             Expenses ({expenses.length})
           </span>
           {expenses.map((exp) => {
@@ -342,7 +342,7 @@ export default function BudgetPanel() {
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: meta.color }} />
                 <div className="flex-1 min-w-0">
                   <div className={`text-xs font-medium truncate ${dark ? "text-zinc-200" : "text-zinc-700"}`}>{exp.name}</div>
-                  <div className={`text-[10px] flex items-center gap-1 ${dark ? "text-zinc-500" : "text-zinc-400"}`}>
+                  <div className={`text-[10px] flex items-center gap-1 ${textSubtle(dark)}`}>
                     <span>{meta.label}</span>
                     {dayLabel && <><span>·</span><span>{dayLabel}</span></>}
                     {exp.note && <><span>·</span><span className="truncate">{exp.note}</span></>}
@@ -351,7 +351,7 @@ export default function BudgetPanel() {
                 <div className="flex flex-col items-end flex-shrink-0">
                   {expIsForeign ? (
                     <>
-                      <span className={`text-[10px] ${dark ? "text-zinc-400" : "text-zinc-500"}`}>
+                      <span className={`text-[10px] ${textMuted(dark)}`}>
                         {foreignSymbol}{fmtAmt(exp.amount)}
                       </span>
                       <span className={`text-xs font-semibold ${dark ? "text-zinc-200" : "text-zinc-700"}`}>
