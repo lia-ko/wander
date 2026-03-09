@@ -1,4 +1,4 @@
-import { toast } from "@/store/toastStore";
+import { toastHttpError, toastNetworkError } from "./apiError";
 
 export type GeoResult = {
   placeId: string;
