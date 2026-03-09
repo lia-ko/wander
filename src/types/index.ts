@@ -8,6 +8,8 @@ export type AttrTypeKey =
   | "park" | "museum" | "temple" | "gallery" | "viewpoint"
   | "historic" | "shopping" | "nature" | "entertain" | "nightlife" | "hidden";
 
+export type PinType = "location" | "flight";
+
 export type Pin = {
   id: number;
   name: string;
@@ -17,6 +19,7 @@ export type Pin = {
   travelTime: string | null;
   x: number;
   y: number;
+  pinType: PinType;
 
   // Food-specific
   foodType?: FoodTypeKey;
@@ -30,6 +33,14 @@ export type Pin = {
 
   // Hours
   openingHours?: string | null;
+
+  // Flight-specific
+  airline?: string;
+  flightNumber?: string;
+  departureAirport?: string;
+  arrivalAirport?: string;
+  departureTime?: string;
+  arrivalTime?: string;
 };
 
 export type Day = {
@@ -46,6 +57,9 @@ export type Hotel = {
   address: string;
   x: number;
   y: number;
+  notes: string | null;
+  checkIn: string | null;
+  checkOut: string | null;
 };
 
 export type Trip = {

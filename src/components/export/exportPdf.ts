@@ -51,7 +51,8 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
       doc.setFontSize(11);
       doc.text(`Accommodation: ${hotel.name}`, MARGIN + 5, y + 8);
       doc.setFontSize(9);
-      doc.text(hotel.address, MARGIN + 5, y + 14);
+      const hotelSub = [hotel.address, hotel.checkIn ? `In: ${hotel.checkIn}` : "", hotel.checkOut ? `Out: ${hotel.checkOut}` : ""].filter(Boolean).join("  ·  ");
+      doc.text(hotelSub, MARGIN + 5, y + 14);
       y += 22;
     }
     y += 3;
@@ -115,6 +116,31 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
         doc.setTextColor(tc.r, tc.g, tc.b);
         doc.text(`${tmeta.label}${pin.travelTime ? ` · ${pin.travelTime}` : ""}`, MARGIN + 12, y + 5);
         y += 10;
+      }
+
+      // Flight pin: distinct rendering
+      if (pin.pinType === "flight") {
+        doc.setFillColor(59, 130, 246);
+        doc.circle(MARGIN + 6, y + 4, 4, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.text("\u2708", MARGIN + 6, y + 5.5, { align: "center" });
+        doc.setTextColor(30, 30, 30);
+        doc.setFontSize(11);
+        doc.text(pin.name || "Flight", MARGIN + 14, y + 5);
+        y += 9;
+        doc.setFontSize(8);
+        doc.setTextColor(120, 120, 120);
+        const flightDetails: string[] = [];
+        if (pin.departureAirport && pin.arrivalAirport) flightDetails.push(`${pin.departureAirport} → ${pin.arrivalAirport}`);
+        if (pin.departureTime) flightDetails.push(`Dep: ${pin.departureTime}`);
+        if (pin.arrivalTime) flightDetails.push(`Arr: ${pin.arrivalTime}`);
+        if (flightDetails.length > 0) {
+          doc.text(flightDetails.join("  ·  "), MARGIN + 14, y);
+          y += 4;
+        }
+        y += 6;
+        continue;
       }
 
       // Stop number circle

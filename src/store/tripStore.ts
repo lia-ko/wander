@@ -39,13 +39,14 @@ interface TripState {
   updateDay: (dayId: number, updates: Partial<Pick<Day, "label" | "sublabel">>) => void;
 
   // Pin CRUD
-  addPin: (dayId: number, pin: Omit<Pin, "id">) => void;
+  addPin: (dayId: number, pin: Omit<Pin, "id" | "pinType"> & { pinType?: Pin["pinType"] }) => void;
   updatePin: (dayId: number, pinId: number, updates: Partial<Pin>) => void;
   removePin: (dayId: number, pinId: number) => void;
   reorderPin: (dayId: number, fromIndex: number, toIndex: number) => void;
 
   // Hotels
-  addHotel: (hotel: Omit<Hotel, "id">) => void;
+  addHotel: (hotel: Omit<Hotel, "id" | "notes" | "checkIn" | "checkOut"> & { notes?: string | null; checkIn?: string | null; checkOut?: string | null }) => void;
+  updateHotel: (hotelId: string, updates: Partial<Pick<Hotel, "notes" | "checkIn" | "checkOut">>) => void;
   removeHotel: (hotelId: string) => void;
 
   // Helpers
@@ -177,7 +178,7 @@ export const useTripStore = create<TripState>()(
         set((s) => ({
           trips: s.trips.map((t) =>
             t.id === s.activeTripId
-              ? { ...t, days: t.days.map((d) => (d.id === dayId ? { ...d, pins: [...d.pins, { ...pin, id: genId() }] } : d)) }
+              ? { ...t, days: t.days.map((d) => (d.id === dayId ? { ...d, pins: [...d.pins, { pinType: "location", ...pin, id: genId() }] } : d)) }
               : t
           ),
         })),
@@ -222,7 +223,16 @@ export const useTripStore = create<TripState>()(
         set((s) => ({
           trips: s.trips.map((t) =>
             t.id === s.activeTripId
-              ? { ...t, hotels: [...t.hotels, { ...hotel, id: `hotel-${genId()}` }] }
+              ? { ...t, hotels: [...t.hotels, { notes: null, checkIn: null, checkOut: null, ...hotel, id: `hotel-${genId()}` }] }
+              : t
+          ),
+        })),
+
+      updateHotel: (hotelId, updates) =>
+        set((s) => ({
+          trips: s.trips.map((t) =>
+            t.id === s.activeTripId
+              ? { ...t, hotels: t.hotels.map((h) => (h.id === hotelId ? { ...h, ...updates } : h)) }
               : t
           ),
         })),
@@ -249,7 +259,7 @@ export const useTripStore = create<TripState>()(
     }),
     {
       name: "wander-trips",
-      version: 5,
+      version: 6,
       migrate: (persisted: unknown) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const state = persisted as any;
@@ -269,6 +279,14 @@ export const useTripStore = create<TripState>()(
               trip.hotels = trip.hotel ? [trip.hotel] : [];
               delete trip.hotel;
             }
+            // v6: hotel notes
+            if (Array.isArray(trip.hotels)) {
+              for (const hotel of trip.hotels) {
+                if (hotel.notes === undefined) hotel.notes = null;
+                if (hotel.checkIn === undefined) hotel.checkIn = null;
+                if (hotel.checkOut === undefined) hotel.checkOut = null;
+              }
+            }
             if (Array.isArray(trip.days)) {
               for (const day of trip.days) {
                 if (Array.isArray(day.pins)) {
@@ -280,6 +298,8 @@ export const useTripStore = create<TripState>()(
                       pin.id = ++rekeySeed;
                     }
                     seenIds.add(pin.id);
+                    // v6: pin type
+                    if (!pin.pinType) pin.pinType = "location";
                   }
                 }
               }
