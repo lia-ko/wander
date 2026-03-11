@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
-import { CURRENCIES } from "@/store/constants";
+import { symbolFor } from "@/lib/formatUtils";
 import { useUIStore } from "@/store/uiStore";
 import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE } from "./stops/types";
 
@@ -24,7 +24,7 @@ export default function DayChips() {
   const [dropTargetId, setDropTargetId] = useState<number | null>(null);
 
   const homeCurrency = trip.budget?.currency ?? "USD";
-  const homeSymbol = CURRENCIES.find((c) => c.code === homeCurrency)?.symbol ?? homeCurrency;
+  const homeSymbol = symbolFor(homeCurrency);
   // Pre-compute per-day totals so each chip can show spend
   const daySpendMap = useMemo(() => {
     const map = new Map<number, number>();

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { getPinBadge } from "@/lib/pinUtils";
 import { textMuted, textSubtle, sectionBg, softHoverBg, ghostBtn, ghostBtnSoft, deleteBtn } from "@/lib/styles";
@@ -11,11 +11,13 @@ import PlaceSearch from "./PlaceSearch";
 const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
   const removeFromWishlist = useTripStore((s) => s.removeFromWishlist);
   const moveWishlistToDay = useTripStore((s) => s.moveWishlistToDay);
+  const updateWishlistItem = useTripStore((s) => s.updateWishlistItem);
   const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
   const [showDayPicker, setShowDayPicker] = useState(false);
 
   const badge = getPinBadge(pin);
+  const isMustDo = !!pin.mustDo;
 
   return (
     <div
@@ -50,6 +52,23 @@ const WishlistItem = memo(function WishlistItem({ pin }: { pin: Pin }) {
             </div>
           )}
         </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            updateWishlistItem(pin.id, { mustDo: !isMustDo });
+          }}
+          className={`p-1 rounded-lg transition-colors flex-shrink-0 ${
+            isMustDo
+              ? "text-amber-400"
+              : dark ? "text-zinc-600 hover:text-amber-400" : "text-zinc-300 hover:text-amber-400"
+          }`}
+          title={isMustDo ? "Unmark must-do" : "Mark as must-do"}
+          aria-label={isMustDo ? "Unmark must-do" : "Mark as must-do"}
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill={isMustDo ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isMustDo ? 0 : 2}>
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          </svg>
+        </button>
         <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => { e.stopPropagation(); setShowDayPicker(!showDayPicker); }}
@@ -105,6 +124,17 @@ export default function WishlistPanel() {
   const dark = useTripStore((s) => s.darkMode);
   const [searching, setSearching] = useState(false);
 
+  const wishlist = trip.wishlist ?? [];
+
+  const sorted = useMemo(() => {
+    const mustDo = wishlist.filter((p) => p.mustDo);
+    const rest = wishlist.filter((p) => !p.mustDo);
+    if (mustDo.length === 0) return wishlist;
+    return [...mustDo, ...rest];
+  }, [wishlist]);
+
+  const mustDoCount = wishlist.filter((p) => p.mustDo).length;
+
   return (
     <div className="flex-1 overflow-y-auto py-1 scrollbar-hide">
       {/* Title bar */}
@@ -116,16 +146,17 @@ export default function WishlistPanel() {
           <span className="font-semibold text-sm">Wishlist</span>
         </div>
         <span className={`text-xs ${textMuted(dark)}`}>
-          {(trip.wishlist ?? []).length} {(trip.wishlist ?? []).length === 1 ? "place" : "places"}
+          {wishlist.length} {wishlist.length === 1 ? "place" : "places"}
+          {mustDoCount > 0 && ` · ${mustDoCount} must-do`}
         </span>
       </div>
 
       {/* Wishlist items */}
-      {(trip.wishlist ?? []).map((pin) => (
+      {sorted.map((pin) => (
         <WishlistItem key={pin.id} pin={pin} />
       ))}
 
-      {(trip.wishlist ?? []).length === 0 && !searching && (
+      {wishlist.length === 0 && !searching && (
         <div className={`text-center py-8 px-6 ${textSubtle(dark)}`}>
           <div className="text-2xl mb-3">{"\u{1F516}"}</div>
           <div className="text-sm font-medium mb-1">No saved places yet</div>

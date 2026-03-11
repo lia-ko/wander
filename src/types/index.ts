@@ -31,6 +31,15 @@ export type Pin = {
   duration?: string;
   cost?: number | null;
 
+  // Scheduling
+  startTime?: string;         // 24h format e.g. "09:00", "14:30"
+
+  // Wishlist
+  mustDo?: boolean;
+
+  // Photo
+  thumbnail?: string | null;  // URL to a small image of the place
+
   // Hours
   openingHours?: string | null;
 

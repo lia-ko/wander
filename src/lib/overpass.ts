@@ -65,8 +65,8 @@ const TAG_MAP: Record<DiscoverCategory, string[]> = {
 };
 
 const RADIUS_MAP: Record<DiscoverCategory, number> = {
-  eat: 1500,        // 1.5km
-  grocers: 1200,    // 1.2km
+  eat: 2000,        // 2km
+  grocers: 2000,    // 2km
   attractions: 3000, // 3km
 };
 
@@ -86,7 +86,7 @@ function buildQuery(
     ...(category === "attractions" ? [`relation${tag}${around};`] : []),
   ]);
 
-  let query = `[out:json][timeout:25];(\n${parts.join("\n")}\n);out center body qt 50;`;
+  let query = `[out:json][timeout:30];(\n${parts.join("\n")}\n);out center body qt 50;`;
 
   // If there's a name filter, we use a regex filter
   if (nameFilter) {
@@ -96,7 +96,7 @@ function buildQuery(
       `way${tag}["name"~"${escaped}",i]${around};`,
       ...(category === "attractions" ? [`relation${tag}["name"~"${escaped}",i]${around};`] : []),
     ]);
-    query = `[out:json][timeout:25];(\n${filterParts.join("\n")}\n);out center body qt 50;`;
+    query = `[out:json][timeout:30];(\n${filterParts.join("\n")}\n);out center body qt 50;`;
   }
 
   return query;
@@ -114,11 +114,11 @@ function parseElement(el: Record<string, unknown>): OverpassResult | null {
     lat = center.lat;
     lng = center.lon;
   } else {
-    lat = el.lat as number;
-    lng = el.lon as number;
+    lat = Number(el.lat);
+    lng = Number(el.lon);
   }
 
-  if (!lat || !lng) return null;
+  if (!lat || !lng || isNaN(lat) || isNaN(lng)) return null;
 
   // Build address from addr:* tags
   const addrParts: string[] = [];
@@ -154,19 +154,62 @@ export async function searchOverpass(
   const radius = customRadiusM ?? RADIUS_MAP[category];
   const query = buildQuery(center, category, radius, nameFilter);
 
-  try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      signal,
-    });
+  const ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+  ];
 
-    if (!res.ok) {
-      toastHttpError(res, "Discovery search failed");
+  const MAX_RETRIES = 2;
+
+  try {
+    let res: Response | null = null;
+    let lastError: Response | null = null;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      if (signal?.aborted) throw new Error("aborted");
+
+      // On retry, wait with exponential backoff
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, attempt * 1500));
+        if (signal?.aborted) throw new Error("aborted");
+      }
+
+      for (const endpoint of ENDPOINTS) {
+        if (signal?.aborted) throw new Error("aborted");
+        try {
+          res = await fetch(endpoint, {
+            method: "POST",
+            body: `data=${encodeURIComponent(query)}`,
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            signal,
+          });
+          if (res.ok) break;
+          lastError = res;
+          res = null;
+        } catch {
+          if (signal?.aborted) throw new Error("aborted");
+        }
+      }
+
+      // Success or non-retryable error
+      if (res?.ok) break;
+      const status = lastError?.status ?? 0;
+      const retryable = status === 429 || status === 504 || status === 408 || status >= 500;
+      if (!retryable) break;
+    }
+
+    if (!res || !res.ok) {
+      const errRes = res ?? lastError;
+      if (errRes) toastHttpError(errRes, "Discovery search failed");
       return [];
     }
-    const data = await res.json();
+    let data: { elements?: Record<string, unknown>[] };
+    try {
+      data = await res.json();
+    } catch {
+      toastNetworkError(new Error("Invalid JSON response"), "Discovery search failed");
+      return [];
+    }
 
     if (!data.elements) return [];
 

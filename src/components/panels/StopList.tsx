@@ -9,6 +9,7 @@ import StopItem from "./stops/StopItem";
 import FlightItem from "./stops/FlightItem";
 import TransportSegment from "./stops/TransportSegment";
 import AddStopSearch from "./stops/AddStopSearch";
+import TimelineSummary from "./stops/TimelineSummary";
 
 export default function StopList() {
   const trip = useTripStore(selectActiveTrip);
@@ -107,6 +108,7 @@ export default function StopList() {
       onDragLeave={handleContainerDragLeave}
       onDrop={handleContainerDrop}
     >
+      <TimelineSummary dayId={day.id} />
       {day.pins.map((pin, i) => {
         const prev = i > 0 ? day.pins[i - 1] : null;
         const isFlight = pin.pinType === "flight";
@@ -126,7 +128,6 @@ export default function StopList() {
                 pin={pin}
                 index={i}
                 dayId={day.id}
-                dayColor={day.color}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}

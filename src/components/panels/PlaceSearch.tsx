@@ -37,10 +37,13 @@ export default function PlaceSearch({
       const controller = new AbortController();
       abortRef.current = controller;
       setSearching(true);
-      const res = await searchPlaces(query, center, controller.signal);
-      if (!controller.signal.aborted) {
-        setResults(res);
-        setSearching(false);
+      try {
+        const res = await searchPlaces(query, center, controller.signal);
+        if (!controller.signal.aborted) {
+          setResults(res);
+        }
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
       }
     }, SEARCH_DEBOUNCE_MS);
     return () => {

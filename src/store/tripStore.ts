@@ -45,6 +45,7 @@ interface TripState {
   // Wishlist
   addToWishlist: (pin: Omit<Pin, "id" | "pinType"> & { pinType?: Pin["pinType"] }) => void;
   removeFromWishlist: (pinId: number) => void;
+  updateWishlistItem: (pinId: number, updates: Partial<Pin>) => void;
   moveWishlistToDay: (pinId: number, dayId: number, insertIndex?: number) => void;
   movePinToWishlist: (dayId: number, pinId: number) => void;
 
@@ -281,7 +282,7 @@ export const useTripStore = create<TripState>()(
             ...t,
             days: t.days.map((d) => {
               if (d.id === fromDayId) return { ...d, pins: d.pins.filter((p) => p.id !== pinId) };
-              if (d.id === toDayId) return { ...d, pins: [...d.pins, { ...pin, transport: null, travelTime: null }] };
+              if (d.id === toDayId) return { ...d, pins: [...d.pins, { ...pin, transport: null, travelTime: null, startTime: undefined }] };
               return d;
             }),
           })),
@@ -315,6 +316,13 @@ export const useTripStore = create<TripState>()(
         set((s) => ({
           trips: mapActiveTrip(s, (t) => ({
             ...t, wishlist: [...(t.wishlist ?? []), { pinType: "location", ...pin, id: genId() }],
+          })),
+        })),
+
+      updateWishlistItem: (pinId, updates) =>
+        set((s) => ({
+          trips: mapActiveTrip(s, (t) => ({
+            ...t, wishlist: (t.wishlist ?? []).map((p) => (p.id === pinId ? { ...p, ...updates } : p)),
           })),
         })),
 
@@ -367,7 +375,7 @@ export const useTripStore = create<TripState>()(
             if (!p) return t;
             return {
               ...t,
-              wishlist: [...(t.wishlist ?? []), { ...p, transport: null, travelTime: null }],
+              wishlist: [...(t.wishlist ?? []), { ...p, transport: null, travelTime: null, startTime: undefined }],
               days: t.days.map((dy) =>
                 dy.id === dayId ? { ...dy, pins: dy.pins.filter((px) => px.id !== pinId) } : dy
               ),
@@ -452,8 +460,7 @@ export const useTripStore = create<TripState>()(
       name: "wander-trips",
       version: 8,
       migrate: (persisted: unknown) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const state = persisted as any;
+        const state = persisted as Record<string, unknown>;
         const transportMap: Record<string, string> = {
           train: "transit", subway: "transit", bus: "transit",
           ferry: "transit", taxi: "car", bike: "walk",

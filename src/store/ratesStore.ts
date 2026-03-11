@@ -18,13 +18,15 @@ export const useRatesStore = create<RatesState>((set, get) => ({
   lastFetch: {},
 
   fetchRates: async (base: string) => {
-    const { rates, loading, lastFetch } = get();
-    // Already cached and fresh
-    if (rates[base] && lastFetch[base] && Date.now() - lastFetch[base] < CACHE_TTL) return;
-    // Already fetching
-    if (loading[base]) return;
-
-    set((s) => ({ loading: { ...s.loading, [base]: true } }));
+    // Check + set loading atomically via set() to prevent race conditions
+    let shouldFetch = false;
+    set((s) => {
+      if (s.rates[base] && s.lastFetch[base] && Date.now() - s.lastFetch[base] < CACHE_TTL) return s;
+      if (s.loading[base]) return s;
+      shouldFetch = true;
+      return { loading: { ...s.loading, [base]: true } };
+    });
+    if (!shouldFetch) return;
     try {
       const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=${base}`);
       if (!res.ok) {
@@ -33,6 +35,7 @@ export const useRatesStore = create<RatesState>((set, get) => ({
         throw new Error("Failed to fetch rates");
       }
       const data = await res.json();
+      if (!data.rates || typeof data.rates !== "object") throw new Error("Invalid rates response");
       const newRates = data.rates as Record<string, number>;
       // Add self-rate
       newRates[base] = 1;

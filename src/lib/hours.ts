@@ -3,7 +3,6 @@
  * Handles common formats: "Mo-Fr 10:00-18:00; Sa 10:00-17:00; Su 12:00-17:00"
  */
 
-const DAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const DAY_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 // Map day abbreviations to indices (0=Su, 1=Mo, ..., 6=Sa)
@@ -25,7 +24,7 @@ function expandDayRange(range: string): number[] {
     const end = DAY_INDEX[parts[1]];
     const days: number[] = [];
     let i = start;
-    while (true) {
+    for (let safety = 0; safety < 7; safety++) {
       days.push(i);
       if (i === end) break;
       i = (i + 1) % 7;
@@ -116,6 +115,99 @@ function formatTime(h: string, m: string): string {
   if (hour < 12) return `${hour}:${min} AM`;
   if (hour === 12) return `12:${min} PM`;
   return `${hour - 12}:${min} PM`;
+}
+
+// ── Scheduling utilities ──
+
+/** Convert "09:00" or "9:00" to total minutes from midnight. Returns null if invalid. */
+export function parseTimeToMinutes(time: string | undefined): number | null {
+  if (!time) return null;
+  const m = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = parseInt(m[1]), min = parseInt(m[2]);
+  if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+  return h * 60 + min;
+}
+
+/** Convert total minutes from midnight to "9:00 AM" display format. */
+export function minutesToDisplay(mins: number): string {
+  const h = Math.floor(mins / 60) % 24;
+  const m = String(mins % 60).padStart(2, "0");
+  if (h === 0) return `12:${m} AM`;
+  if (h < 12) return `${h}:${m} AM`;
+  if (h === 12) return `12:${m} PM`;
+  return `${h - 12}:${m} PM`;
+}
+
+/** Convert total minutes to "HH:MM" 24h format. */
+export function minutesTo24h(mins: number): string {
+  const h = String(Math.floor(mins / 60) % 24).padStart(2, "0");
+  const m = String(mins % 60).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+/** Parse a duration string like "1h30m", "45 min", "2h", "90min" to minutes. Returns null if unparseable. */
+export function parseDurationToMinutes(duration: string | null | undefined): number | null {
+  if (!duration) return null;
+  const d = duration.trim().toLowerCase();
+
+  // "1h30m", "1h 30m", "2h", "30m"
+  const hm = d.match(/^(\d+)\s*h(?:\s*(\d+)\s*m(?:in)?)?$/);
+  if (hm) return parseInt(hm[1]) * 60 + (hm[2] ? parseInt(hm[2]) : 0);
+
+  // "45 min", "90min", "45m"
+  const minOnly = d.match(/^(\d+)\s*m(?:in)?$/);
+  if (minOnly) return parseInt(minOnly[1]);
+
+  // "1.5h", "2.5 hours"
+  const decH = d.match(/^(\d+(?:\.\d+)?)\s*h(?:ours?)?$/);
+  if (decH) return Math.round(parseFloat(decH[1]) * 60);
+
+  // Plain number — assume minutes
+  const plain = d.match(/^(\d+)$/);
+  if (plain) return parseInt(plain[1]);
+
+  return null;
+}
+
+/**
+ * Check if a startTime (minutes from midnight) falls within the opening hours
+ * for a given date. Returns:
+ * - "open" if within hours
+ * - "closed" if outside hours
+ * - null if can't determine (no hours data, unparseable, etc.)
+ */
+export function checkTimeConflict(
+  startMinutes: number,
+  openingHours: string | null | undefined,
+  date: Date | null,
+): "open" | "closed" | null {
+  if (!openingHours || !date) return null;
+
+  const dayHours = getHoursForDate(openingHours, date);
+  if (!dayHours) return null;
+
+  const lower = dayHours.toLowerCase();
+  if (lower.includes("closed")) return "closed";
+  if (lower.includes("24 hours")) return "open";
+
+  // Try to extract time range from the display string, e.g. "10:00 AM - 6:00 PM"
+  const rangeMatch = dayHours.match(/(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!rangeMatch) return null;
+
+  const toMins = (h: string, m: string, ampm: string) => {
+    let hour = parseInt(h);
+    const min = parseInt(m);
+    if (ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
+    if (ampm.toUpperCase() === "PM" && hour !== 12) hour += 12;
+    return hour * 60 + min;
+  };
+
+  const openMin = toMins(rangeMatch[1], rangeMatch[2], rangeMatch[3]);
+  const closeMin = toMins(rangeMatch[4], rangeMatch[5], rangeMatch[6]);
+
+  if (startMinutes >= openMin && startMinutes < closeMin) return "open";
+  return "closed";
 }
 
 /** Get the date for a specific day index given the trip start date */
