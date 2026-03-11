@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { getDayDate, parseTimeToMinutes, parseDurationToMinutes, minutesToDisplay, checkTimeConflict } from "@/lib/hours";
+import { fmtMins } from "@/lib/formatUtils";
 import { textSubtle, textStrong } from "@/lib/styles";
 import type { Pin } from "@/types";
 
@@ -97,7 +98,7 @@ export default function TimelineSummary({ dayId }: { dayId: number }) {
                 <div className={`flex items-center gap-1.5 pl-1 py-0.5`}>
                   <div className={`w-px h-3 ${dark ? "bg-white/10" : "bg-zinc-200"}`} style={{ marginLeft: "3px" }} />
                   <span className={`text-[9px] ${textSubtle(dark)}`}>
-                    {gapMins >= 60 ? `${Math.floor(gapMins / 60)}h${gapMins % 60 > 0 ? ` ${gapMins % 60}m` : ""}` : `${gapMins}m`}
+                    {fmtMins(gapMins)}
                   </span>
                 </div>
               )}

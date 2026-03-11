@@ -460,8 +460,7 @@ export const useTripStore = create<TripState>()(
       name: "wander-trips",
       version: 8,
       migrate: (persisted: unknown) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const state = persisted as any;
+        const state = persisted as Record<string, unknown>;
         const transportMap: Record<string, string> = {
           train: "transit", subway: "transit", bus: "transit",
           ferry: "transit", taxi: "car", bike: "walk",

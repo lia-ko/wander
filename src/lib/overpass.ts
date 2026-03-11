@@ -154,19 +154,43 @@ export async function searchOverpass(
   const radius = customRadiusM ?? RADIUS_MAP[category];
   const query = buildQuery(center, category, radius, nameFilter);
 
-  try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      signal,
-    });
+  const ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+  ];
 
-    if (!res.ok) {
-      toastHttpError(res, "Discovery search failed");
+  try {
+    let res: Response | null = null;
+    let lastError: Response | null = null;
+    for (const endpoint of ENDPOINTS) {
+      try {
+        res = await fetch(endpoint, {
+          method: "POST",
+          body: `data=${encodeURIComponent(query)}`,
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          signal,
+        });
+        if (res.ok) break;
+        lastError = res;
+        res = null; // Clear so we try next endpoint
+      } catch {
+        if (signal?.aborted) throw new Error("aborted");
+        // Try next endpoint
+      }
+    }
+
+    if (!res || !res.ok) {
+      const errRes = res ?? lastError;
+      if (errRes) toastHttpError(errRes, "Discovery search failed");
       return [];
     }
-    const data = await res.json();
+    let data: { elements?: Record<string, unknown>[] };
+    try {
+      data = await res.json();
+    } catch {
+      toastNetworkError(new Error("Invalid JSON response"), "Discovery search failed");
+      return [];
+    }
 
     if (!data.elements) return [];
 

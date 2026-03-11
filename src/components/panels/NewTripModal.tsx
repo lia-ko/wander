@@ -4,25 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useTripStore } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
 import { searchCities, type GeoResult } from "@/lib/geocode";
+import { formatDateRange, daysBetween } from "@/lib/formatUtils";
 import { DAY_COLORS } from "@/store/constants";
 import { textMuted, textSubtle, hoverBg, inputFocus, btnHover, SEARCH_DEBOUNCE_MS } from "@/lib/styles";
-
-function formatDateRange(start: string, end: string): string {
-  const s = new Date(start + "T12:00:00");
-  const e = new Date(end + "T12:00:00");
-  const sMonth = s.toLocaleDateString("en-US", { month: "short" });
-  const eMonth = e.toLocaleDateString("en-US", { month: "short" });
-  if (sMonth === eMonth) {
-    return `${sMonth} ${s.getDate()}\u2013${e.getDate()}`;
-  }
-  return `${sMonth} ${s.getDate()} \u2013 ${eMonth} ${e.getDate()}`;
-}
-
-function daysBetween(start: string, end: string): number {
-  const s = new Date(start + "T12:00:00");
-  const e = new Date(end + "T12:00:00");
-  return Math.max(1, Math.round((e.getTime() - s.getTime()) / 86400000) + 1);
-}
 
 function NewTripModal() {
   const addTrip = useTripStore((s) => s.addTrip);

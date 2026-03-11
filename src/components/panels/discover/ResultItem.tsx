@@ -31,6 +31,18 @@ export default memo(function ResultItem({ result, tab, added, wishlisted, onAdd,
   const pills = getTagPills(result, tab);
   const address = result.address || "";
   const dist = result.dist ?? 0;
+  const tags = result.tags;
+
+  // Opening hours
+  const rawHours = tags.opening_hours;
+  const todayHours = rawHours && dayDate ? getHoursForDate(rawHours, dayDate) : null;
+  const isClosed = todayHours?.toLowerCase().includes("closed");
+  const isOpen24 = rawHours?.includes("24/7");
+
+  // Extra info line
+  const extras: string[] = [];
+  if (tags.phone) extras.push(tags.phone);
+  if (tags.website) extras.push("Website");
 
   return (
     <div className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${softHoverBg(dark)}`}>
@@ -39,6 +51,8 @@ export default memo(function ResultItem({ result, tab, added, wishlisted, onAdd,
         {address && (
           <div className={`text-xs truncate mt-0.5 ${textMuted(dark)}`}>{address}</div>
         )}
+
+        {/* Tag pills + distance */}
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           {pills.map((pill, i) => (
             <TagPill key={i} label={pill.label} color={pill.color} />
@@ -47,19 +61,45 @@ export default memo(function ResultItem({ result, tab, added, wishlisted, onAdd,
             {formatDist(dist)}
           </span>
         </div>
-        {result.tags.opening_hours && (() => {
-          const parsed = dayDate ? getHoursForDate(result.tags.opening_hours, dayDate) : result.tags.opening_hours;
-          const isClosed = parsed?.toLowerCase().includes("closed");
-          return (
-            <div className={`text-[10px] mt-0.5 flex items-center gap-1 ${isClosed ? "text-red-400" : textSubtle(dark)}`}>
-              <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="truncate">{parsed}</span>
-            </div>
-          );
-        })()}
+
+        {/* Opening hours */}
+        {rawHours && (
+          <div className={`text-[10px] mt-1 flex items-center gap-1 ${
+            isClosed ? "text-red-400" : isOpen24 ? "text-emerald-500" : textSubtle(dark)
+          }`}>
+            <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {todayHours ? (
+              <span className="truncate">
+                {isClosed ? "Closed today" : `Today: ${todayHours}`}
+              </span>
+            ) : (
+              <span className="truncate">{isOpen24 ? "Open 24/7" : rawHours}</span>
+            )}
+          </div>
+        )}
+
+        {/* Website link */}
+        {tags.website && (
+          <a
+            href={tags.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`text-[10px] mt-0.5 inline-flex items-center gap-1 hover:underline ${
+              dark ? "text-[#60A5FA]" : "text-[#4E8098]"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Website
+          </a>
+        )}
       </div>
+
+      {/* Action buttons */}
       <div className="flex flex-col gap-1 flex-shrink-0 mt-1">
         <button
           onClick={onAdd}

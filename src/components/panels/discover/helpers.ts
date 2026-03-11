@@ -35,10 +35,7 @@ export function mapOsmToAttrType(result: OverpassResult): AttrTypeKey {
   return "historic";
 }
 
-export function formatDist(km: number): string {
-  if (km < 1) return `${Math.round(km * 1000)}m`;
-  return `${km.toFixed(1)}km`;
-}
+export { fmtDist as formatDist } from "@/lib/formatUtils";
 
 export function formatCuisine(cuisine: string): string {
   return cuisine
@@ -67,15 +64,22 @@ export function formatOsmType(osmType: string): string {
 export function getTagPills(result: OverpassResult, tab: DiscoverTab): { label: string; color: string }[] {
   const pills: { label: string; color: string }[] = [];
   const type = formatOsmType(result.osmType);
+  const tags = result.tags;
 
   if (tab === "eat") {
     pills.push({ label: type, color: "#E8745A" });
     if (result.cuisine) {
       pills.push({ label: formatCuisine(result.cuisine), color: "#DAA520" });
     }
+    // Diet tags
+    if (tags["diet:vegan"] === "yes" || tags["diet:vegan"] === "only") pills.push({ label: "Vegan", color: "#22C55E" });
+    else if (tags["diet:vegetarian"] === "yes" || tags["diet:vegetarian"] === "only") pills.push({ label: "Vegetarian", color: "#22C55E" });
+    // Takeaway / outdoor
+    if (tags.takeaway === "yes" || tags.takeaway === "only") pills.push({ label: "Takeaway", color: "#3B82F6" });
+    if (tags.outdoor_seating === "yes") pills.push({ label: "Outdoor", color: "#60A5FA" });
   } else if (tab === "grocers") {
     pills.push({ label: type, color: "#22C55E" });
-    const brand = result.tags["brand:en"] || result.tags.brand;
+    const brand = tags["brand:en"] || tags.brand;
     if (brand && brand.toLowerCase() !== result.name.toLowerCase()) {
       pills.push({ label: brand, color: "#3B82F6" });
     }
@@ -83,12 +87,14 @@ export function getTagPills(result: OverpassResult, tab: DiscoverTab): { label: 
     const at = mapOsmToAttrType(result);
     const meta = ATTR_TYPE_META[at];
     pills.push({ label: type, color: meta?.color || "#8B5CF6" });
-    if (result.tags.fee === "no") {
+    if (tags.fee === "no") {
       pills.push({ label: "Free", color: "#22C55E" });
-    } else if (result.tags.fee === "yes") {
+    } else if (tags.fee === "yes") {
       pills.push({ label: "Paid Entry", color: "#F97316" });
     }
+    if (tags.wheelchair === "yes") pills.push({ label: "Accessible", color: "#60A5FA" });
   }
 
   return pills;
 }
+

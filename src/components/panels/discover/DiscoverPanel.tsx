@@ -80,8 +80,19 @@ export default function DiscoverPanel() {
     searchOverpass(center, discoverTab, nameFilter || undefined, 5000, controller.signal).then((r) => {
       if (controller.signal.aborted) return;
       r.sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity));
-      cacheRef.current.set(cacheKey, r);
+      // Only cache non-empty results so transient failures don't stick
+      if (r.length > 0) {
+        // Bound cache to 50 entries to prevent memory growth
+        if (cacheRef.current.size >= 50) {
+          const oldest = cacheRef.current.keys().next().value;
+          if (oldest !== undefined) cacheRef.current.delete(oldest);
+        }
+        cacheRef.current.set(cacheKey, r);
+      }
       setResults(r);
+      setLoading(false);
+    }).catch(() => {
+      if (controller.signal.aborted) return;
       setLoading(false);
     });
   }, [getSearchCenter, discoverTab]);

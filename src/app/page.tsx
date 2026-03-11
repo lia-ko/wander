@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import MainPanel from "@/components/panels/MainPanel";
 import DiscoverPanel from "@/components/panels/DiscoverPanel";
 import MapControls from "@/components/map/MapControls";
+import TimelineBar from "@/components/panels/TimelineBar";
 import ToastContainer from "@/components/ui/ToastContainer";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import { useTripStore } from "@/store/tripStore";
@@ -33,15 +34,20 @@ export default function Home() {
 
   return (
     <ErrorBoundary>
-      <div className="relative w-screen h-screen overflow-hidden">
-        {/* Map layer — full bleed */}
-        <MapView />
+      <div className="flex flex-col w-screen h-screen overflow-hidden">
+        <div className="relative flex-1 min-h-0">
+          {/* Map layer — full bleed */}
+          <MapView />
 
-        {/* Floating UI panels */}
-        <MainPanel />
-        <DiscoverPanel />
-        <MapControls />
-        <ToastContainer />
+          {/* Floating UI panels */}
+          <MainPanel />
+          <DiscoverPanel />
+          <MapControls />
+          <ToastContainer />
+        </div>
+
+        {/* Bottom timeline strip */}
+        <TimelineBar />
       </div>
     </ErrorBoundary>
   );

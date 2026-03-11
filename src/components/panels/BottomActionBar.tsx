@@ -1,11 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
 import { exportTripPdf } from "@/components/export/exportPdf";
 import { toast } from "@/store/toastStore";
-import { accentActive, inactiveBtn } from "@/lib/styles";
 import html2canvas from "html2canvas";
 import type { Trip } from "@/types";
 
@@ -29,12 +28,12 @@ function validateTrips(data: unknown): data is Trip[] {
 export default function BottomActionBar() {
   const toggleDiscover = useUIStore((s) => s.toggleDiscover);
   const discoverOpen = useUIStore((s) => s.discoverOpen);
-  const discoverTab = useUIStore((s) => s.discoverTab);
   const sidebarView = useUIStore((s) => s.sidebarView);
   const setSidebarView = useUIStore((s) => s.setSidebarView);
   const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const wishlistCount = (trip.wishlist ?? []).length;
   const isWishlist = sidebarView === "wishlist";
@@ -42,18 +41,23 @@ export default function BottomActionBar() {
   const isStats = sidebarView === "stats";
   const expenseCount = (trip.expenses ?? []).length;
 
-  const discoverButtons = [
-    { key: "eat" as const, emoji: "\u{1F37D}\uFE0F", label: "Eat Out" },
-    { key: "grocers" as const, emoji: "\u{1F6D2}", label: "Grocers" },
-    { key: "attractions" as const, emoji: "\u{1F5FA}\uFE0F", label: "Attractions" },
-  ];
-
-  const btnClass = (active: boolean) =>
-    `flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl text-xs font-semibold transition-all ${
+  const iconBtn = (active: boolean) =>
+    `relative flex items-center justify-center w-9 h-9 rounded-xl transition-all ${
       active
-        ? accentActive(dark)
-        : inactiveBtn(dark)
+        ? dark ? "bg-[#DAA520]/20 text-[#DAA520]" : "bg-[#4E8098]/15 text-[#4E8098]"
+        : dark ? "text-zinc-400 hover:bg-[#F5E8D8]/8 hover:text-zinc-200" : "text-zinc-500 hover:bg-[#4E8098]/8 hover:text-zinc-700"
     }`;
+
+  const badge = (count: number, active: boolean) =>
+    count > 0 ? (
+      <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold ${
+        active
+          ? dark ? "bg-[#DAA520] text-[#1C1C1C]" : "bg-[#4E8098] text-white"
+          : dark ? "bg-[#F5E8D8]/15 text-zinc-300" : "bg-[#4E8098]/10 text-zinc-600"
+      }`}>
+        {count}
+      </span>
+    ) : null;
 
   const handleExportJson = () => {
     try {
@@ -70,18 +74,23 @@ export default function BottomActionBar() {
     } catch {
       toast("Export failed — please try again.");
     }
+    setMenuOpen(false);
   };
 
   const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Reset so re-selecting same file still triggers
     e.target.value = "";
 
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const parsed = JSON.parse(ev.target?.result as string);
+        const raw = ev.target?.result;
+        if (typeof raw !== "string") {
+          toast("Could not read file.");
+          return;
+        }
+        const parsed = JSON.parse(raw);
         const trips = parsed as unknown;
         if (!validateTrips(trips)) {
           toast("Invalid file — not a valid Wander trips export.");
@@ -99,133 +108,143 @@ export default function BottomActionBar() {
     };
     reader.onerror = () => toast("Failed to read file.");
     reader.readAsText(file);
+    setMenuOpen(false);
   };
 
+  const handleExportPdf = async () => {
+    setMenuOpen(false);
+    try {
+      const t = useTripStore.getState().getActiveTrip();
+      const mapEl = document.querySelector(".leaflet-container") as HTMLElement | null;
+      let mapCanvas: HTMLCanvasElement | null = null;
+      if (mapEl) {
+        mapCanvas = await html2canvas(mapEl, { useCORS: true, allowTaint: true });
+      }
+      await exportTripPdf(t, mapCanvas);
+      toast("PDF exported successfully!", "success");
+    } catch {
+      toast("PDF export failed — please try again.");
+    }
+  };
+
+  const menuItemClass = `flex items-center gap-2.5 w-full px-3 py-2 text-xs font-medium rounded-lg transition-colors text-left ${
+    dark ? "text-zinc-300 hover:bg-[#F5E8D8]/10" : "text-zinc-600 hover:bg-[#4E8098]/8"
+  }`;
+
   return (
-    <div className={`border-t px-3 py-2.5 flex flex-col gap-2 ${dark ? "border-[#F5E8D8]/10" : "border-[#4E8098]/10"}`}>
-      {/* Wishlist & Budget toggles */}
-      <div className="flex items-center gap-1.5">
+    <div className={`border-t px-3 py-2 ${dark ? "border-[#F5E8D8]/10" : "border-[#4E8098]/10"}`}>
+      <div className="flex items-center justify-around">
+        {/* Day view */}
+        <button
+          onClick={() => setSidebarView("day")}
+          className={iconBtn(sidebarView === "day")}
+          title="Itinerary"
+        >
+          <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        </button>
+
+        {/* Wishlist */}
         <button
           onClick={() => setSidebarView(isWishlist ? "day" : "wishlist")}
-          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-            isWishlist
-              ? accentActive(dark)
-              : inactiveBtn(dark)
-          }`}
+          className={iconBtn(isWishlist)}
+          title="Wishlist"
         >
-          <svg className="w-3.5 h-3.5" fill={isWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-[18px] h-[18px]" fill={isWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
-          Wishlist
-          {wishlistCount > 0 && (
-            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-              isWishlist
-                ? dark ? "bg-[#DAA520]/30" : "bg-[#4E8098]/20"
-                : dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
-            }`}>
-              {wishlistCount}
-            </span>
-          )}
+          {badge(wishlistCount, isWishlist)}
         </button>
 
+        {/* Budget */}
         <button
           onClick={() => setSidebarView(isBudget ? "day" : "budget")}
-          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-            isBudget
-              ? accentActive(dark)
-              : inactiveBtn(dark)
-          }`}
+          className={iconBtn(isBudget)}
+          title="Budget"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          Budget
-          {expenseCount > 0 && (
-            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-              isBudget
-                ? dark ? "bg-[#DAA520]/30" : "bg-[#4E8098]/20"
-                : dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/8"
-            }`}>
-              {expenseCount}
-            </span>
-          )}
+          {badge(expenseCount, isBudget)}
         </button>
 
+        {/* Stats */}
         <button
           onClick={() => setSidebarView(isStats ? "day" : "stats")}
-          className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-            isStats
-              ? accentActive(dark)
-              : inactiveBtn(dark)
-          }`}
+          className={iconBtn(isStats)}
+          title="Stats"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
-          Stats
         </button>
-      </div>
 
-      {/* Discover row */}
-      <div className="flex items-center gap-1.5">
-        {discoverButtons.map((btn) => (
-          <button
-            key={btn.key}
-            onClick={() => toggleDiscover(btn.key)}
-            className={btnClass(discoverOpen && discoverTab === btn.key)}
-            aria-label={`Discover ${btn.label}`}
-          >
-            <span>{btn.emoji}</span>
-            <span>{btn.label}</span>
-          </button>
-        ))}
-      </div>
+        {/* Divider */}
+        <div className={`w-px h-5 ${dark ? "bg-[#F5E8D8]/10" : "bg-[#4E8098]/10"}`} />
 
-      {/* Export/Import row */}
-      <div className="flex items-center gap-1.5">
+        {/* Discover */}
         <button
-          onClick={async () => {
-            try {
-              const t = useTripStore.getState().getActiveTrip();
-              const mapEl = document.querySelector(".leaflet-container") as HTMLElement | null;
-              let mapCanvas: HTMLCanvasElement | null = null;
-              if (mapEl) {
-                mapCanvas = await html2canvas(mapEl, { useCORS: true, allowTaint: true });
-              }
-              await exportTripPdf(t, mapCanvas);
-              toast("PDF exported successfully!", "success");
-            } catch {
-              toast("PDF export failed — please try again.");
-            }
-          }}
-          className={btnClass(false)}
+          onClick={() => toggleDiscover()}
+          className={iconBtn(discoverOpen)}
+          title="Discover places"
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          Export PDF
         </button>
 
-        <button onClick={handleExportJson} className={btnClass(false)}>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Save
-        </button>
+        {/* More menu */}
+        <div className="relative">
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className={iconBtn(menuOpen)}
+            title="More actions"
+          >
+            <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+            </svg>
+          </button>
 
-        <button onClick={() => fileInputRef.current?.click()} className={btnClass(false)}>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          Load
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          onChange={handleImportJson}
-          className="hidden"
-        />
+          {menuOpen && (
+            <>
+              {/* Backdrop to close */}
+              <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+
+              {/* Menu popover */}
+              <div className={`absolute bottom-full right-0 mb-2 w-48 rounded-xl overflow-hidden shadow-lg z-50 py-1.5 px-1.5 ${
+                dark ? "bg-[#1C1C1C] border border-[#F5E8D8]/10" : "bg-white border border-black/10"
+              }`}>
+                <button onClick={handleExportPdf} className={menuItemClass} aria-label="Export PDF">
+                  <svg className="w-4 h-4 flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Export PDF
+                </button>
+                <button onClick={handleExportJson} className={menuItemClass} aria-label="Save as JSON">
+                  <svg className="w-4 h-4 flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Save as JSON
+                </button>
+                <button onClick={() => { fileInputRef.current?.click(); }} className={menuItemClass} aria-label="Load from JSON">
+                  <svg className="w-4 h-4 flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Load from JSON
+                </button>
+              </div>
+            </>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImportJson}
+            className="hidden"
+          />
+        </div>
       </div>
     </div>
   );

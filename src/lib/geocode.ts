@@ -9,14 +9,31 @@ export type GeoResult = {
   type: string;
 };
 
-let lastRequestTime = 0;
+function parseResults(data: Record<string, string>[]): GeoResult[] {
+  return data.map((item) => ({
+    placeId: item.place_id,
+    name: item.display_name?.split(",")[0] ?? item.name,
+    displayName: item.display_name,
+    lat: parseFloat(item.lat),
+    lng: parseFloat(item.lon),
+    type: item.type,
+  }));
+}
+
+// Serialize Nominatim requests to enforce 1s spacing (race-safe)
+let throttleQueue: Promise<void> = Promise.resolve();
 
 async function throttledFetch(url: string, signal?: AbortSignal): Promise<Response> {
-  const now = Date.now();
-  const wait = Math.max(0, lastRequestTime + 1100 - now); // Nominatim requires 1s between requests
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-  lastRequestTime = Date.now();
-  return fetch(url, signal ? { signal } : undefined);
+  let release: () => void;
+  const prev = throttleQueue;
+  throttleQueue = new Promise((r) => { release = r; });
+  await prev;
+  try {
+    return await fetch(url, signal ? { signal } : undefined);
+  } finally {
+    // Enforce 1.1s gap before next request can proceed
+    setTimeout(() => release!(), 1100);
+  }
 }
 
 export async function searchCities(query: string, signal?: AbortSignal): Promise<GeoResult[]> {
@@ -36,14 +53,7 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
       return [];
     }
     const data = await res.json();
-    return data.map((item: Record<string, string>) => ({
-      placeId: item.place_id,
-      name: item.display_name?.split(",")[0] ?? item.name,
-      displayName: item.display_name,
-      lat: parseFloat(item.lat),
-      lng: parseFloat(item.lon),
-      type: item.type,
-    }));
+    return parseResults(data);
   } catch (err) {
     toastNetworkError(err, "City search failed");
     return [];
@@ -71,16 +81,6 @@ export async function searchNearby(
   if (!center.lat && !center.lng) return [];
   const searchQuery = query.trim();
   if (!searchQuery) return [];
-
-  const parseResults = (data: Record<string, string>[]): GeoResult[] =>
-    data.map((item) => ({
-      placeId: item.place_id,
-      name: item.display_name?.split(",")[0] ?? item.name,
-      displayName: item.display_name,
-      lat: parseFloat(item.lat),
-      lng: parseFloat(item.lon),
-      type: item.type,
-    }));
 
   try {
     const url = `https://nominatim.openstreetmap.org/search?` +
@@ -131,16 +131,6 @@ export async function searchNearby(
 
 export async function searchPlaces(query: string, center: { lat: number; lng: number }, signal?: AbortSignal): Promise<GeoResult[]> {
   if (!query.trim() || query.length < 2) return [];
-
-  const parseResults = (data: Record<string, string>[]): GeoResult[] =>
-    data.map((item) => ({
-      placeId: item.place_id,
-      name: item.display_name?.split(",")[0] ?? item.name,
-      displayName: item.display_name,
-      lat: parseFloat(item.lat),
-      lng: parseFloat(item.lon),
-      type: item.type,
-    }));
 
   try {
     // Tight search: ~55km around trip center

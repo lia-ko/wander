@@ -59,7 +59,6 @@ export default function StatsPanel() {
   const trip = useTripStore(selectActiveTrip);
   const dark = useTripStore((s) => s.darkMode);
   const convert = useRatesStore((s) => s.convert);
-  const rates = useRatesStore((s) => s.rates);
 
   const expenses = trip.expenses ?? [];
   const budget = trip.budget ?? { currency: "USD", totalBudget: null };

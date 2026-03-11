@@ -3,7 +3,6 @@
  * Handles common formats: "Mo-Fr 10:00-18:00; Sa 10:00-17:00; Su 12:00-17:00"
  */
 
-const DAY_NAMES = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const DAY_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 // Map day abbreviations to indices (0=Su, 1=Mo, ..., 6=Sa)
@@ -25,7 +24,7 @@ function expandDayRange(range: string): number[] {
     const end = DAY_INDEX[parts[1]];
     const days: number[] = [];
     let i = start;
-    while (true) {
+    for (let safety = 0; safety < 7; safety++) {
       days.push(i);
       if (i === end) break;
       i = (i + 1) % 7;
