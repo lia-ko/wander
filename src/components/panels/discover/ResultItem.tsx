@@ -80,23 +80,40 @@ export default memo(function ResultItem({ result, tab, added, wishlisted, onAdd,
           </div>
         )}
 
-        {/* Website link */}
-        {tags.website && (
+        {/* Links row */}
+        <div className="flex items-center gap-2.5 mt-0.5">
           <a
-            href={tags.website}
+            href={`https://www.google.com/maps/search/${encodeURIComponent(result.name)}/@${result.lat},${result.lng},18z`}
             target="_blank"
             rel="noopener noreferrer"
-            className={`text-[10px] mt-0.5 inline-flex items-center gap-1 hover:underline ${
+            className={`text-[10px] inline-flex items-center gap-1 hover:underline ${
               dark ? "text-[#60A5FA]" : "text-[#4E8098]"
             }`}
             onClick={(e) => e.stopPropagation()}
           >
             <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Website
+            Google Maps
           </a>
-        )}
+          {tags.website && (
+            <a
+              href={tags.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-[10px] inline-flex items-center gap-1 hover:underline ${
+                dark ? "text-[#60A5FA]" : "text-[#4E8098]"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Website
+            </a>
+          )}
+        </div>
       </div>
 
       {/* Action buttons */}

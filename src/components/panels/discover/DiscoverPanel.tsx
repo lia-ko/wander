@@ -77,7 +77,7 @@ export default function DiscoverPanel() {
 
     setLoading(true);
     setSearched(true);
-    searchOverpass(center, discoverTab, nameFilter || undefined, 5000, controller.signal).then((r) => {
+    searchOverpass(center, discoverTab, nameFilter || undefined, undefined, controller.signal).then((r) => {
       if (controller.signal.aborted) return;
       r.sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity));
       // Only cache non-empty results so transient failures don't stick

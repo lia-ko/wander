@@ -4,7 +4,7 @@ import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
 import { getHoursForDate, getDayDate, parseTimeToMinutes, minutesToDisplay, checkTimeConflict } from "@/lib/hours";
 import { useUIStore } from "@/store/uiStore";
-import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg, formInput, saveBtn, cancelBtn, wishlistBtn, removeBtn, isSameLocation } from "@/lib/styles";
+import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg, formInput, saveBtn, cancelBtn, wishlistBtn, isSameLocation } from "@/lib/styles";
 import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
 
@@ -29,7 +29,6 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
   const trip = useTripStore(selectActiveTrip);
   const day = useTripStore(selectActiveDay);
   const isSelected = selectedPinId === pin.id;
-  const pinCount = day.pins.length;
 
   // Compute day-specific hours
   const dayIndex = trip.days.findIndex((d) => d.id === dayId);
@@ -197,69 +196,81 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
       )}
 
       {expanded && (
-        <div className="flex items-center gap-1 mt-2 ml-8" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-0.5 mt-1.5 ml-8" onClick={(e) => e.stopPropagation()}>
+          {/* Edit */}
           <button
             onClick={() => { setEditName(pin.name); setEditNote(pin.note || ""); setEditing(true); }}
-            className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-              btnHover(dark)
-            }`}
+            className={`p-1.5 rounded-lg transition-colors ${btnHover(dark)}`}
+            title="Edit name & note"
+            aria-label="Edit stop"
           >
-            Edit
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
           </button>
+          {/* Set / edit time */}
           {!editingTime && (
             <button
               onClick={() => { setTimeValue(pin.startTime || ""); setEditingTime(true); }}
-              className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+              className={`p-1.5 rounded-lg transition-colors ${
                 pin.startTime
-                  ? dark ? "bg-[#DAA520]/10 text-[#DAA520]" : "bg-[#4E8098]/10 text-[#4E8098]"
+                  ? dark ? "text-[#DAA520] bg-[#DAA520]/10 hover:bg-[#DAA520]/15" : "text-[#4E8098] bg-[#4E8098]/10 hover:bg-[#4E8098]/15"
                   : btnHover(dark)
               }`}
-              title={pin.startTime ? "Edit start time" : "Set start time"}
+              title={pin.startTime ? `Time: ${minutesToDisplay(startMins!)} — click to edit` : "Set start time"}
+              aria-label={pin.startTime ? "Edit start time" : "Set start time"}
             >
-              {pin.startTime ? minutesToDisplay(startMins!) : "Set time"}
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </button>
           )}
+          {/* Wishlist */}
           <button
             onClick={() => { movePinToWishlist(dayId, pin.id); setSelectedPinId(null); }}
-            className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
-              wishlistBtn(dark)
-            }`}
+            className={`p-1.5 rounded-lg transition-colors ${wishlistBtn(dark)}`}
             title="Move to wishlist"
+            aria-label="Move to wishlist"
           >
-            <span className="flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-              </svg>
-              Save
-            </span>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+            </svg>
           </button>
-          <button
-            onClick={() => { removePin(dayId, pin.id); setSelectedPinId(null); }}
-            className={`text-xs px-2.5 py-1 rounded-md transition-colors ${removeBtn}`}
-          >
-            Remove
-          </button>
+          {/* Walking radius */}
           {pin.y !== 0 && pin.x !== 0 && (
             <button
               onClick={() => {
                 const isActive = radiusCenter && isSameLocation(radiusCenter.lat, radiusCenter.lng, pin.y, pin.x);
                 setRadiusCenter(isActive ? null : { lat: pin.y, lng: pin.x, label: pin.name });
               }}
-              className={`text-xs px-2.5 py-1 rounded-md transition-colors ${
+              className={`p-1.5 rounded-lg transition-colors ${
                 radiusCenter && isSameLocation(radiusCenter.lat, radiusCenter.lng, pin.y, pin.x)
                   ? "bg-[#4E8098]/20 text-[#4E8098]"
                   : btnHover(dark)
               }`}
               title="Show walking radius"
+              aria-label="Show walking radius"
             >
-              Radius
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                <circle cx="12" cy="12" r="4" strokeWidth={2} />
+              </svg>
             </button>
           )}
-          {pinCount > 1 && (
-            <span className={`text-[10px] ml-1 ${dark ? "text-zinc-600" : "text-zinc-400"}`}>
-              Drag to reorder
-            </span>
-          )}
+
+          <div className={`w-px h-4 mx-0.5 ${dark ? "bg-white/10" : "bg-black/10"}`} />
+
+          {/* Remove */}
+          <button
+            onClick={() => { removePin(dayId, pin.id); setSelectedPinId(null); }}
+            className="p-1.5 rounded-lg transition-colors text-zinc-400 hover:text-red-500 hover:bg-red-500/10"
+            title="Remove stop"
+            aria-label="Remove stop"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       )}
     </div>
