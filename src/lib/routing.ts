@@ -4,7 +4,6 @@
  * through sidewalks, parks, and small streets.
  */
 import { VALHALLA_BASE, ROUTE_CACHE_MAX } from "./constants";
-import { toastNetworkError } from "./apiError";
 import type { TransportKey } from "@/types";
 
 export type RouteSegment = {
@@ -195,11 +194,6 @@ export async function fetchDayRoutes(
     for (const r of results) {
       if (r.status === "fulfilled") segments.push(r.value);
     }
-  }
-
-  // If every segment fell back to straight line, routing service may be down
-  if (segments.length > 0 && segments.every((s) => s.distanceKm === null)) {
-    toastNetworkError(new Error("routing unavailable"), "Route calculation failed");
   }
 
   return segments;

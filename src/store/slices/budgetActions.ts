@@ -1,6 +1,6 @@
 import type { Expense, BudgetConfig } from "@/types";
-import type { TripState, StoreSet, StoreGet } from "../tripStore";
-import { genId, mapActiveTrip, snapBeforeAction } from "../tripStore";
+import type { StoreSet, StoreGet } from "../tripStore";
+import { genId, getActiveTrip, mapActiveTrip, snapBeforeAction } from "../tripStore";
 
 export function createBudgetActions(set: StoreSet, get: StoreGet) {
   return {
@@ -26,7 +26,7 @@ export function createBudgetActions(set: StoreSet, get: StoreGet) {
       })),
 
     removeExpense: (expenseId: number) => {
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const expName = (trip?.expenses ?? []).find((e) => e.id === expenseId)?.name ?? "Expense";
       snapBeforeAction(get, `Removed "${expName}"`);
       set((s) => ({
@@ -37,7 +37,7 @@ export function createBudgetActions(set: StoreSet, get: StoreGet) {
     },
 
     clearAllExpenses: () => {
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const count = (trip?.expenses ?? []).length;
       if (count === 0) return;
       snapBeforeAction(get, `Cleared ${count} expense${count > 1 ? "s" : ""}`);

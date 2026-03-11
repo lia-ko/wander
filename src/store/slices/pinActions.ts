@@ -1,6 +1,6 @@
 import type { Pin } from "@/types";
-import type { TripState, StoreSet, StoreGet } from "../tripStore";
-import { genId, mapActiveTrip, mapActiveDay, snapBeforeAction } from "../tripStore";
+import type { StoreSet, StoreGet } from "../tripStore";
+import { genId, getActiveTrip, mapActiveTrip, mapActiveDay, snapBeforeAction } from "../tripStore";
 import { useUIStore } from "../uiStore";
 
 export function createPinActions(set: StoreSet, get: StoreGet) {
@@ -16,7 +16,7 @@ export function createPinActions(set: StoreSet, get: StoreGet) {
       })),
 
     removePin: (dayId: number, pinId: number) => {
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const day = trip?.days.find((d) => d.id === dayId);
       const pinName = day?.pins.find((p) => p.id === pinId)?.name ?? "Stop";
       snapBeforeAction(get, `Removed "${pinName}"`);
@@ -28,7 +28,7 @@ export function createPinActions(set: StoreSet, get: StoreGet) {
     },
 
     reorderPin: (dayId: number, fromIndex: number, toIndex: number) => {
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const day = trip?.days.find((d) => d.id === dayId);
       const pinName = day?.pins[fromIndex]?.name ?? "stop";
       snapBeforeAction(get, `Reordered "${pinName}"`);
@@ -44,7 +44,7 @@ export function createPinActions(set: StoreSet, get: StoreGet) {
 
     movePinToDay: (fromDayId: number, pinId: number, toDayId: number) => {
       if (fromDayId === toDayId) return;
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const fromDay = trip?.days.find((d) => d.id === fromDayId);
       const toDay = trip?.days.find((d) => d.id === toDayId);
       const pin = fromDay?.pins.find((p) => p.id === pinId);
@@ -79,7 +79,7 @@ export function createPinActions(set: StoreSet, get: StoreGet) {
       })),
 
     removeFromWishlist: (pinId: number) => {
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const pinName = (trip?.wishlist ?? []).find((p) => p.id === pinId)?.name ?? "Item";
       snapBeforeAction(get, `Removed "${pinName}" from wishlist`);
       set((s) => ({
@@ -88,7 +88,7 @@ export function createPinActions(set: StoreSet, get: StoreGet) {
     },
 
     moveWishlistToDay: (pinId: number, dayId: number, insertIndex?: number) => {
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const pin = (trip?.wishlist ?? []).find((p) => p.id === pinId);
       const day = trip?.days.find((d) => d.id === dayId);
       if (pin) snapBeforeAction(get, `Moved "${pin.name}" to ${day?.label ?? "day"}`);
@@ -116,7 +116,7 @@ export function createPinActions(set: StoreSet, get: StoreGet) {
     },
 
     movePinToWishlist: (dayId: number, pinId: number) => {
-      const trip = get().trips.find((t) => t.id === get().activeTripId);
+      const trip = getActiveTrip(get);
       const day = trip?.days.find((d) => d.id === dayId);
       const pin = day?.pins.find((p) => p.id === pinId);
       if (pin) snapBeforeAction(get, `Moved "${pin.name}" to wishlist`);

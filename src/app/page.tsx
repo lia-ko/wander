@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import MainPanel from "@/components/panels/MainPanel";
-import DiscoverPanel from "@/components/panels/DiscoverPanel";
+import DiscoverPanel from "@/components/panels/discover/DiscoverPanel";
 import MapControls from "@/components/map/MapControls";
 import TimelineBar from "@/components/panels/TimelineBar";
 import ToastContainer from "@/components/ui/ToastContainer";

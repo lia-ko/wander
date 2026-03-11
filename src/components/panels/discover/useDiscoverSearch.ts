@@ -55,7 +55,7 @@ export function useDiscoverSearch() {
 
   const doSearch = useCallback((nameFilter?: string) => {
     const center = getSearchCenter();
-    if (!center || (!center.lat && !center.lng)) return;
+    if (!center || !isFinite(center.lat) || !isFinite(center.lng)) return;
     const cacheKey = `${discoverTab}|${center.lat.toFixed(4)},${center.lng.toFixed(4)}|${nameFilter || ""}`;
     const cached = cacheRef.current.get(cacheKey);
     if (cached) {

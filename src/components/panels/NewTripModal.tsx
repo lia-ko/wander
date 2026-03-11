@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTripStore } from "@/store/tripStore";
+import { useTripStore, genId } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
 import { searchCities, type GeoResult } from "@/lib/geocode";
 import { formatDateRange, daysBetween } from "@/lib/formatUtils";
@@ -64,7 +64,6 @@ function NewTripModal() {
   const handleCreate = () => {
     if (!name.trim() || !selectedDest || !startDate || !endDate || !datesValid) return;
 
-    const genId = () => Date.now() + Math.floor(Math.random() * 10000);
     const count = daysBetween(startDate, endDate);
 
     addTrip(

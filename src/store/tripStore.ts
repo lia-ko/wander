@@ -89,6 +89,11 @@ function activeTrip(s: { trips: Trip[]; activeTripId: number }): Trip {
   return s.trips.find((t) => t.id === s.activeTripId) ?? s.trips[0];
 }
 
+/** For use in slices: resolve the active trip from get() */
+export function getActiveTrip(get: StoreGet): Trip {
+  return activeTrip(get());
+}
+
 /** Safely resolve a day within a trip, falling back to days[0] */
 function activeDay(trip: Trip, dayId: number): Day {
   return trip.days.find((d) => d.id === dayId) ?? trip.days[0];
@@ -226,8 +231,8 @@ export const useTripStore = create<TripState>()(
         }),
 
       removeDay: (dayId) => {
-        const trip = get().trips.find((t) => t.id === get().activeTripId);
-        const dayLabel = trip?.days.find((d) => d.id === dayId)?.label ?? "Day";
+        const trip = getActiveTrip(get);
+        const dayLabel = trip.days.find((d) => d.id === dayId)?.label ?? "Day";
         snapBeforeAction(get, `Deleted ${dayLabel}`);
         set((s) => ({
           trips: mapActiveTrip(s, (t) => ({ ...t, days: t.days.filter((d) => d.id !== dayId) })),
@@ -236,8 +241,8 @@ export const useTripStore = create<TripState>()(
       },
 
       clearDay: (dayId) => {
-        const trip = get().trips.find((t) => t.id === get().activeTripId);
-        const day = trip?.days.find((d) => d.id === dayId);
+        const trip = getActiveTrip(get);
+        const day = trip.days.find((d) => d.id === dayId);
         const count = day?.pins.length ?? 0;
         if (count === 0) return;
         snapBeforeAction(get, `Cleared ${count} stop${count > 1 ? "s" : ""} from ${day?.label ?? "day"}`);
@@ -269,8 +274,8 @@ export const useTripStore = create<TripState>()(
         })),
 
       removeHotel: (hotelId) => {
-        const trip = get().trips.find((t) => t.id === get().activeTripId);
-        const hotelName = trip?.hotels.find((h) => h.id === hotelId)?.name ?? "Hotel";
+        const trip = getActiveTrip(get);
+        const hotelName = trip.hotels.find((h) => h.id === hotelId)?.name ?? "Hotel";
         snapBeforeAction(get, `Removed "${hotelName}"`);
         set((s) => ({
           trips: mapActiveTrip(s, (t) => ({ ...t, hotels: t.hotels.filter((h) => h.id !== hotelId) })),

@@ -55,7 +55,7 @@ export default memo(function ResultItem({ result, tab, added, wishlisted, onAdd,
         {/* Tag pills + distance */}
         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
           {pills.map((pill, i) => (
-            <TagPill key={i} label={pill.label} color={pill.color} />
+            <TagPill key={`${pill.label}-${pill.color}`} label={pill.label} color={pill.color} />
           ))}
           <span className={`text-[10px] ${textSubtle(dark)}`}>
             {formatDist(dist)}

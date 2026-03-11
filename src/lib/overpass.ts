@@ -146,7 +146,7 @@ export async function searchOverpass(
   customRadiusM?: number,
   signal?: AbortSignal,
 ): Promise<OverpassResult[]> {
-  if (!center.lat && !center.lng) return [];
+  if (!isFinite(center.lat) || !isFinite(center.lng)) return [];
 
   const radius = customRadiusM ?? RADIUS_MAP[category];
   const query = buildQuery(center, category, radius, nameFilter);

@@ -1,4 +1,4 @@
-import { OVERPASS_ENDPOINTS, HOURS_SEARCH_RADIUS, HOURS_FALLBACK_RADIUS, HOURS_MATCH_THRESHOLD } from "./constants";
+import { OVERPASS_ENDPOINTS, HOURS_SEARCH_RADIUS, HOURS_MATCH_THRESHOLD } from "./constants";
 
 /**
  * Parse OSM opening_hours for a specific date and return human-readable hours.
@@ -141,13 +141,6 @@ export function minutesToDisplay(mins: number): string {
   return `${h - 12}:${m} PM`;
 }
 
-/** Convert total minutes to "HH:MM" 24h format. */
-export function minutesTo24h(mins: number): string {
-  const h = String(Math.floor(mins / 60) % 24).padStart(2, "0");
-  const m = String(mins % 60).padStart(2, "0");
-  return `${h}:${m}`;
-}
-
 /** Parse a duration string like "1h30m", "45 min", "2h", "90min" to minutes. Returns null if unparseable. */
 export function parseDurationToMinutes(duration: string | null | undefined): number | null {
   if (!duration) return null;
@@ -284,50 +277,4 @@ export async function batchFetchOpeningHours(
   }
 
   return results;
-}
-
-/**
- * Fetch opening_hours for a POI from Overpass by coordinates.
- * Tries name-matched search first (200m), then falls back to nearest POI with hours (100m).
- * Note: This is a background fetch so errors are silent (no toast) to avoid noise.
- */
-export async function fetchOpeningHours(lat: number, lng: number, name: string): Promise<string | null> {
-  async function tryQuery(query: string): Promise<string | null> {
-    try {
-      const res = await fetch(OVERPASS_ENDPOINTS[0], {
-        method: "POST",
-        body: `data=${encodeURIComponent(query)}`,
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      });
-      if (!res.ok) return null;
-      const data = await res.json();
-      if (data.elements?.[0]?.tags?.opening_hours) {
-        return data.elements[0].tags.opening_hours;
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  }
-
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  // Try 1: Name-matched (including name:en) within 300m
-  const nameQuery = `[out:json][timeout:10];(
-    node["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
-    way["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
-    relation["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
-    node["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
-    way["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
-    relation["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
-  );out body qt 1;`;
-  const result = await tryQuery(nameQuery);
-  if (result) return result;
-
-  // Try 2: Any named POI with opening_hours within 200m (closest match)
-  const nearbyQuery = `[out:json][timeout:10];(
-    node["name"]["opening_hours"](around:${HOURS_FALLBACK_RADIUS},${lat},${lng});
-    way["name"]["opening_hours"](around:${HOURS_FALLBACK_RADIUS},${lat},${lng});
-  );out body qt 1;`;
-  return tryQuery(nearbyQuery);
 }

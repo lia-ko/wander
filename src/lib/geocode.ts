@@ -79,7 +79,7 @@ export async function searchNearby(
   maxDistKm = 10,
   signal?: AbortSignal,
 ): Promise<GeoResult[]> {
-  if (!center.lat && !center.lng) return [];
+  if (!isFinite(center.lat) || !isFinite(center.lng)) return [];
   const searchQuery = query.trim();
   if (!searchQuery) return [];
 
