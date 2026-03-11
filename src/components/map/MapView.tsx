@@ -2,6 +2,7 @@
 
 import { MapContainer, TileLayer } from "react-leaflet";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { MAP_DEFAULT_ZOOM } from "@/lib/constants";
 import MapPins from "./MapPins";
 import RouteLines from "./RouteLines";
 import WalkingRadius from "./WalkingRadius";
@@ -20,7 +21,7 @@ export default function MapView() {
   return (
     <MapContainer
       center={[center.lat, center.lng]}
-      zoom={12}
+      zoom={MAP_DEFAULT_ZOOM}
       className="w-full h-full z-0"
       zoomControl={false}
       attributionControl={false}

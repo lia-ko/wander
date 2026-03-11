@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { batchFetchOpeningHours } from "@/lib/hours";
 import { textSubtle, dashedBorder } from "@/lib/styles";
-import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE } from "./stops/types";
+import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE, parseDragData, hasDragType } from "./stops/types";
+import type { WishlistDragData } from "./stops/types";
 import StopItem from "./stops/StopItem";
 import FlightItem from "./stops/FlightItem";
 import TransportSegment from "./stops/TransportSegment";
@@ -76,7 +77,7 @@ export default function StopList() {
   };
 
   const handleContainerDragOver = (e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes(WISHLIST_DRAG_TYPE)) {
+    if (hasDragType(e, WISHLIST_DRAG_TYPE)) {
       e.preventDefault();
       setWishlistDragOver(true);
     }
@@ -88,12 +89,8 @@ export default function StopList() {
 
   const handleContainerDrop = (e: React.DragEvent) => {
     setWishlistDragOver(false);
-    const data = e.dataTransfer.getData(WISHLIST_DRAG_TYPE);
-    if (!data) return;
-    try {
-      const { pinId } = JSON.parse(data);
-      moveWishlistToDay(pinId, day.id);
-    } catch { /* ignore */ }
+    const data = parseDragData<WishlistDragData>(e, WISHLIST_DRAG_TYPE);
+    if (data) moveWishlistToDay(data.pinId, day.id);
   };
 
   return (

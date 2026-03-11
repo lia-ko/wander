@@ -14,7 +14,7 @@ export function toastHttpError(res: Response, context: string): void {
   }
 }
 
-export function isAbortError(err: unknown): boolean {
+function isAbortError(err: unknown): boolean {
   return err instanceof DOMException && err.name === "AbortError";
 }
 

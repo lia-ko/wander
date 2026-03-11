@@ -49,7 +49,7 @@ function DayRoute({ dayId, color, pins, isActive }: {
 
   useEffect(() => {
     const ac = new AbortController();
-    fetchDayRoutes(pins, ac.signal).then(setSegments).catch(() => {});
+    fetchDayRoutes(pins, ac.signal).then(setSegments).catch(() => { /* aborted — safe to ignore */ });
     return () => ac.abort();
   }, [pinsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 

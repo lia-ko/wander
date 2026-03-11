@@ -3,6 +3,7 @@ import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripSto
 import { useUIStore } from "@/store/uiStore";
 import { searchOverpass, type OverpassResult } from "@/lib/overpass";
 import { getDayDate } from "@/lib/hours";
+import { DISCOVER_CACHE_MAX } from "@/lib/constants";
 import { isSameLocation } from "@/lib/styles";
 import type { DiscoverTab, Pin } from "@/types";
 import { mapOsmToFoodType, mapOsmToAttrType, formatCuisine, formatOsmType, formatDist } from "./helpers";
@@ -72,7 +73,7 @@ export function useDiscoverSearch() {
       if (controller.signal.aborted) return;
       r.sort((a, b) => (a.dist ?? Infinity) - (b.dist ?? Infinity));
       if (r.length > 0) {
-        if (cacheRef.current.size >= 50) {
+        if (cacheRef.current.size >= DISCOVER_CACHE_MAX) {
           const oldest = cacheRef.current.keys().next().value;
           if (oldest !== undefined) cacheRef.current.delete(oldest);
         }

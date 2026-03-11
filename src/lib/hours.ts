@@ -1,3 +1,5 @@
+import { OVERPASS_ENDPOINTS, HOURS_SEARCH_RADIUS, HOURS_FALLBACK_RADIUS, HOURS_MATCH_THRESHOLD } from "./constants";
+
 /**
  * Parse OSM opening_hours for a specific date and return human-readable hours.
  * Handles common formats: "Mo-Fr 10:00-18:00; Sa 10:00-17:00; Su 12:00-17:00"
@@ -237,17 +239,17 @@ export async function batchFetchOpeningHours(
   const unions = pins.map((p) => {
     const escaped = p.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     return [
-      `node["name"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
-      `way["name"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
-      `node["name:en"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
-      `way["name:en"~"${escaped}",i]["opening_hours"](around:300,${p.lat},${p.lng});`,
+      `node["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${p.lat},${p.lng});`,
+      `way["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${p.lat},${p.lng});`,
+      `node["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${p.lat},${p.lng});`,
+      `way["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${p.lat},${p.lng});`,
     ].join("\n");
   }).join("\n");
 
   const query = `[out:json][timeout:15];(\n${unions}\n);out body qt;`;
 
   try {
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
+    const res = await fetch(OVERPASS_ENDPOINTS[0], {
       method: "POST",
       body: `data=${encodeURIComponent(query)}`,
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -270,7 +272,7 @@ export async function batchFetchOpeningHours(
       for (const p of pins) {
         if (results.has(p.id)) continue; // already matched
         const dist = Math.abs(p.lat - elLat) + Math.abs(p.lng - elLng);
-        if (dist < bestDist && dist < 0.005) { // ~500m threshold
+        if (dist < bestDist && dist < HOURS_MATCH_THRESHOLD) { // ~500m threshold
           bestDist = dist;
           bestPin = p;
         }
@@ -292,7 +294,7 @@ export async function batchFetchOpeningHours(
 export async function fetchOpeningHours(lat: number, lng: number, name: string): Promise<string | null> {
   async function tryQuery(query: string): Promise<string | null> {
     try {
-      const res = await fetch("https://overpass-api.de/api/interpreter", {
+      const res = await fetch(OVERPASS_ENDPOINTS[0], {
         method: "POST",
         body: `data=${encodeURIComponent(query)}`,
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -312,20 +314,20 @@ export async function fetchOpeningHours(lat: number, lng: number, name: string):
 
   // Try 1: Name-matched (including name:en) within 300m
   const nameQuery = `[out:json][timeout:10];(
-    node["name"~"${escaped}",i]["opening_hours"](around:300,${lat},${lng});
-    way["name"~"${escaped}",i]["opening_hours"](around:300,${lat},${lng});
-    relation["name"~"${escaped}",i]["opening_hours"](around:300,${lat},${lng});
-    node["name:en"~"${escaped}",i]["opening_hours"](around:300,${lat},${lng});
-    way["name:en"~"${escaped}",i]["opening_hours"](around:300,${lat},${lng});
-    relation["name:en"~"${escaped}",i]["opening_hours"](around:300,${lat},${lng});
+    node["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
+    way["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
+    relation["name"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
+    node["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
+    way["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
+    relation["name:en"~"${escaped}",i]["opening_hours"](around:${HOURS_SEARCH_RADIUS},${lat},${lng});
   );out body qt 1;`;
   const result = await tryQuery(nameQuery);
   if (result) return result;
 
   // Try 2: Any named POI with opening_hours within 200m (closest match)
   const nearbyQuery = `[out:json][timeout:10];(
-    node["name"]["opening_hours"](around:200,${lat},${lng});
-    way["name"]["opening_hours"](around:200,${lat},${lng});
+    node["name"]["opening_hours"](around:${HOURS_FALLBACK_RADIUS},${lat},${lng});
+    way["name"]["opening_hours"](around:${HOURS_FALLBACK_RADIUS},${lat},${lng});
   );out body qt 1;`;
   return tryQuery(nearbyQuery);
 }
