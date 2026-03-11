@@ -5,7 +5,8 @@ import { useTripStore } from "@/store/tripStore";
 import { useUIStore } from "@/store/uiStore";
 import { parseTimeToMinutes, minutesToDisplay, parseDurationToMinutes, checkTimeConflict, getDayDate, formatDayDate } from "@/lib/hours";
 import { fmtAmt, fmtMins } from "@/lib/formatUtils";
-import { STOP_DRAG_TYPE } from "../stops/types";
+import { STOP_DRAG_TYPE, parseDragData, hasDragType } from "../stops/types";
+import type { StopDragData } from "../stops/types";
 import StopCell from "./StopCell";
 import type { Day } from "@/types";
 
@@ -63,7 +64,7 @@ export default function DayColumn({
   };
 
   const handleDragOver = (e: React.DragEvent, visualIdx: number) => {
-    if (e.dataTransfer.types.includes(STOP_DRAG_TYPE)) {
+    if (hasDragType(e, STOP_DRAG_TYPE)) {
       e.preventDefault();
       setDragOverIdx(visualIdx);
     }
@@ -72,20 +73,17 @@ export default function DayColumn({
   const handleContainerDrop = (e: React.DragEvent) => {
     const dropIdx = dragOverIdxRef.current;
     setDragOverIdx(null);
-    const data = e.dataTransfer.getData(STOP_DRAG_TYPE);
+    const data = parseDragData<StopDragData>(e, STOP_DRAG_TYPE);
     if (!data) return;
     e.preventDefault();
-    try {
-      const { pinId, fromDayId, fromOrigIdx } = JSON.parse(data);
-      if (fromDayId !== day.id) {
-        movePinToDay(fromDayId, pinId, day.id);
-        return;
-      }
-      if (dropIdx === null) return;
-      const toOrigIdx = sortedPins[dropIdx]?.origIdx;
-      if (toOrigIdx === undefined || fromOrigIdx === toOrigIdx) return;
-      reorderPin(day.id, fromOrigIdx, toOrigIdx);
-    } catch { /* ignore */ }
+    if (data.fromDayId !== day.id) {
+      movePinToDay(data.fromDayId, data.pinId, day.id);
+      return;
+    }
+    if (dropIdx === null) return;
+    const toOrigIdx = sortedPins[dropIdx]?.origIdx;
+    if (toOrigIdx === undefined || data.fromOrigIdx === toOrigIdx) return;
+    reorderPin(day.id, data.fromOrigIdx!, toOrigIdx);
   };
 
   const handleDragEnd = () => {
@@ -106,7 +104,7 @@ export default function DayColumn({
       }`}
       style={fill ? undefined : { minWidth: Math.max(120, sortedPins.length * 96 + 24) }}
       onDrop={handleContainerDrop}
-      onDragOver={(e) => { if (e.dataTransfer.types.includes(STOP_DRAG_TYPE)) e.preventDefault(); }}
+      onDragOver={(e) => { if (hasDragType(e, STOP_DRAG_TYPE)) e.preventDefault(); }}
       onDragEnd={handleDragEnd}
       onDragLeave={() => setDragOverIdx(null)}
     >
@@ -194,6 +192,8 @@ export default function DayColumn({
                   pin={entry.pin}
                   dayColor={day.color}
                   dayDate={dayDate}
+                  stopIndex={i}
+                  stopCount={sortedPins.length}
                   isSelected={selectedPinId === entry.pin.id}
                   isDragOver={dragOverIdx === i}
                   onClick={() => {

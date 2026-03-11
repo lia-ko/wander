@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { toast } from "@/store/toastStore";
+import { EXCHANGE_RATE_BASE } from "@/lib/constants";
 
 interface RatesState {
   // rates keyed by base currency, e.g. { "USD": { "EUR": 0.92, "JPY": 149.5 } }
@@ -28,7 +29,7 @@ export const useRatesStore = create<RatesState>((set, get) => ({
     });
     if (!shouldFetch) return;
     try {
-      const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=${base}`);
+      const res = await fetch(`${EXCHANGE_RATE_BASE}?base=${base}`);
       if (!res.ok) {
         if (res.status === 429) toast("Exchange rate limit hit — try again shortly.");
         else toast("Could not fetch exchange rates — conversion may be unavailable.");
@@ -36,7 +37,11 @@ export const useRatesStore = create<RatesState>((set, get) => ({
       }
       const data = await res.json();
       if (!data.rates || typeof data.rates !== "object") throw new Error("Invalid rates response");
-      const newRates = data.rates as Record<string, number>;
+      // Validate every rate is a finite positive number
+      const newRates: Record<string, number> = {};
+      for (const [key, val] of Object.entries(data.rates)) {
+        if (typeof val === "number" && isFinite(val) && val > 0) newRates[key] = val;
+      }
       // Add self-rate
       newRates[base] = 1;
       set((s) => {

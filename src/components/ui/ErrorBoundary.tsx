@@ -26,7 +26,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   };
 
   handleReset = () => {
-    localStorage.removeItem("wander-trips");
+    try { localStorage.removeItem("wander-trips"); } catch { /* private browsing */ }
     window.location.reload();
   };
 

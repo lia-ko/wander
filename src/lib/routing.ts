@@ -3,7 +3,7 @@
  * Uses pedestrian/auto/bicycle profiles for realistic human routes
  * through sidewalks, parks, and small streets.
  */
-
+import { VALHALLA_BASE, ROUTE_CACHE_MAX } from "./constants";
 import type { TransportKey } from "@/types";
 
 export type RouteSegment = {
@@ -22,7 +22,6 @@ type CachedSegment = {
 };
 
 const routeCache = new Map<string, CachedSegment>();
-const ROUTE_CACHE_MAX = 100;
 
 function cacheSet(key: string, value: CachedSegment) {
   if (routeCache.size >= ROUTE_CACHE_MAX) {
@@ -80,8 +79,6 @@ function decodePolyline(encoded: string, precision = 6): [number, number][] {
 
   return points;
 }
-
-const VALHALLA_BASE = "https://valhalla1.openstreetmap.de";
 
 /**
  * Fetch a single route segment between two points via Valhalla.
@@ -145,6 +142,8 @@ async function fetchSegment(
     cacheSet(cacheKey, result);
     return result;
   } catch {
+    // Non-critical: fall back to straight line between points.
+    // Individual segment failures are expected (rate limits, unsupported regions).
     if (!signal?.aborted) {
       cacheSet(cacheKey, fallback);
     }

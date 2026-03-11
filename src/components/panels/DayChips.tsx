@@ -5,7 +5,8 @@ import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { symbolFor } from "@/lib/formatUtils";
 import { useUIStore } from "@/store/uiStore";
-import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE } from "./stops/types";
+import { STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE, parseDragData, hasDragType } from "./stops/types";
+import type { StopDragData, WishlistDragData } from "./stops/types";
 
 export default function DayChips() {
   const trip = useTripStore(selectActiveTrip);
@@ -39,10 +40,7 @@ export default function DayChips() {
   }, [trip.expenses, homeCurrency, rates, convert]);
 
   const handleDragOver = (e: React.DragEvent, dayId: number) => {
-    if (
-      e.dataTransfer.types.includes(STOP_DRAG_TYPE) ||
-      e.dataTransfer.types.includes(WISHLIST_DRAG_TYPE)
-    ) {
+    if (hasDragType(e, STOP_DRAG_TYPE, WISHLIST_DRAG_TYPE)) {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       setDropTargetId(dayId);
@@ -56,26 +54,14 @@ export default function DayChips() {
   const handleDrop = (e: React.DragEvent, toDayId: number) => {
     setDropTargetId(null);
 
-    // Stop drag from another day
-    const stopData = e.dataTransfer.getData(STOP_DRAG_TYPE);
+    const stopData = parseDragData<StopDragData>(e, STOP_DRAG_TYPE);
     if (stopData) {
-      try {
-        const { pinId, fromDayId } = JSON.parse(stopData);
-        if (fromDayId !== toDayId) {
-          movePinToDay(fromDayId, pinId, toDayId);
-        }
-      } catch { /* ignore */ }
+      if (stopData.fromDayId !== toDayId) movePinToDay(stopData.fromDayId, stopData.pinId, toDayId);
       return;
     }
 
-    // Wishlist drag
-    const wishData = e.dataTransfer.getData(WISHLIST_DRAG_TYPE);
-    if (wishData) {
-      try {
-        const { pinId } = JSON.parse(wishData);
-        moveWishlistToDay(pinId, toDayId);
-      } catch { /* ignore */ }
-    }
+    const wishData = parseDragData<WishlistDragData>(e, WISHLIST_DRAG_TYPE);
+    if (wishData) moveWishlistToDay(wishData.pinId, toDayId);
   };
 
   return (

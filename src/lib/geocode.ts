@@ -1,4 +1,5 @@
 import { toastHttpError, toastNetworkError } from "./apiError";
+import { NOMINATIM_BASE, NOMINATIM_THROTTLE_MS } from "./constants";
 
 export type GeoResult = {
   placeId: string;
@@ -24,7 +25,7 @@ function parseResults(data: Record<string, string>[]): GeoResult[] {
 let throttleQueue: Promise<void> = Promise.resolve();
 
 async function throttledFetch(url: string, signal?: AbortSignal): Promise<Response> {
-  let release: () => void;
+  let release!: () => void;
   const prev = throttleQueue;
   throttleQueue = new Promise((r) => { release = r; });
   await prev;
@@ -32,14 +33,14 @@ async function throttledFetch(url: string, signal?: AbortSignal): Promise<Respon
     return await fetch(url, signal ? { signal } : undefined);
   } finally {
     // Enforce 1.1s gap before next request can proceed
-    setTimeout(() => release!(), 1100);
+    setTimeout(() => release(), NOMINATIM_THROTTLE_MS);
   }
 }
 
 export async function searchCities(query: string, signal?: AbortSignal): Promise<GeoResult[]> {
   if (!query.trim() || query.length < 2) return [];
   try {
-    const url = `https://nominatim.openstreetmap.org/search?` +
+    const url = `${NOMINATIM_BASE}/search?` +
       new URLSearchParams({
         q: query,
         format: "json",
@@ -78,12 +79,12 @@ export async function searchNearby(
   maxDistKm = 10,
   signal?: AbortSignal,
 ): Promise<GeoResult[]> {
-  if (!center.lat && !center.lng) return [];
+  if (!isFinite(center.lat) || !isFinite(center.lng)) return [];
   const searchQuery = query.trim();
   if (!searchQuery) return [];
 
   try {
-    const url = `https://nominatim.openstreetmap.org/search?` +
+    const url = `${NOMINATIM_BASE}/search?` +
       new URLSearchParams({
         q: searchQuery,
         format: "json",
@@ -102,7 +103,7 @@ export async function searchNearby(
     // If tight search returns too few, widen
     if (data.length < 3) {
       const wider = radiusDeg * 4;
-      const widerUrl = `https://nominatim.openstreetmap.org/search?` +
+      const widerUrl = `${NOMINATIM_BASE}/search?` +
         new URLSearchParams({
           q: searchQuery,
           format: "json",
@@ -134,7 +135,7 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
 
   try {
     // Tight search: ~55km around trip center
-    const url = `https://nominatim.openstreetmap.org/search?` +
+    const url = `${NOMINATIM_BASE}/search?` +
       new URLSearchParams({
         q: query,
         format: "json",
@@ -151,7 +152,7 @@ export async function searchPlaces(query: string, center: { lat: number; lng: nu
     if (data.length > 0) return parseResults(data);
 
     // Widen to ~220km if tight search returns nothing
-    const widerUrl = `https://nominatim.openstreetmap.org/search?` +
+    const widerUrl = `${NOMINATIM_BASE}/search?` +
       new URLSearchParams({
         q: query,
         format: "json",

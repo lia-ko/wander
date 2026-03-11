@@ -4,6 +4,7 @@ import { useEffect, useRef, useMemo } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
+import { MAP_DEFAULT_ZOOM, MAP_MAX_ZOOM, MAP_FLY_DURATION, MAP_BOUNDS_PADDING } from "@/lib/constants";
 
 export default function MapSync() {
   const map = useMap();
@@ -28,7 +29,7 @@ export default function MapSync() {
       prevDayId.current = activeDayId;
       prevPinCount.current = validPins.length;
       const c = trip.center ?? { lat: 0, lng: 0 };
-      map.flyTo([c.lat, c.lng], 12, { duration: 1 });
+      map.flyTo([c.lat, c.lng], MAP_DEFAULT_ZOOM, { duration: 1 });
       return;
     }
 
@@ -38,7 +39,7 @@ export default function MapSync() {
       prevPinCount.current = validPins.length;
       if (validPins.length > 0) {
         const bounds = L.latLngBounds(validPins.map((p) => [p.y, p.x]));
-        map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 15, duration: 0.8 });
+        map.flyToBounds(bounds, { padding: MAP_BOUNDS_PADDING, maxZoom: MAP_MAX_ZOOM, duration: MAP_FLY_DURATION });
       }
       return;
     }
@@ -47,10 +48,10 @@ export default function MapSync() {
     if (validPins.length > prevPinCount.current && validPins.length > 0) {
       prevPinCount.current = validPins.length;
       if (validPins.length === 1) {
-        map.flyTo([validPins[0].y, validPins[0].x], 15, { duration: 0.8 });
+        map.flyTo([validPins[0].y, validPins[0].x], MAP_MAX_ZOOM, { duration: MAP_FLY_DURATION });
       } else {
         const bounds = L.latLngBounds(validPins.map((p) => [p.y, p.x]));
-        map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 15, duration: 0.8 });
+        map.flyToBounds(bounds, { padding: MAP_BOUNDS_PADDING, maxZoom: MAP_MAX_ZOOM, duration: MAP_FLY_DURATION });
       }
     }
 

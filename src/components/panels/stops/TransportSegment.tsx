@@ -43,7 +43,7 @@ export default function TransportSegment({ pin, prevPin, dayId }: { pin: Pin; pr
         setDistanceKm(segs[0].distanceKm);
         setTimeMins(segs[0].timeMins);
       }
-    }).catch(() => {});
+    }).catch(() => { /* aborted — safe to ignore */ });
 
     return () => ac.abort();
   }, [hasCoords, prevPin.y, prevPin.x, pin.y, pin.x, pin.transport]);

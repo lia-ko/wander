@@ -1,5 +1,6 @@
 import { distanceKm } from "./geocode";
 import { toastHttpError, toastNetworkError } from "./apiError";
+import { OVERPASS_ENDPOINTS, DISCOVER_RADIUS, OVERPASS_MAX_RETRIES, OVERPASS_RETRY_DELAY_MS } from "./constants";
 
 export type OverpassResult = {
   id: string;
@@ -64,11 +65,7 @@ const TAG_MAP: Record<DiscoverCategory, string[]> = {
   attractions: ATTRACTION_TAGS,
 };
 
-const RADIUS_MAP: Record<DiscoverCategory, number> = {
-  eat: 2000,        // 2km
-  grocers: 2000,    // 2km
-  attractions: 3000, // 3km
-};
+const RADIUS_MAP: Record<DiscoverCategory, number> = DISCOVER_RADIUS;
 
 function buildQuery(
   center: { lat: number; lng: number },
@@ -149,17 +146,13 @@ export async function searchOverpass(
   customRadiusM?: number,
   signal?: AbortSignal,
 ): Promise<OverpassResult[]> {
-  if (!center.lat && !center.lng) return [];
+  if (!isFinite(center.lat) || !isFinite(center.lng)) return [];
 
   const radius = customRadiusM ?? RADIUS_MAP[category];
   const query = buildQuery(center, category, radius, nameFilter);
 
-  const ENDPOINTS = [
-    "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
-  ];
-
-  const MAX_RETRIES = 2;
+  const ENDPOINTS = OVERPASS_ENDPOINTS;
+  const MAX_RETRIES = OVERPASS_MAX_RETRIES;
 
   try {
     let res: Response | null = null;
@@ -170,7 +163,7 @@ export async function searchOverpass(
 
       // On retry, wait with exponential backoff
       if (attempt > 0) {
-        await new Promise((r) => setTimeout(r, attempt * 1500));
+        await new Promise((r) => setTimeout(r, attempt * OVERPASS_RETRY_DELAY_MS));
         if (signal?.aborted) throw new Error("aborted");
       }
 

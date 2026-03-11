@@ -2,8 +2,18 @@ import L from "leaflet";
 
 const pinIconCache = new Map<string, L.DivIcon>();
 
-export const getPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" = "default"): L.DivIcon => {
-  const key = `${color}-${variant}`;
+/** Sanitize a color value to prevent SVG/HTML injection. */
+function safeColor(raw: string): string {
+  // Allow only valid hex, rgb(), hsl(), or named CSS colors
+  if (/^#[0-9a-fA-F]{3,8}$/.test(raw)) return raw;
+  if (/^(rgb|hsl)a?\(\s*[\d.,\s%]+\)$/.test(raw)) return raw;
+  if (/^[a-zA-Z]{1,20}$/.test(raw)) return raw;
+  return "#888888"; // fallback for anything suspicious
+}
+
+export const getPinIcon = (color: string, variant: "default" | "hotel" | "wishlist" = "default", number?: number): L.DivIcon => {
+  color = safeColor(color);
+  const key = `${color}-${variant}-${number ?? ""}`;
   const cached = pinIconCache.get(key);
   if (cached) return cached;
 
@@ -18,6 +28,13 @@ export const getPinIcon = (color: string, variant: "default" | "hotel" | "wishli
     svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
         <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="${color}" stroke="white" stroke-width="1.5" opacity="0.7"/>
         <path d="M12 7l1.5 3 3.3.5-2.4 2.3.6 3.2L12 14.2 8.9 16l.6-3.2L7.1 10.5l3.3-.5z" fill="white" opacity="0.9"/>
+      </svg>`;
+  } else if (number != null) {
+    const fontSize = number >= 10 ? 8 : 9;
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
+        <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <circle cx="12" cy="11" r="5.5" fill="white" opacity="0.9"/>
+        <text x="12" y="11" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="${fontSize}" font-weight="700" font-family="system-ui, sans-serif">${number}</text>
       </svg>`;
   } else {
     svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="24" height="32">
@@ -38,10 +55,11 @@ export const getPinIcon = (color: string, variant: "default" | "hotel" | "wishli
 };
 
 export const createClusterIcon = (color: string, opacity: number) => (cluster: { getChildCount(): number }) => {
+  const safe = safeColor(color);
   const count = cluster.getChildCount();
   return L.divIcon({
     html: `<div style="
-      background: ${color};
+      background: ${safe};
       opacity: ${opacity};
       color: white;
       width: 34px;

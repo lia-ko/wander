@@ -9,16 +9,23 @@ import html2canvas from "html2canvas";
 import type { Trip } from "@/types";
 
 function validateTrips(data: unknown): data is Trip[] {
-  if (!Array.isArray(data)) return false;
+  if (!Array.isArray(data) || data.length > 100) return false;
   for (const t of data) {
     if (typeof t !== "object" || t === null) return false;
+    // Block prototype pollution keys
+    if ("__proto__" in t || "constructor" in t && typeof (t as Record<string, unknown>).constructor !== "function") return false;
     if (typeof t.id !== "number" || typeof t.name !== "string") return false;
-    if (!Array.isArray(t.days)) return false;
+    if (t.name.length > 200) return false;
+    if (!Array.isArray(t.days) || t.days.length > 365) return false;
     if (!t.center || typeof t.center.lat !== "number" || typeof t.center.lng !== "number") return false;
+    if (!isFinite(t.center.lat) || !isFinite(t.center.lng)) return false;
+    // Validate day color is a safe value
     for (const d of t.days) {
-      if (typeof d.id !== "number" || !Array.isArray(d.pins)) return false;
+      if (typeof d.id !== "number" || !Array.isArray(d.pins) || d.pins.length > 500) return false;
+      if (typeof d.color === "string" && !/^#[0-9a-fA-F]{3,8}$/.test(d.color)) return false;
       for (const p of d.pins) {
         if (typeof p.name !== "string" || typeof p.x !== "number" || typeof p.y !== "number") return false;
+        if (!isFinite(p.x) || !isFinite(p.y)) return false;
       }
     }
   }
@@ -90,8 +97,7 @@ export default function BottomActionBar() {
           toast("Could not read file.");
           return;
         }
-        const parsed = JSON.parse(raw);
-        const trips = parsed as unknown;
+        const trips: unknown = JSON.parse(raw);
         if (!validateTrips(trips)) {
           toast("Invalid file — not a valid Wander trips export.");
           return;

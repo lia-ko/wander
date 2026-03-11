@@ -87,8 +87,20 @@ export default function MainPanel() {
 
       {/* Resize handle */}
       <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        aria-valuenow={sidebarWidth}
+        tabIndex={0}
         onMouseDown={handleMouseDown}
-        className={`absolute top-0 right-0 bottom-0 w-1.5 cursor-col-resize group z-30`}
+        onKeyDown={(e) => {
+          const step = e.shiftKey ? 50 : 10;
+          if (e.key === "ArrowRight") { e.preventDefault(); setSidebarWidth(sidebarWidth + step); }
+          else if (e.key === "ArrowLeft") { e.preventDefault(); setSidebarWidth(sidebarWidth - step); }
+        }}
+        className={`absolute top-0 right-0 bottom-0 w-1.5 cursor-col-resize group z-30 focus:outline-none focus-visible:ring-1 ${
+          dark ? "focus-visible:ring-[#F5E8D8]/40" : "focus-visible:ring-[#4E8098]/40"
+        }`}
       >
         <div className={`absolute inset-y-0 right-0 w-0.5 transition-colors ${
           dark ? "group-hover:bg-[#F5E8D8]/20" : "group-hover:bg-black/10"

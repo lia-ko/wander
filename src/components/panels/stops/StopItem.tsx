@@ -2,11 +2,13 @@
 
 import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
-import { getHoursForDate, getDayDate, parseTimeToMinutes, minutesToDisplay, checkTimeConflict } from "@/lib/hours";
+import { parseTimeToMinutes, minutesToDisplay } from "@/lib/hours";
+import { getPinSchedule } from "@/lib/usePinSchedule";
 import { useUIStore } from "@/store/uiStore";
-import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg, formInput, saveBtn, cancelBtn, wishlistBtn, isSameLocation } from "@/lib/styles";
+import { textMuted, textSubtle, softHoverBg, btnHover, dragOverBg, sectionBg, wishlistBtn, isSameLocation } from "@/lib/styles";
 import type { Pin } from "@/types";
 import type { DragHandlers } from "./types";
+import StopItemEditor from "./StopItemEditor";
 
 export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart, onDragOver, onDrop, isDragOver }: {
   pin: Pin; index: number; dayId: number; dayColor: string;
@@ -14,8 +16,6 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
 } & DragHandlers) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState(pin.name);
-  const [editNote, setEditNote] = useState(pin.note || "");
   const [editingTime, setEditingTime] = useState(false);
   const [timeValue, setTimeValue] = useState(pin.startTime || "");
   const removePin = useTripStore((s) => s.removePin);
@@ -30,23 +30,7 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
   const day = useTripStore(selectActiveDay);
   const isSelected = selectedPinId === pin.id;
 
-  // Compute day-specific hours
-  const dayIndex = trip.days.findIndex((d) => d.id === dayId);
-  const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
-  const dayHours = pin.openingHours && dayDate ? getHoursForDate(pin.openingHours, dayDate) : null;
-
-  // Time conflict check
-  const startMins = parseTimeToMinutes(pin.startTime);
-  const conflict = startMins !== null
-    ? checkTimeConflict(startMins, pin.openingHours, dayDate)
-    : null;
-
-  const handleSaveEdit = () => {
-    if (editName.trim()) {
-      updatePin(dayId, pin.id, { name: editName.trim(), note: editNote.trim() || null });
-    }
-    setEditing(false);
-  };
+  const { dayDate, dayHours, startMins, conflict } = getPinSchedule(pin, trip, dayId);
 
   const handleSaveTime = () => {
     const trimmed = timeValue.trim();
@@ -60,33 +44,7 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
   };
 
   if (editing) {
-    return (
-      <div className={`px-3 py-2 rounded-xl mx-2 ${sectionBg(dark)}`}>
-        <input
-          type="text"
-          value={editName}
-          onChange={(e) => setEditName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
-          autoFocus
-          aria-label="Stop name"
-          className={`${formInput(dark)} mb-1.5`}
-          placeholder="Stop name"
-        />
-        <input
-          type="text"
-          value={editNote}
-          onChange={(e) => setEditNote(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") handleSaveEdit(); if (e.key === "Escape") setEditing(false); }}
-          aria-label="Stop note"
-          className={`${formInput(dark)} mb-2`}
-          placeholder="Note (optional)"
-        />
-        <div className="flex gap-1.5">
-          <button onClick={handleSaveEdit} className={saveBtn}>Save</button>
-          <button onClick={() => setEditing(false)} className={cancelBtn(dark)}>Cancel</button>
-        </div>
-      </div>
-    );
+    return <StopItemEditor pin={pin} dayId={dayId} dark={dark} onClose={() => setEditing(false)} />;
   }
 
   return (
@@ -199,7 +157,7 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
         <div className="flex items-center gap-0.5 mt-1.5 ml-8" onClick={(e) => e.stopPropagation()}>
           {/* Edit */}
           <button
-            onClick={() => { setEditName(pin.name); setEditNote(pin.note || ""); setEditing(true); }}
+            onClick={() => setEditing(true)}
             className={`p-1.5 rounded-lg transition-colors ${btnHover(dark)}`}
             title="Edit name & note"
             aria-label="Edit stop"

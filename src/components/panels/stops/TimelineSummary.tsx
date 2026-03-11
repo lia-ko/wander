@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
-import { getDayDate, parseTimeToMinutes, parseDurationToMinutes, minutesToDisplay, checkTimeConflict } from "@/lib/hours";
+import { parseTimeToMinutes, parseDurationToMinutes, minutesToDisplay, checkTimeConflict, getDayDate } from "@/lib/hours";
 import { fmtMins } from "@/lib/formatUtils";
 import { textSubtle, textStrong } from "@/lib/styles";
 import type { Pin } from "@/types";
