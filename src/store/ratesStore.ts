@@ -36,7 +36,11 @@ export const useRatesStore = create<RatesState>((set, get) => ({
       }
       const data = await res.json();
       if (!data.rates || typeof data.rates !== "object") throw new Error("Invalid rates response");
-      const newRates = data.rates as Record<string, number>;
+      // Validate every rate is a finite positive number
+      const newRates: Record<string, number> = {};
+      for (const [key, val] of Object.entries(data.rates)) {
+        if (typeof val === "number" && isFinite(val) && val > 0) newRates[key] = val;
+      }
       // Add self-rate
       newRates[base] = 1;
       set((s) => {

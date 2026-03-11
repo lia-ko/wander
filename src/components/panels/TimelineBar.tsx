@@ -4,7 +4,6 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useTripStore, selectActiveTrip } from "@/store/tripStore";
 import { useRatesStore } from "@/store/ratesStore";
 import { symbolFor, fmtAmt } from "@/lib/formatUtils";
-import { batchFetchThumbnails } from "@/lib/photos";
 import DayColumn from "./timeline/DayColumn";
 
 type ViewMode = "day" | "all";
@@ -12,44 +11,16 @@ type ViewMode = "day" | "all";
 export default function TimelineBar() {
   const trip = useTripStore(selectActiveTrip);
   const activeDayId = useTripStore((s) => s.activeDayId);
-  const updatePin = useTripStore((s) => s.updatePin);
   const dark = useTripStore((s) => s.darkMode);
   const convert = useRatesStore((s) => s.convert);
 
   const [viewMode, setViewMode] = useState<ViewMode>("all");
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeDayRef = useRef<HTMLDivElement>(null);
-  const fetchedRef = useRef<Set<number>>(new Set());
 
   const homeCurrency = trip.budget?.currency ?? "USD";
   const homeSymbol = symbolFor(homeCurrency);
   const totalBudget = trip.budget?.totalBudget;
-
-  // Fetch thumbnails for pins that don't have them yet
-  useEffect(() => {
-    const eligible = trip.days.flatMap((d) =>
-      d.pins
-        .filter((p) => p.thumbnail === undefined && p.name && !fetchedRef.current.has(p.id))
-        .map((p) => ({ id: p.id, name: p.name, dayId: d.id }))
-    );
-    if (eligible.length === 0) return;
-
-    for (const p of eligible) fetchedRef.current.add(p.id);
-
-    const controller = new AbortController();
-    batchFetchThumbnails(
-      eligible.map((p) => ({ id: p.id, name: p.name })),
-      controller.signal,
-    ).then((thumbMap) => {
-      if (controller.signal.aborted) return;
-      for (const p of eligible) {
-        const url = thumbMap.get(p.id) ?? null;
-        updatePin(p.dayId, p.id, { thumbnail: url });
-      }
-    });
-
-    return () => { controller.abort(); };
-  }, [trip.days, updatePin]);
 
   const daySpendMap = useMemo(() => {
     const map = new Map<number, number>();

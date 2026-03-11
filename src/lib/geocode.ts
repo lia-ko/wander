@@ -24,7 +24,7 @@ function parseResults(data: Record<string, string>[]): GeoResult[] {
 let throttleQueue: Promise<void> = Promise.resolve();
 
 async function throttledFetch(url: string, signal?: AbortSignal): Promise<Response> {
-  let release: () => void;
+  let release!: () => void;
   const prev = throttleQueue;
   throttleQueue = new Promise((r) => { release = r; });
   await prev;
@@ -32,7 +32,7 @@ async function throttledFetch(url: string, signal?: AbortSignal): Promise<Respon
     return await fetch(url, signal ? { signal } : undefined);
   } finally {
     // Enforce 1.1s gap before next request can proceed
-    setTimeout(() => release!(), 1100);
+    setTimeout(() => release(), 1100);
   }
 }
 

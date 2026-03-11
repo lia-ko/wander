@@ -48,7 +48,7 @@ export default function StopList() {
         const hours = hoursMap.get(p.id);
         updatePin(day.id, p.id, { openingHours: hours || "" });
       }
-    });
+    }).catch(() => { /* aborted or network error — safe to ignore */ });
 
     return () => { controller.abort(); };
   }, [day, updatePin]);

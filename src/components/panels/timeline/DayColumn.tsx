@@ -194,6 +194,8 @@ export default function DayColumn({
                   pin={entry.pin}
                   dayColor={day.color}
                   dayDate={dayDate}
+                  stopIndex={i}
+                  stopCount={sortedPins.length}
                   isSelected={selectedPinId === entry.pin.id}
                   isDragOver={dragOverIdx === i}
                   onClick={() => {

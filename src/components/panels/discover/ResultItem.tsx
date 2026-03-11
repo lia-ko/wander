@@ -97,7 +97,7 @@ export default memo(function ResultItem({ result, tab, added, wishlisted, onAdd,
             </svg>
             Google Maps
           </a>
-          {tags.website && (
+          {tags.website && /^https?:\/\//i.test(tags.website) && (
             <a
               href={tags.website}
               target="_blank"

@@ -69,11 +69,11 @@ export default function MapPins() {
         const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
         return (
           <DayCluster key={day.id} dayId={day.id} color={day.color} isActive={isActive}>
-            {validPins.map((pin) => (
+            {validPins.map((pin, i) => (
               <Marker
                 key={`${day.id}-${pin.id}`}
                 position={[pin.y, pin.x]}
-                icon={getPinIcon(day.color)}
+                icon={getPinIcon(day.color, "default", i + 1)}
                 opacity={isActive ? 1 : 0.15}
                 eventHandlers={{
                   click: () => setSelectedPinId(selectedPinId === pin.id ? null : pin.id),

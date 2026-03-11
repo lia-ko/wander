@@ -37,9 +37,6 @@ export type Pin = {
   // Wishlist
   mustDo?: boolean;
 
-  // Photo
-  thumbnail?: string | null;  // URL to a small image of the place
-
   // Hours
   openingHours?: string | null;
 

@@ -2,7 +2,8 @@
 
 import { memo, useState } from "react";
 import { useTripStore, selectActiveTrip, selectActiveDay } from "@/store/tripStore";
-import { getHoursForDate, getDayDate, parseTimeToMinutes, minutesToDisplay, checkTimeConflict } from "@/lib/hours";
+import { parseTimeToMinutes, minutesToDisplay } from "@/lib/hours";
+import { getPinSchedule } from "@/lib/usePinSchedule";
 import { useUIStore } from "@/store/uiStore";
 import { textMuted, textSubtle, sectionBg, softHoverBg, btnHover, dragOverBg, formInput, saveBtn, cancelBtn, wishlistBtn, isSameLocation } from "@/lib/styles";
 import type { Pin } from "@/types";
@@ -30,16 +31,7 @@ export default memo(function StopItem({ pin, index, dayId, dayColor, onDragStart
   const day = useTripStore(selectActiveDay);
   const isSelected = selectedPinId === pin.id;
 
-  // Compute day-specific hours
-  const dayIndex = trip.days.findIndex((d) => d.id === dayId);
-  const dayDate = trip.startDate ? getDayDate(trip.startDate, dayIndex) : null;
-  const dayHours = pin.openingHours && dayDate ? getHoursForDate(pin.openingHours, dayDate) : null;
-
-  // Time conflict check
-  const startMins = parseTimeToMinutes(pin.startTime);
-  const conflict = startMins !== null
-    ? checkTimeConflict(startMins, pin.openingHours, dayDate)
-    : null;
+  const { dayDate, dayHours, startMins, conflict } = getPinSchedule(pin, trip, dayId);
 
   const handleSaveEdit = () => {
     if (editName.trim()) {

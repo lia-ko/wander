@@ -192,6 +192,6 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
   }
 
   // ─── Save ───
-  const filename = `${trip.name.replace(/\s+/g, "_").toLowerCase()}_itinerary.pdf`;
+  const filename = `${trip.name.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_").toLowerCase() || "trip"}_itinerary.pdf`;
   doc.save(filename);
 }
