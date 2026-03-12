@@ -121,10 +121,14 @@ export default function BottomActionBar() {
     setMenuOpen(false);
     try {
       const t = useTripStore.getState().getActiveTrip();
-      const mapEl = document.querySelector(".leaflet-container") as HTMLElement | null;
       let mapCanvas: HTMLCanvasElement | null = null;
-      if (mapEl) {
-        mapCanvas = await html2canvas(mapEl, { useCORS: true, allowTaint: true });
+      try {
+        const mapEl = document.querySelector(".leaflet-container") as HTMLElement | null;
+        if (mapEl) {
+          mapCanvas = await html2canvas(mapEl, { useCORS: true, allowTaint: true, logging: false });
+        }
+      } catch {
+        // html2canvas often fails on Leaflet maps (CORS tiles, SVG overlays) — export without map
       }
       await exportTripPdf(t, mapCanvas);
       toast("PDF exported successfully!", "success");

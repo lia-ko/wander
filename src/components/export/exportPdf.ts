@@ -183,8 +183,12 @@ export async function exportTripPdf(trip: Trip, mapCanvas: HTMLCanvasElement | n
       if (pin.note) {
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        doc.text(pin.note, MARGIN + 14, y);
-        y += 4;
+        const noteLines = doc.splitTextToSize(pin.note, CONTENT_W - 14);
+        for (const line of noteLines) {
+          pageCheck(6);
+          doc.text(line, MARGIN + 14, y);
+          y += 4;
+        }
       }
 
       y += 5;

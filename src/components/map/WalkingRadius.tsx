@@ -19,11 +19,15 @@ export default function WalkingRadius() {
 
   const ringColor = dark ? "#60A5FA" : "#3B82F6";
 
+  // Key prefix forces re-mount when center changes, ensuring Leaflet layers
+  // and permanent tooltips re-render correctly
+  const keyPrefix = `${radiusCenter.lat},${radiusCenter.lng}`;
+
   return (
     <>
       {WALK_RINGS.map((ring) => (
         <Circle
-          key={ring.minutes}
+          key={`${keyPrefix}-${ring.minutes}`}
           center={[radiusCenter.lat, radiusCenter.lng]}
           radius={ring.radius}
           pathOptions={{
@@ -44,6 +48,7 @@ export default function WalkingRadius() {
         </Circle>
       ))}
       <Circle
+        key={`${keyPrefix}-center`}
         center={[radiusCenter.lat, radiusCenter.lng]}
         radius={30}
         pathOptions={{
