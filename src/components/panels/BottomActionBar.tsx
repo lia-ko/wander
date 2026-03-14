@@ -13,7 +13,7 @@ function validateTrips(data: unknown): data is Trip[] {
   for (const t of data) {
     if (typeof t !== "object" || t === null) return false;
     // Block prototype pollution keys
-    if ("__proto__" in t || "constructor" in t && typeof (t as Record<string, unknown>).constructor !== "function") return false;
+    if (Object.hasOwn(t, "__proto__") || Object.hasOwn(t, "constructor")) return false;
     if (typeof t.id !== "number" || typeof t.name !== "string") return false;
     if (t.name.length > 200) return false;
     if (!Array.isArray(t.days) || t.days.length > 365) return false;
