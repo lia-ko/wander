@@ -195,16 +195,16 @@ function NewTripModal() {
                 if (!endDate || e.target.value > endDate) setEndDate(e.target.value);
               }}
               aria-label="Start date"
-              className={`flex-1 ${inputClass}`}
+              className={`flex-1 min-w-0 ${inputClass}`}
             />
-            <span className={`text-xs ${textSubtle(dark)}`}>to</span>
+            <span className={`text-xs shrink-0 ${textSubtle(dark)}`}>to</span>
             <input
               type="date"
               value={endDate}
               min={startDate}
               onChange={(e) => setEndDate(e.target.value)}
               aria-label="End date"
-              className={`flex-1 ${inputClass}`}
+              className={`flex-1 min-w-0 ${inputClass}`}
             />
           </div>
           {startDate && endDate && endDate < startDate && (
